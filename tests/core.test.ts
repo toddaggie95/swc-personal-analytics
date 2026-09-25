@@ -1,0 +1,149 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { SWCombine } from 'swcombine-sdk';
+import { loadConfig, requireLive, REDIRECT_URI, SCOPES } from '../src/config/index.js';
+import { beginAuth, finishAuth, loadAuth, verifyOob } from '../src/auth/session.js';
+import { atomicWrite, withLock } from '../src/storage/files.js';
+import { SnapshotRun } from '../src/storage/snapshots.js';
+import { ReadClient, retryDelay } from '../src/swc/read-client.js';
+import { syncStations } from '../src/swc/sync.js';
+import { normalizeStation } from '../src/models/station.js';
+
+const auth = { accessToken: async () => 'synthetic-token', refresh: async () => {} };
+const envelope = (value: unknown) => JSON.stringify({ swcapi: { result: value } });
+const page = (total: number, start: number, ids: number[]) => ({ entities: {
+  attributes: { total: String(total), start: String(start), count: String(ids.length) }, entity: ids.map(id => ({ uid: `5:${id}`, name: `Station ${id}` })) } });
+async function fixture(work: (root: string) => Promise<void>) {
+  const root = await mkdtemp(join(tmpdir(), 'swc-test-'));
+  try { await work(root); } finally { await rm(root, { recursive: true, force: true }); }
+}
+test('live access defaults closed; only four read scopes', () => {
+  assert.throws(() => requireLive(loadConfig({})), /activation/);
+  assert.deepEqual(SCOPES, ['character_auth', 'character_read', 'personal_inv_overview', 'personal_inv_stations_read']);
+  assert.throws(() => loadConfig({ SWC_PRIVATE_DIR: process.cwd() }), /outside/);
+});
+test('OOB URL uses SDK offline flow, fixed redirect, random state and optional S256', async () => fixture(async root => {
+  const config = { ...loadConfig({}), privateDir: root, clientId: 'fixture-id', clientSecret: 'fixture-secret', pkce: 's256' as const };
+  const url = new URL(await beginAuth(config));
+  assert.equal(url.origin + url.pathname, 'https://www.swcombine.com/ws/oauth2/auth/');
+  assert.equal(url.searchParams.get('redirect_uri'), REDIRECT_URI);
+  assert.equal(url.searchParams.get('access_type'), 'offline');
+  assert.equal(url.searchParams.get('code_challenge_method'), 'S256');
+  assert.equal(url.searchParams.get('scope'), SCOPES.join(' '));
+  assert.ok(!url.href.includes('fixture-secret'));
+  assert.notEqual(url.searchParams.get('state'), new URL(await beginAuth(config)).searchParams.get('state'));
+}));
+test('state fails closed, rejects expiry and mismatch even in code-only mode', () => {
+  const pending = { state: 'correct', createdAt: 1000, clientId: 'id', oobMode: 'state-required' as const };
+  assert.throws(() => verifyOob(pending, 'code', '', 2000), /state/);
+  assert.throws(() => verifyOob(pending, 'code', 'wrong', 2000), /state/);
+  assert.throws(() => verifyOob(pending, 'code', 'correct', 700000), /expired/);
+  verifyOob(pending, 'code', 'correct', 2000);
+  verifyOob({ ...pending, oobMode: 'code-only' }, 'code', '', 2000);
+  assert.throws(() => verifyOob({ ...pending, oobMode: 'code-only' }, 'code', 'wrong', 2000));
+});
+test('code exchange validates state before call, persists tokens, consumes session', async () => fixture(async root => {
+  const config = { ...loadConfig({}), privateDir: root, clientId: 'fixture', clientSecret: 'fixture' };
+  const client = new SWCombine({ clientId: 'fixture', clientSecret: 'fixture', redirectUri: REDIRECT_URI });
+  await beginAuth(config, client);
+  const pending = JSON.parse(await readFile(join(root, 'pending.json'), 'utf8'));
+  let calls = 0;
+  client.auth.handleCallback = async () => { calls++; return { success: true, token: { accessToken: 'fixture', refreshToken: 'refresh', expiresAt: Date.now() + 3600000 } }; };
+  await assert.rejects(finishAuth(config, 'code', 'wrong', client)); assert.equal(calls, 0);
+  assert.equal(await finishAuth(config, 'code', pending.state, client), true);
+  assert.equal(calls, 1);
+  assert.ok((await readdir(root)).includes('tokens.json'));
+  assert.ok(!(await readdir(root)).includes('pending.json'));
+  await assert.rejects(finishAuth(config, 'code', pending.state, client)); assert.equal(calls, 1);
+}));
+test('refresh is durable and preserves previous refresh token when omitted', async () => fixture(async root => {
+  const config = { ...loadConfig({}), privateDir: root, clientId: 'fixture', clientSecret: 'fixture' };
+  await atomicWrite(join(root, 'tokens.json'), JSON.stringify({ accessToken: 'old', refreshToken: 'retained', expiresAt: 1 }));
+  const client = new SWCombine({ clientId: 'fixture', clientSecret: 'fixture' });
+  client.refreshToken = async () => { client.setToken({ accessToken: 'new', expiresAt: Date.now() + 3600000 }); };
+  const provider = await loadAuth(config, client);
+  assert.equal(await provider.accessToken(), 'new');
+  const saved = JSON.parse(await readFile(join(root, 'tokens.json'), 'utf8'));
+  assert.equal(saved.refreshToken, 'retained'); assert.equal(saved.accessToken, 'new');
+}));
+test('mock end-to-end: character, two station pages, exact bytes and safe metadata', async () => fixture(async root => {
+  const bodies = [envelope({ uid: '1:123', name: 'Fixture' }), envelope(page(3, 1, [1, 2])), envelope(page(3, 3, [3]))];
+  bodies[0] = ' \n' + bodies[0] + '\n';
+  let calls = 0;
+  const fetcher: typeof fetch = async (input, init) => {
+    const url = new URL(String(input));
+    assert.equal(init?.method, 'GET'); assert.equal(init?.redirect, 'error');
+    assert.equal((init?.headers as Record<string, string>).Authorization, 'OAuth synthetic-token');
+    assert.ok(!url.href.includes('synthetic-token'));
+    if (calls === 0) assert.equal(url.pathname, '/ws/v2.0/character/');
+    else { assert.equal(url.pathname, '/ws/v2.0/inventory/1:123/stations/owner'); assert.equal(url.searchParams.get('start_index'), calls === 1 ? '1' : '3'); }
+    return new Response(bodies[calls++], { headers: { 'Content-Type': 'application/json' } });
+  };
+  const run = new SnapshotRun(root), result = await syncStations(new ReadClient(auth, run, fetcher), run, root);
+  assert.equal(result.ownedStations, 3); assert.equal(calls, 3);
+  assert.equal(await readFile(join(run.directory, '00001.body'), 'utf8'), bodies[0]);
+  assert.ok(!(await readFile(join(run.directory, '00001.meta.json'), 'utf8')).includes('synthetic-token'));
+  assert.ok((await readdir(run.directory)).includes('complete.json'));
+}));
+test('empty inventory succeeds; incomplete, repeated and changing pages fail', async () => fixture(async root => {
+  const run = new SnapshotRun(root);
+  const result = await syncStations({ me: async () => ({ uid: '1:1' }), stations: async () => page(0, 1, []) }, run, root);
+  assert.equal(result.ownedStations, 0);
+  for (const pages of [[page(2, 1, [])], [page(2, 1, [1]), page(2, 2, [1])], [page(2, 1, [1]), page(3, 2, [2])], [{ entities: {} }]]) {
+    const failedRun = new SnapshotRun(root); let index = 0;
+    await assert.rejects(syncStations({ me: async () => ({ uid: '1:1' }), stations: async () => pages[index++]! }, failedRun, root));
+    await assert.rejects(readFile(join(failedRun.directory, 'complete.json')));
+  }
+}));
+test('429 Retry-After then success, and bounded 401 refresh', async () => fixture(async root => {
+  let calls = 0, refreshed = 0; const delays: number[] = [];
+  const run = new SnapshotRun(root);
+  const client = new ReadClient({ ...auth, refresh: async () => { refreshed++; } }, run, async () => {
+    calls++;
+    if (calls === 1) return new Response('{}', { status: 429, headers: { 'Retry-After': '2' } });
+    if (calls === 2) return new Response('{}', { status: 401 });
+    return new Response(envelope({ uid: '1:1' }));
+  }, async ms => { delays.push(ms); });
+  assert.equal((await client.me()).uid, '1:1'); assert.deepEqual(delays, [2000]); assert.equal(refreshed, 1);
+  let repeats = 0;
+  await assert.rejects(new ReadClient(auth, run, async () => { repeats++; return new Response('{}', { status: 401 }); }).me());
+  assert.equal(repeats, 2);
+  assert.equal(retryDelay('Thu, 01 Jan 1970 00:00:05 GMT', 0, 1000), 4000);
+}));
+test('malformed/Anubis response retained without retry; OAuth not captured', async () => fixture(async root => {
+  const run = new SnapshotRun(root); let calls = 0;
+  await assert.rejects(new ReadClient(auth, run, async () => { calls++; return new Response('<html>Anubis</html>'); }).me(), /non-JSON/);
+  assert.equal(calls, 1); assert.equal(await readFile(join(run.directory, '00001.body'), 'utf8'), '<html>Anubis</html>');
+}));
+test('rate-limit retries are bounded and long Retry-After stops without early retry', async () => fixture(async root => {
+  let calls = 0, sleeps = 0;
+  const run = new SnapshotRun(root);
+  await assert.rejects(new ReadClient(auth, run, async () => {
+    calls++; return new Response('{}', { status: 429 });
+  }, async () => { sleeps++; }).me());
+  assert.equal(calls, 4); assert.equal(sleeps, 3);
+  calls = 0;
+  await assert.rejects(new ReadClient(auth, run, async () => {
+    calls++; return new Response('{}', { status: 429, headers: { 'Retry-After': '120' } });
+  }, async () => { assert.fail('Must not retry before Retry-After'); }).me(), /long retry/);
+  assert.equal(calls, 1);
+}));
+test('failed refresh never sends an unauthenticated data request', async () => fixture(async root => {
+  let calls = 0;
+  await assert.rejects(new ReadClient({ accessToken: async () => { throw new Error('fixture refresh failure'); }, refresh: async () => {} },
+    new SnapshotRun(root), async () => { calls++; return new Response('{}'); }).me());
+  assert.equal(calls, 0);
+}));
+test('normalization preserves zero coordinates and handles unknown coordinates', () => {
+  const station = normalizeStation({ uid: '5:1', location: { coordinates: { galaxy: { attributes: { x: 0, y: '-2' } }, system: {} } } }, '1:1', 'test');
+  assert.deepEqual(station.coordinates.galaxy, { x: 0, y: -2 }); assert.equal(station.coordinates.system, null);
+  assert.equal(normalizeStation({ uid: '5:1' }, '1:1', 'test').coordinates.ground, null);
+});
+test('single-process lock rejects concurrent access and releases on failure', async () => fixture(async root => {
+  await withLock(root, async () => { await assert.rejects(withLock(root, async () => {}), /locked/); });
+  await assert.rejects(withLock(root, async () => { throw new Error('fixture'); }));
+  await withLock(root, async () => {});
+}));

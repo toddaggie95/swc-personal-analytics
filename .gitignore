@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+data/
+.local/
+tokens*.json
+*token*.local.json
+*.db
+*.db-*
+*.sqlite*
+*.log
+logs/
+*.tmp
+.DS_Store
