@@ -63,3 +63,8 @@ A-wing observed distances 1, 2, 3, 7, 10 and a diagonal 1-square leg all agree w
 - BFF-1 also 20 MGLT, measured 1565 s at distance 1 and 4695 s at distance 3. Simple 1565*5 would give 7825s, 1 second longer than observed Mammoth.
 - **Potentially important:** rounding of fractional journey duration vs per-square rounding, or ship-specific/pilot modifiers. Do NOT claim rounding explanation established; same pilot and travel conditions should be verified.
 - The earlier candidate `floor(31300/MGLT)` per square multiplied by D would predict 7825 s, **failing this observation** if same modifiers apply. A direct journey-level floor model could explain the 1s difference, but requires further testing.
+
+## Pilot default and timing precision clarification (2026-10-15)
+- User explicitly confirms Fraul Du`tan piloted Mammoth test S-011 and instructs: **assume Fraul is piloting all reported ship tests unless explicitly stated otherwise**.
+- User cautions that Mammoth's one-second difference from BFF-derived 5-square prediction could be browser refresh/display timing, not necessarily a game-engine rounding difference.
+- Evidence treatment: retain raw S-011 02:10:24, mark one-second discrepancy as unresolved and possibly measurement/display artifact; **do not revise or reject working sublight model on this evidence alone**.
