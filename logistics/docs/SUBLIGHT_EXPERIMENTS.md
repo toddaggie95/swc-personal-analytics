@@ -55,3 +55,11 @@ A-wing observed distances 1, 2, 3, 7, 10 and a diagonal 1-square leg all agree w
 - Across ships (pilot Fighter/Freighter Piloting 3): BFF-1 20 MGLT -> 1565s/square; Modular Conveyor 40 -> 782s/square; A-wing 120 -> 260s/square.
 - New candidate: `seconds_per_square = floor(K/MGLT)` then `total_seconds = distance * seconds_per_square`. If K is integer, constraints from BFF: 31300 <= K < 31320; Conveyor: 31280 <= K < 31320; A-wing: 31200 <= K < 31320. Joint interval **31300 <= K < 31320**, or integer K=31300..31319. K=31300 fits all three. Not uniquely identified, and alternative game formulas remain possible. This candidate is a testable empirical fit, not verified implementation.
 - Useful discriminating tests: additional MGLT rating, especially where floor(31300/MGLT) differs from alternatives; pilot-skill variation. Distances alone likely cannot resolve K if per-square truncation precedes multiplication.
+
+## S-011 — Mammoth-class Heavy Hauler
+- Ship specifications from SWC Production Plans Ships tab row 20: Mammoth-class Heavy Hauler, 20 MGLT.
+- User reported in-system route (8,13) -> (3,13), Chebyshev distance 5, initial travel duration **02:10:24 = 7824 s**.
+- Effective rate 7824/5 = **1564.8 s/square**.
+- BFF-1 also 20 MGLT, measured 1565 s at distance 1 and 4695 s at distance 3. Simple 1565*5 would give 7825s, 1 second longer than observed Mammoth.
+- **Potentially important:** rounding of fractional journey duration vs per-square rounding, or ship-specific/pilot modifiers. Do NOT claim rounding explanation established; same pilot and travel conditions should be verified.
+- The earlier candidate `floor(31300/MGLT)` per square multiplied by D would predict 7825 s, **failing this observation** if same modifiers apply. A direct journey-level floor model could explain the 1s difference, but requires further testing.
