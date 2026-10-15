@@ -39,3 +39,13 @@ Pilot Fighter/Freighter Piloting 3; RZ-1 A-wing, 120 MGLT.
 | S-006 | (5,7) | (5,9) | 2 axial | 00:08:40 | 00:08:40 | 0 s |
 
 **Status:** H-001 Chebyshev distance is now supported by an exact diagonal-versus-axial match and exact distance proportionality across 1, 2, 3 squares for A-wing; BFF-1 matches 1 and 3 squares. Empirical formula for A-wing with this pilot `T_seconds = 260 * max(abs(dx),abs(dy))`; for BFF-1 `T_seconds = 1565 * max(abs(dx),abs(dy))`. Scope: these ship/pilot/route conditions; do not claim general game-wide proof or exact MGLT/skill formula.
+
+## S-007 and S-008 — longer A-wing distance tests
+Pilot Fighter/Freighter Piloting 3; RZ-1 A-wing, 120 MGLT.
+
+| ID | Origin | Destination | Chebyshev distance | Predicted | Observed | Error |
+|---|---|---|---:|---|---|---:|
+| S-007 | (5,7) | (5,0) | 7 | 00:30:20 | 00:30:20 | 0 s |
+| S-008 | (5,7) | (15,7) | 10 | 00:43:20 | 00:43:20 | 0 s |
+
+A-wing observed distances 1, 2, 3, 7, 10 and a diagonal 1-square leg all agree with 260 seconds per Chebyshev square. No accumulated rounding difference through 10 squares. This does **not** distinguish exact underlying rate from a rate rounded per square before multiplication. Next discriminating variable: different MGLT or pilot skill, preferably same pilot.
