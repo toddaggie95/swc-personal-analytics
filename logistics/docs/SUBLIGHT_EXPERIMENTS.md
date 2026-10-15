@@ -15,3 +15,17 @@
 3. RZ-1 A-wing (120 MGLT), same pilot/distance, to compare ship class.
 
 For every test record origin, destination, exact initial ETA (h:m:s), pilot and any modifiers. Don't confuse countdown remainder with original duration. Record whether abort/restart impacts duration.
+
+## S-002 through S-004 — controlled user measurements
+All tests in Eberon, pilot Fighter/Freighter Piloting 3. Initial displayed durations (not remaining countdowns).
+
+| ID | Ship | MGLT | Origin | Destination | Chebyshev D | Initial duration | Seconds | Seconds/grid |
+|---|---|---:|---|---|---:|---|---:|---:|
+| S-001 | BFF-1 | 20 | (5,7) | (5,10) | 3 | 01:18:15 | 4695 | 1565 |
+| S-002 | BFF-1 | 20 | (5,7) | (5,8) | 1 | 00:26:05 | 1565 | 1565 |
+| S-003 | RZ-1 A-wing | 120 | (5,7) | (5,10) | 3 | 00:13:00 | 780 | 260 |
+| S-004 | RZ-1 A-wing | 120 | (5,7) | (5,8) | 1 | 00:04:20 | 260 | 260 |
+
+**Findings:** Exact linearity in observed grid distance for each ship, across 1 and 3 squares; no detectable fixed startup overhead at displayed-second resolution. BFF-1 / A-wing per-square ratio = 1565/260 = 6.01923, slightly different from nominal MGLT ratio 6. Do not assume inverse-speed formula or rounding method. 31200/MGLT predicts 1560s and 260s, so it does not fit BFF-1. No KRS-1 test possible: pilot lacks permissions.
+
+**Next best discriminating tests:** Diagonal route with Chebyshev distance 1 or 3; 2-square A-wing route to test per-leg rounding; optionally a different pilot skill or ship speed if accessible.
