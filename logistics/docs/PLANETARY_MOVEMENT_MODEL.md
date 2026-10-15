@@ -23,3 +23,9 @@ Optimize elapsed time subject to vehicle access, travel permission, loading/carg
 - Any additional loading, docking, facility entry/exit time.
 
 Do not claim that all SWC ships universally have identical ascent/descent times based solely on three tested types.
+
+## Player-confirmed common coordinate distance rule (2026-10-15)
+- Within-city travel uses the same Chebyshev distance metric as in-system sublight and inter-system hyperspace: `D=max(abs(x2-x1),abs(y2-y1))`.
+- Coordinate spaces differ: city-local coordinates for within-city movement, system coordinates for sublight, galactic system coordinates for hyperspace.
+- Evidence classification: player-confirmed city rule; sublight metric separately supported by exact diagonal and axial measurements; hyperspace metric remains a player hypothesis pending independent test.
+- Distance calculation is shared, but duration, speed, modifiers, and boundary-crossing overhead are mode-specific and not interchangeable.
