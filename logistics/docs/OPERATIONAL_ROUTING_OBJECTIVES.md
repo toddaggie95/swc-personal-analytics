@@ -16,3 +16,8 @@ Planner 4h, manual 3h30m but requires intervention at intermediate exit. If play
 
 ## Uncertainties
 Verify which SWC Travel Planner legs and intermediate jumps can truly auto-execute, whether multi-waypoint trips are supported, and whether an intermediate exit must require manual action. Do not assume planner cannot automate the directional staging idea until tested.
+
+## Confirmed Travel Planner limitation (player clarification, 2026-10-15)
+- The Travel Planner accepts **one destination**: user selects destination and clicks Go; the planner completes the journey unattended.
+- **No user-defined intermediate waypoints**. Deliberately jumping to a staging coordinate and then initiating a second jump into a target requires a separate player command after arrival.
+- Operational policy: default to direct one-destination planner routes for unattended movement; evaluate multi-hop directional entry only as explicitly interactive/manual option with user-availability wait cost. This overrides the earlier open question about whether planner supports multiple waypoints.
