@@ -20,3 +20,13 @@ Source: user-reported Travel Planner step timings. Ship RZ-1 A-wing (120 MGLT, c
 - How does planner delay vary? Is 1:56 randomly chosen?
 - Is the spool duration reduced by pilot skill and deducted from total hyperspace time per Movement rules?
 - Capture exact step timing on a no-lane or 1-grid jump to isolate baseline.
+
+## TP-001 follow-up — arrived in Tholatin (2026-10-15)
+- Actual hyperspace arrival local position: **(0,10)**, western/left boundary of Tholatin.
+- Requested final local destination: (8,13).
+- After arrival, Travel Planner imposed an **approximately 15-minute** travel delay (user's estimate, not exact seconds). User reports delay grows with more journey legs; preserve as player observation/hypothesis, not verified quantitative rule.
+- User clicked **Continue Now** to bypass delay. Post-hyper sublight ETA from (0,10) to (8,13) = **00:34:40 = 2080 seconds**.
+- Chebyshev local distance `max(8,3)=8`; 8*260=2080 seconds, exact match with A-wing observed rate.
+- Eberon (224,93) lies west of Tholatin (238,88); western boundary arrival at x=0 is **consistent with** approach-direction entry hypothesis H-004/H-006, but one case does not establish causality. Arrival y=10 remains unexplained.
+- Distinguish first Travel Delay 1m56s before hyper from second approximately 15m delay after hyper. The user bypassed second delay; do not add full 15m to actual elapsed time.
+- Nominal planned route step sum through hyper 02:58:26; plus post-hyper sublight 00:34:40 = **03:33:06** excluding any second arrival delay. If second delay were fully waited, approximate 03:48:06; not observed actual elapsed.
