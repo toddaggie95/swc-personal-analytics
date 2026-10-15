@@ -19,3 +19,10 @@ Recorded 2026-10-15. Evidence categories must be preserved.
 ## Evidence caveats
 - No direct measurement for H-004/H-005 yet.
 - Deep Space (224,92) adjacent to Eberon (224,93) is shown in player screenshot; not proof of traversability by sublight or of named-system boundary behavior.
+
+## H-006 — Directional hyperspace arrival via adjacent staging coordinate (2026-10-15)
+- **Player recollection / speculative hypothesis, not confirmed:** To choose a favorable boundary of a target system at galactic `(x,y)`, first hyperjump to adjacent galactic coordinate `(x-1,y)` and then hyperjump east into `(x,y)`; the approach may cause arrival at the **left/west** system boundary. Analogous approach from east/north/south may choose other edges.
+- Motivation: target local system position near `(0,15)`; if western entry is achievable, potentially avoid substantial in-system sublight travel.
+- This is DISTINCT from H-005 (physically crossing adjacent systems by sublight). It proposes two hyperspace jumps with an intermediate staging coordinate, which may be deep space.
+- Unknown: whether arrival edge follows approach vector; exact arrival local position; whether adjacent deep space is valid as staging; spool/exit penalties per leg; whether direction or destination system position controls arrival; safety/feasibility.
+- Experiment: record direct-jump arrival position, then from adjacent staging coordinate approach target and record entry position, with ship/pilot and route modifiers held constant when feasible. Compare total elapsed time including two spools and destination sublight. Avoid costly detours until basic navigation rules are verified.
