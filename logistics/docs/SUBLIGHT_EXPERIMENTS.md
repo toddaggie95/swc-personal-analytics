@@ -49,3 +49,9 @@ Pilot Fighter/Freighter Piloting 3; RZ-1 A-wing, 120 MGLT.
 | S-008 | (5,7) | (15,7) | 10 | 00:43:20 | 00:43:20 | 0 s |
 
 A-wing observed distances 1, 2, 3, 7, 10 and a diagonal 1-square leg all agree with 260 seconds per Chebyshev square. No accumulated rounding difference through 10 squares. This does **not** distinguish exact underlying rate from a rate rounded per square before multiplication. Next discriminating variable: different MGLT or pilot skill, preferably same pilot.
+
+## S-009/S-010 — Modular Conveyor (40 MGLT), same pilot
+- User-reported initial times: 1 Chebyshev square = 13m02s = 782s; 3 squares = 39m06s = 2346s. Exact 3x proportionality. Specific endpoints not supplied; do not invent them.
+- Across ships (pilot Fighter/Freighter Piloting 3): BFF-1 20 MGLT -> 1565s/square; Modular Conveyor 40 -> 782s/square; A-wing 120 -> 260s/square.
+- New candidate: `seconds_per_square = floor(K/MGLT)` then `total_seconds = distance * seconds_per_square`. If K is integer, constraints from BFF: 31300 <= K < 31320; Conveyor: 31280 <= K < 31320; A-wing: 31200 <= K < 31320. Joint interval **31300 <= K < 31320**, or integer K=31300..31319. K=31300 fits all three. Not uniquely identified, and alternative game formulas remain possible. This candidate is a testable empirical fit, not verified implementation.
+- Useful discriminating tests: additional MGLT rating, especially where floor(31300/MGLT) differs from alternatives; pilot-skill variation. Distances alone likely cannot resolve K if per-square truncation precedes multiplication.
