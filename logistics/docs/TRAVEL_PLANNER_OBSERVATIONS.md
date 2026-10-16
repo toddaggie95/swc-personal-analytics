@@ -30,3 +30,13 @@ Source: user-reported Travel Planner step timings. Ship RZ-1 A-wing (120 MGLT, c
 - Eberon (224,93) lies west of Tholatin (238,88); western boundary arrival at x=0 is **consistent with** approach-direction entry hypothesis H-004/H-006, but one case does not establish causality. Arrival y=10 remains unexplained.
 - Distinguish first Travel Delay 1m56s before hyper from second approximately 15m delay after hyper. The user bypassed second delay; do not add full 15m to actual elapsed time.
 - Nominal planned route step sum through hyper 02:58:26; plus post-hyper sublight 00:34:40 = **03:33:06** excluding any second arrival delay. If second delay were fully waited, approximate 03:48:06; not observed actual elapsed.
+
+## TP-002 — Mammoth Tholatin to Eberon (2026-10-15; in progress)
+- Pilot: Fraul Du`tan (default for all observations unless user specifies otherwise).
+- Mammoth departed Tholatin local (8,8); Travel Planner first moved to **(4,4)** (user corrected initial typo '(4,3)').
+- Reported initial sublight duration approximately **01:44:18**, versus 4-square Chebyshev distance at 1565 s/square predicting **01:44:20** (2-second approximate/display discrepancy).
+- Reported hyperspace spooling **~00:28:47** (uncertain by a few seconds).
+- Reported hyperspace leg **~21:54:54**.
+- Sum of reported three legs **~24:07:59**, excluding Travel Planner delays and any Eberon arrival sublight.
+- Hypothesis for Eberon entry: (19,10), east boundary, opposite observed Tholatin (0,10). **Not yet measured**.
+- All durations approximate, and source coordinate (4,4) is user-confirmed correction.
