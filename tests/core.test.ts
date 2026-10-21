@@ -102,7 +102,8 @@ test('owned ships use fixed GET endpoint, paginate and retain type and missing l
     const start = Number(url.searchParams.get('start_index'));
     assert.equal(start, calls === 2 ? 1 : 3);
     return new Response(envelope({ entities: { attributes: { total: 3, start }, entity: (start === 1 ? [1, 2] : [3]).map(id => ({
-      uid: `2:${id}`, name: `Fixture ${id}`, type: { attributes: { uid: 'type:1' }, value: 'Fixture class' }, location: { coordinates: { galaxy: {} } }
+      attributes: { href: 'https://www.swcombine.com/ws/v2.0/inventory/ships/2:' + id },
+      value: { uid: `2:${id}`, name: `Fixture ${id}`, type: { attributes: { uid: 'type:1' }, value: 'Fixture class' }, location: { coordinates: { galaxy: {} } } }
     })) } }));
   };
   const run = new SnapshotRun(root);

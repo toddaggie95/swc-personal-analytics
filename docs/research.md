@@ -5,7 +5,10 @@
 The installed SDK's `PersonalInventoryScopes.SHIPS.READ` is `personal_inv_ships_read`, and its inventory
 resource uses the same UID/entity-type/assignment route for ships. The extension adds only that scope
 and a fixed owner-assigned ship GET method. Offline tests cover ship pagination, normalization and
-preserving refresh tokens across re-consent. Live ship verification requires the added user consent.
+preserving refresh tokens across re-consent. Live ship verification completed after the added user consent.
+Live inventory entries use `{ attributes: { href }, value: { uid, name, type, ... } }` wrappers.
+Normalization now accepts this observed shape as well as direct entity objects; the ship pagination
+regression test exercises the wrapped form. No private inventory contents are included in tests or Git.
 
 ## Live compatibility follow-up (2026-10-21 UTC)
 

@@ -18,7 +18,10 @@ export function normalizeStation(value: unknown, ownerUid: string, run: string):
   return { ...normalizeEntity(value, ownerUid, run, 'stations'), entityType: 'stations' };
 }
 export function normalizeEntity(value: unknown, ownerUid: string, run: string, entityType: InventoryEntity['entityType']): InventoryEntity {
-  const v = record(value), type = record(v.type), coords = record(record(v.location).coordinates);
+  // Live inventory lists may wrap each entity as { attributes: { href }, value: {...} }.
+  const entry = record(value);
+  const v = entry.value && typeof entry.value === 'object' && !Array.isArray(entry.value) ? record(entry.value) : entry;
+  const type = record(v.type), coords = record(record(v.location).coordinates);
   const uid = text(v.uid);
   if (!uid || !/^\d+:\d+$/.test(uid)) throw new SafeError('Entity UID missing or invalid; snapshot is incomplete.');
   return { uid, entityType, name: text(v.name), typeUid: text(record(type.attributes).uid), typeName: text(type.value),
