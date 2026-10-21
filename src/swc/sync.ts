@@ -3,13 +3,13 @@ import { SafeError } from '../config/index.js';
 import { atomicWrite } from '../storage/files.js';
 import { SnapshotRun } from '../storage/snapshots.js';
 import { normalizeEntity, type InventoryEntity } from '../models/station.js';
-import { record, type ReadClient } from './read-client.js';
+import { record, type ReadClient, type LocationFilter } from './read-client.js';
 
 interface InventorySummary {
   schemaVersion: number; runId: string; completedAt: string; characterUid: string;
   entityType: InventoryEntity['entityType']; ownedShips?: number; ownedStations?: number; ownedFacilities?: number;
   materialLots?: number; ownerUid: string; ownerName?: string;
-  pages: number; consistency: string;
+  pages: number; consistency: string; locationFilter?: LocationFilter;
 }
 export const MATERIAL_FACTIONS = {
   tff: 'The Faerytail Family',
@@ -30,14 +30,18 @@ export async function syncFactionStations(client: Pick<ReadClient, 'me' | 'facti
     run, root, 'stations', MATERIAL_FACTIONS[faction]);
 }
 export async function syncFactionFacilities(client: Pick<ReadClient, 'me' | 'factionFacilities'>,
-  run: SnapshotRun, root: string, faction: keyof typeof MATERIAL_FACTIONS) {
-  return syncInventory({ me: () => client.me(), list: (uid, start) => client.factionFacilities(uid, start) },
-    run, root, 'facilities', MATERIAL_FACTIONS[faction]);
+  run: SnapshotRun, root: string, faction: keyof typeof MATERIAL_FACTIONS, filter: LocationFilter,
+  wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms))) {
+  if (!filter || !['system', 'planet'].includes(filter.kind) || !filter.name.trim()) throw new SafeError('A facility location filter is required.');
+  return syncInventory({ me: () => client.me(), list: async (uid, start) => {
+    if (start > 1) await wait(6500);
+    return client.factionFacilities(uid, start, filter);
+  } }, run, root, 'facilities', MATERIAL_FACTIONS[faction], filter);
 }
 export async function syncShips(client: Pick<ReadClient, 'me' | 'ships'>, run: SnapshotRun, root: string) {
   return syncInventory({ me: () => client.me(), list: (uid, start) => client.ships(uid, start) }, run, root, 'ships');
 }
-async function syncInventory(client: { me: ReadClient['me']; list: ReadClient['stations'] }, run: SnapshotRun, root: string, entityType: InventoryEntity['entityType'], factionName?: string) {
+async function syncInventory(client: { me: ReadClient['me']; list: ReadClient['stations'] }, run: SnapshotRun, root: string, entityType: InventoryEntity['entityType'], factionName?: string, filter?: LocationFilter) {
   const me = await client.me();
   const uid = me.uid;
   if (typeof uid !== 'string' || !/^1:\d+$/.test(uid)) throw new SafeError('Character response did not contain a valid character UID.');
@@ -72,13 +76,16 @@ async function syncInventory(client: { me: ReadClient['me']; list: ReadClient['s
     expectedTotal = total;
     for (const row of rows) {
       const station = normalizeEntity(row, ownerUid, run.id, entityType);
+      if (filter && station.location[filter.kind]?.name?.toLowerCase() !== filter.name.toLowerCase()) {
+        throw new SafeError('SWC returned a facility outside the requested location or with an unknown location. Collection stopped; partial snapshot retained.');
+      }
       if (seen.has(station.uid)) throw new SafeError('Repeated inventory entity; snapshot incomplete.');
       seen.add(station.uid); stations.push(station);
     }
     if (stations.length > total) throw new SafeError('Inventory count exceeds total; snapshot incomplete.');
     if (stations.length === total) {
       const summary: InventorySummary = { schemaVersion: 1, runId: run.id, completedAt: new Date().toISOString(), characterUid: uid,
-        ownerUid, ...(factionName ? { ownerName: factionName } : {}),
+        ownerUid, ...(filter ? { locationFilter: filter } : {}), ...(factionName ? { ownerName: factionName } : {}),
         entityType, ...(entityType === 'materials' ? { materialLots: stations.length } : entityType === 'ships' ? { ownedShips: stations.length } : entityType === 'facilities' ? { ownedFacilities: stations.length } : { ownedStations: stations.length }),
         pages, consistency: 'paginated observation, not a transactional snapshot' };
       await atomicWrite(join(root, 'normalized', `${run.id}.json`), JSON.stringify({ summary, [entityType]: stations }, null, 2));

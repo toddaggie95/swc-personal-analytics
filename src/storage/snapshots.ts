@@ -7,7 +7,7 @@ export class SnapshotRun {
   readonly directory: string;
   private sequence = 0;
   constructor(root: string) { this.directory = join(root, 'raw', this.id); }
-  async capture(body: Uint8Array, request: { endpoint: string; query: Record<string, number> }, status: number, contentType: string | null): Promise<string> {
+  async capture(body: Uint8Array, request: { endpoint: string; query: Record<string, number | string> }, status: number, contentType: string | null): Promise<string> {
     const id = String(++this.sequence).padStart(5, '0');
     await atomicWrite(join(this.directory, `${id}.body`), body);
     await atomicWrite(join(this.directory, `${id}.meta.json`), JSON.stringify({

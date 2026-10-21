@@ -8,7 +8,7 @@ import { loadConfig, requireLive, REDIRECT_URI, SCOPES } from '../src/config/ind
 import { beginAuth, finishAuth, loadAuth, verifyOob } from '../src/auth/session.js';
 import { atomicWrite, withLock } from '../src/storage/files.js';
 import { SnapshotRun } from '../src/storage/snapshots.js';
-import { ReadClient, retryDelay, rateLimitDelay } from '../src/swc/read-client.js';
+import { ReadClient, retryDelay, rateLimitDelay, facilityFilter } from '../src/swc/read-client.js';
 import { syncStations, syncShips, syncFactionMaterials, syncFactionStations, syncFactionFacilities, MATERIAL_FACTIONS } from '../src/swc/sync.js';
 import { normalizeStation } from '../src/models/station.js';
 import { safeFailure } from '../src/config/errors.js';
@@ -269,19 +269,40 @@ test('faction station export uses faction owner route and follows pagination', a
   assert.equal(summary.ownerUid, '20:102'); assert.equal(summary.ownedStations, 2); assert.equal(summary.pages, 2);
   assert.throws(() => client.factionStations('1:123', 1), /Invalid faction/);
 }));
-test('faction facility export uses faction owner route and follows pagination', async () => fixture(async root => {
-  let calls = 0;
+test('facility location filter is sent on every page and saved in the summary', async () => fixture(async root => {
+  for (const kind of ['system', 'planet'] as const) {
+    const filter = facilityFilter([`--${kind}`, 'Kashyyyk']);
+    let calls = 0;
+    const run = new SnapshotRun(root);
+    const client = new ReadClient(auth, run, async input => {
+      const url = new URL(String(input));
+      if (calls++ === 0) return new Response(envelope({ uid: '1:123', factions: [{ value: MATERIAL_FACTIONS.tjo, attributes: { uid: '20:102' } }] }));
+      assert.equal(url.pathname, '/ws/v2.0/inventory/20:102/facilities/owner');
+      assert.equal(url.searchParams.get('filter_type[0]'), kind);
+      assert.equal(url.searchParams.get('filter_value[0]'), 'Kashyyyk');
+      assert.equal(url.searchParams.get('filter_inclusion[0]'), 'includes');
+      const start = Number(url.searchParams.get('start_index'));
+      return new Response(envelope({ entities: { attributes: { total: 2, start }, entity: [
+        { uid: `4:${start}`, location: { [kind]: { value: 'Kashyyyk' } } }
+      ] } }));
+    });
+    const waits: number[] = [];
+    const summary = await syncFactionFacilities(client, run, root, 'tjo', filter, async ms => { waits.push(ms); });
+    assert.equal(summary.ownedFacilities, 2); assert.deepEqual(summary.locationFilter, filter);
+    assert.deepEqual(waits, [6500]);
+    const saved = JSON.parse(await readFile(join(root, 'normalized', `${run.id}.json`), 'utf8'));
+    assert.equal(saved.facilities.length, 2);
+  }
+}));
+test('facility sync rejects missing filters and ignored server filters', async () => fixture(async root => {
+  assert.throws(() => facilityFilter([]), /requires/);
+  assert.throws(() => facilityFilter(['--planet', ' ']), /requires/);
   const run = new SnapshotRun(root);
-  const client = new ReadClient(auth, run, async input => {
-    const url = new URL(String(input));
-    if (calls++ === 0) return new Response(envelope({ uid: '1:123', factions: [{ value: MATERIAL_FACTIONS.tjo, attributes: { uid: '20:102' } }] }));
-    assert.equal(url.pathname, '/ws/v2.0/inventory/20:102/facilities/owner');
-    const start = Number(url.searchParams.get('start_index'));
-    return new Response(envelope(page(2, start, [start])));
-  });
-  const summary = await syncFactionFacilities(client, run, root, 'tjo');
-  assert.equal(summary.ownerUid, '20:102'); assert.equal(summary.ownedFacilities, 2); assert.equal(summary.pages, 2);
-  assert.throws(() => client.factionFacilities('1:123', 1), /Invalid faction/);
+  await assert.rejects(syncFactionFacilities({
+    me: async () => ({ uid: '1:123', factions: [{ value: MATERIAL_FACTIONS.tjo, attributes: { uid: '20:102' } }] }),
+    factionFacilities: async () => page(1, 1, [1]),
+  }, run, root, 'tjo', { kind: 'planet', name: 'Kashyyyk' }), /outside the requested/);
+  await assert.rejects(readFile(join(run.directory, 'complete.json')));
 }));
 test('single-process lock rejects concurrent access and releases on failure', async () => fixture(async root => {
   await withLock(root, async () => { await assert.rejects(withLock(root, async () => {}), /locked/); });

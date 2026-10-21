@@ -93,8 +93,8 @@ script name. This exports station inventory and available locations, not full pr
 
 Facility collection requests `faction_inv_facilities_read`. Run `npm run auth:start`, approve
 in SWC, then `npm run auth:finish` in the same terminal. Keep codes and credentials local.
-Run `npm run sync:faction-facilities` for both TFF and TJO, or
-`npm run sync:faction-facilities:tjo` / `npm run sync:faction-facilities:tff` for one faction.
+Run `npm run sync:faction-facilities -- --system "Kashyyyk"` for both TFF and TJO, or
+`npm run sync:faction-facilities:tjo -- --planet "Kashyyyk"` / `npm run sync:faction-facilities:tff -- --planet "Kashyyyk"` for one faction.
 This reads owner-assigned facilities in pages of 200 and saves raw and normalized snapshots.
 The completion summary reports ownedFacilities. Existing grants need expanded consent;
 offline tests do not establish live facility access.
@@ -118,3 +118,14 @@ https://www.swcombine.com/ws/v2.0/documentation/inventory/entity_type/uid/
    complete or silently overwrite earlier known fields with missing values.
 
 The facility list feature does not yet fetch these individual details.
+
+### Location-limited facility collection
+
+Facility commands require exactly one of `--system "Name"` or `--planet "Name"` after npm's `--`.
+Names are passed as server-side inventory filters on every page. System includes all planets in that
+system; planet limits collection to that planet. Matching is checked against returned location names
+(case-insensitive); missing or different locations stop the run rather than silently broadening it.
+The summary's locationFilter identifies the scope: ownedFacilities is a location count, not a faction total.
+Pages are spaced by 6.5 seconds, and a rate-limit cooldown stops remaining factions. Smaller collections
+still share SWC's rate allowance and cannot bypass an existing cooldown. Live filter behavior has not yet
+been verified; empty results alone do not prove a location contains no facilities.

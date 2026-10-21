@@ -5,7 +5,7 @@ import { loadConfig, requireLive, SafeError } from '../config/index.js';
 import { beginAuth, finishAuth, loadAuth } from '../auth/session.js';
 import { withLock } from '../storage/files.js';
 import { SnapshotRun } from '../storage/snapshots.js';
-import { ReadClient, RateLimitError } from '../swc/read-client.js';
+import { ReadClient, RateLimitError, facilityFilter } from '../swc/read-client.js';
 import { syncStations, syncShips, syncFactionMaterials, syncFactionStations, syncFactionFacilities } from '../swc/sync.js';
 import { secretInput } from './secret-input.js';
 import { safeFailure } from '../config/errors.js';
@@ -14,8 +14,9 @@ dotenv({ quiet: true });
 let stage = 'configuration';
 async function main(): Promise<void> {
   const command = process.argv[2] || 'help';
-  if (process.argv.length > 3) throw new SafeError('Extra arguments refused. Never pass authorization codes or tokens on the command line.');
-  if (command === 'help') { console.log('Commands: status | auth:start | auth:finish | sync:stations | sync:ships | sync:materials | sync:materials:tff | sync:materials:tjo | sync:faction-stations | sync:faction-stations:tff | sync:faction-stations:tjo | sync:faction-facilities | sync:faction-facilities:tff | sync:faction-facilities:tjo\nSee docs/oauth.md before live authorization.'); return; }
+  const filter = command.startsWith('sync:faction-facilities') ? facilityFilter(process.argv.slice(3)) : undefined;
+  if (!filter && process.argv.length > 3) throw new SafeError('Extra arguments refused. Never pass authorization codes or tokens on the command line.');
+  if (command === 'help') { console.log('Commands: status | auth:start | auth:finish | sync:stations | sync:ships | sync:materials | sync:materials:tff | sync:materials:tjo | sync:faction-stations | sync:faction-stations:tff | sync:faction-stations:tjo | sync:faction-facilities | sync:faction-facilities:tff | sync:faction-facilities:tjo\nFacility commands require --system "Name" or --planet "Name".\nSee docs/oauth.md before live authorization.'); return; }
   const config = loadConfig();
   if (command === 'status') {
     const tokenStat = await stat(join(config.privateDir, 'tokens.json')).catch(() => null);
@@ -45,8 +46,9 @@ async function main(): Promise<void> {
       for (const faction of factions) {
         const run = new SnapshotRun(config.privateDir);
         try {
-          const sync = command.startsWith('sync:materials') ? syncFactionMaterials : command.startsWith('sync:faction-facilities') ? syncFactionFacilities : syncFactionStations;
-          const summary = await sync(new ReadClient(auth, run), run, config.privateDir, faction);
+          const client = new ReadClient(auth, run);
+          const summary = filter ? await syncFactionFacilities(client, run, config.privateDir, faction, filter)
+            : await (command.startsWith('sync:materials') ? syncFactionMaterials : syncFactionStations)(client, run, config.privateDir, faction);
           console.log(JSON.stringify({ faction, status: 'complete', ...summary }, null, 2));
         } catch (error) {
           console.error(JSON.stringify({ faction, status: 'failed', error: safeFailure(error, 'faction inventory collection') }));

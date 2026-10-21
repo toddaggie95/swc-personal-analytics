@@ -84,6 +84,6 @@ are deliberately deferred. See [architecture](docs/architecture.md), [security](
 and [SDK/API research and unresolved compatibility](docs/research.md).
 
 For faction-owned facilities, grant the added facility read permission using `npm run auth:start`
-and `npm run auth:finish`, then run `npm run sync:faction-facilities` (both factions),
-`npm run sync:faction-facilities:tff`, or `npm run sync:faction-facilities:tjo`.
+and `npm run auth:finish`, then run `npm run sync:faction-facilities -- --system "Kashyyyk"` (both factions),
+`npm run sync:faction-facilities:tff -- --planet "Kashyyyk"`, or `npm run sync:faction-facilities:tjo -- --planet "Kashyyyk"`.
 Operational detail enrichment is planned in [the OAuth runbook](docs/oauth.md#operational-detail-enrichment-plan).

@@ -18,6 +18,13 @@ export function retryDelay(header: string | null, attempt: number, now = Date.no
   }
   return 1000 * 2 ** attempt;
 }
+export interface LocationFilter { kind: 'system' | 'planet'; name: string }
+export function facilityFilter(args: string[]): LocationFilter {
+  if (args.length !== 2 || !['--system', '--planet'].includes(args[0]!) || !args[1]?.trim() || args[1].trim().length > 120) {
+    throw new SafeError('Facility sync requires --system "System name" or --planet "Planet name".');
+  }
+  return { kind: args[0] === '--system' ? 'system' : 'planet', name: args[1].trim() };
+}
 export class RateLimitError extends SafeError {}
 export function rateLimitDelay(headers: Headers, now = Date.now()): number | null {
   const retry = headers.get('retry-after');
@@ -51,11 +58,13 @@ export class ReadClient {
     if (!/^20:\d+$/.test(uid) || !Number.isSafeInteger(start) || start < 1) throw new SafeError('Invalid faction UID or page index.');
     return this.get(`inventory/${uid}/stations/owner`, { start_index: start, item_count: 200 });
   }
-  factionFacilities(uid: string, start: number): Promise<Record<string, unknown>> {
+  factionFacilities(uid: string, start: number, filter: LocationFilter): Promise<Record<string, unknown>> {
     if (!/^20:\d+$/.test(uid) || !Number.isSafeInteger(start) || start < 1) throw new SafeError('Invalid faction UID or page index.');
-    return this.get(`inventory/${uid}/facilities/owner`, { start_index: start, item_count: 200 });
+    if (!filter || !['system', 'planet'].includes(filter.kind) || !filter.name.trim()) throw new SafeError('A facility location filter is required.');
+    return this.get(`inventory/${uid}/facilities/owner`, { start_index: start, item_count: 200,
+      'filter_type[0]': filter.kind, 'filter_value[0]': filter.name, 'filter_inclusion[0]': 'includes' });
   }
-  private async get(endpoint: string, query: Record<string, number>): Promise<Record<string, unknown>> {
+  private async get(endpoint: string, query: Record<string, number | string>): Promise<Record<string, unknown>> {
     const url = new URL(endpoint, API_BASE);
     for (const [key, value] of Object.entries(query)) url.searchParams.set(key, String(value));
     let refreshed = false;
