@@ -9,7 +9,7 @@ import { beginAuth, finishAuth, loadAuth, verifyOob } from '../src/auth/session.
 import { atomicWrite, withLock } from '../src/storage/files.js';
 import { SnapshotRun } from '../src/storage/snapshots.js';
 import { ReadClient, retryDelay } from '../src/swc/read-client.js';
-import { syncStations } from '../src/swc/sync.js';
+import { syncStations, syncShips } from '../src/swc/sync.js';
 import { normalizeStation } from '../src/models/station.js';
 import { safeFailure } from '../src/config/errors.js';
 
@@ -33,9 +33,9 @@ async function fixture(work: (root: string) => Promise<void>) {
   const root = await mkdtemp(join(tmpdir(), 'swc-test-'));
   try { await work(root); } finally { await rm(root, { recursive: true, force: true }); }
 }
-test('live access defaults closed; only four read scopes', () => {
+test('live access defaults closed; only five read scopes', () => {
   assert.throws(() => requireLive(loadConfig({})), /activation/);
-  assert.deepEqual(SCOPES, ['character_auth', 'character_read', 'personal_inv_overview', 'personal_inv_stations_read']);
+  assert.deepEqual(SCOPES, ['character_auth', 'character_read', 'personal_inv_overview', 'personal_inv_stations_read', 'personal_inv_ships_read']);
   assert.throws(() => loadConfig({ SWC_PRIVATE_DIR: process.cwd() }), /outside/);
 });
 test('OOB URL uses SDK offline flow, fixed redirect, random state and optional S256', async () => fixture(async root => {
@@ -81,6 +81,38 @@ test('refresh is durable and preserves previous refresh token when omitted', asy
   assert.equal(await provider.accessToken(), 'new');
   const saved = JSON.parse(await readFile(join(root, 'tokens.json'), 'utf8'));
   assert.equal(saved.refreshToken, 'retained'); assert.equal(saved.accessToken, 'new');
+}));
+test('re-consent preserves an existing refresh token when exchange omits it', async () => fixture(async root => {
+  const config = { ...loadConfig({}), privateDir: root, clientId: 'fixture', clientSecret: 'fixture', oobMode: 'code-only' as const };
+  await atomicWrite(join(root, 'tokens.json'), JSON.stringify({ accessToken: 'old', refreshToken: 'retained', expiresAt: 1 }));
+  await beginAuth(config);
+  const client = new SWCombine({ clientId: 'fixture', clientSecret: 'fixture' });
+  client.auth.handleCallback = async () => ({ success: true, token: { accessToken: 'new', expiresAt: Date.now() + 3600000 } });
+  assert.equal(await finishAuth(config, 'fixture-code', '', client), true);
+  const saved = JSON.parse(await readFile(join(root, 'tokens.json'), 'utf8'));
+  assert.equal(saved.accessToken, 'new'); assert.equal(saved.refreshToken, 'retained');
+}));
+test('owned ships use fixed GET endpoint, paginate and retain type and missing location', async () => fixture(async root => {
+  let calls = 0;
+  const fetcher: typeof fetch = async (input, init) => {
+    const url = new URL(String(input));
+    assert.equal(init?.method, 'GET');
+    if (calls++ === 0) return new Response(envelope({ uid: '1:123' }));
+    assert.equal(url.pathname, '/ws/v2.0/inventory/1:123/ships/owner');
+    const start = Number(url.searchParams.get('start_index'));
+    assert.equal(start, calls === 2 ? 1 : 3);
+    return new Response(envelope({ entities: { attributes: { total: 3, start }, entity: (start === 1 ? [1, 2] : [3]).map(id => ({
+      uid: `2:${id}`, name: `Fixture ${id}`, type: { attributes: { uid: 'type:1' }, value: 'Fixture class' }, location: { coordinates: { galaxy: {} } }
+    })) } }));
+  };
+  const run = new SnapshotRun(root);
+  const summary = await syncShips(new ReadClient(auth, run, fetcher), run, root);
+  assert.equal(summary.ownedShips, 3); assert.equal(summary.ownedStations, undefined);
+  const saved = JSON.parse(await readFile(join(root, 'normalized', `${run.id}.json`), 'utf8'));
+  assert.equal(saved.ships.length, 3); assert.equal(saved.stations, undefined);
+  assert.equal(saved.ships[0].entityType, 'ships'); assert.equal(saved.ships[0].typeName, 'Fixture class');
+  assert.equal(saved.ships[0].coordinates.galaxy, null);
+  assert.equal(calls, 3);
 }));
 test('mock end-to-end: character, two station pages, exact bytes and safe metadata', async () => fixture(async root => {
   const bodies = [envelope({ uid: '1:123', name: 'Fixture' }), envelope(page(3, 1, [1, 2])), envelope(page(3, 3, [3]))];

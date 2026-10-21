@@ -9,6 +9,7 @@
     "auth:start": "tsx src/cli/index.ts auth:start",
     "auth:finish": "tsx src/cli/index.ts auth:finish",
     "sync:stations": "tsx src/cli/index.ts sync:stations",
+    "sync:ships": "tsx src/cli/index.ts sync:ships",
     "typecheck": "tsc -p tsconfig.check.json",
     "build": "tsc",
     "test": "tsx --test tests/*.test.ts",

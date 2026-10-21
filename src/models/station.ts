@@ -1,8 +1,8 @@
 import { SafeError } from '../config/index.js';
 import { record } from '../swc/read-client.js';
 
-export interface Station {
-  uid: string; entityType: 'stations'; name: string | null; typeUid: string | null; typeName: string | null;
+export interface InventoryEntity {
+  uid: string; entityType: 'stations' | 'ships'; name: string | null; typeUid: string | null; typeName: string | null;
   ownerUid: string; observedAt: string; sourceRun: string;
   coordinates: Record<'galaxy' | 'system' | 'surface' | 'ground', { x: number; y: number } | null>;
 }
@@ -13,11 +13,15 @@ function point(v: unknown): { x: number; y: number } | null {
   const x = number(p.x), y = number(p.y);
   return x === null || y === null ? null : { x, y };
 }
+export type Station = InventoryEntity & { entityType: 'stations' };
 export function normalizeStation(value: unknown, ownerUid: string, run: string): Station {
+  return { ...normalizeEntity(value, ownerUid, run, 'stations'), entityType: 'stations' };
+}
+export function normalizeEntity(value: unknown, ownerUid: string, run: string, entityType: InventoryEntity['entityType']): InventoryEntity {
   const v = record(value), type = record(v.type), coords = record(record(v.location).coordinates);
   const uid = text(v.uid);
-  if (!uid || !/^\d+:\d+$/.test(uid)) throw new SafeError('Station UID missing or invalid; snapshot is incomplete.');
-  return { uid, entityType: 'stations', name: text(v.name), typeUid: text(record(type.attributes).uid), typeName: text(type.value),
+  if (!uid || !/^\d+:\d+$/.test(uid)) throw new SafeError('Entity UID missing or invalid; snapshot is incomplete.');
+  return { uid, entityType, name: text(v.name), typeUid: text(record(type.attributes).uid), typeName: text(type.value),
     ownerUid, observedAt: new Date().toISOString(), sourceRun: run,
     coordinates: { galaxy: point(coords.galaxy), system: point(coords.system), surface: point(coords.surface), ground: point(coords.ground) } };
 }

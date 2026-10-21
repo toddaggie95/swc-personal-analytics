@@ -43,14 +43,27 @@ export async function finishAuth(config: Config, code: string, state: string, cl
   if (pending.clientId !== config.clientId || typeof pending.state !== 'string' || !Number.isFinite(pending.createdAt)
     || !['state-required', 'code-only'].includes(pending.oobMode)) throw new SafeError('Invalid pending session; start again.');
   verifyOob(pending, code, state);
+  // Re-consent may omit a refresh token. Preserve the existing one, as the SDK does.
+  try {
+    const existing = await readJson(join(config.privateDir, 'tokens.json'));
+    if (!validToken(existing)) throw new SafeError('Invalid existing token storage; cannot safely replace it.');
+    client.setToken(existing);
+  } catch (error) {
+    if (!(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT')) {
+      throw new SafeError(safeFailure(error, 'reading existing OAuth tokens'));
+    }
+  }
   // Consume before exchange; failed/uncertain exchanges require a fresh authorization.
   try { await rm(path); }
   catch (error) { throw new SafeError(safeFailure(error, 'consuming the pending authorization session')); }
   const result = await client.auth.handleCallback({ code, ...(state ? { state } : {}) }, pending.verifier);
   if (!result.success || !validToken(result.token)) throw new SafeError('OAuth exchange failed. Check activation, regenerated secret and OOB compatibility; start again.');
-  try { await atomicWrite(join(config.privateDir, 'tokens.json'), JSON.stringify(result.token)); }
+  client.setToken(result.token);
+  const token = client.getToken();
+  if (!validToken(token)) throw new SafeError('Invalid token result; authorize again.');
+  try { await atomicWrite(join(config.privateDir, 'tokens.json'), JSON.stringify(token)); }
   catch (error) { throw new SafeError(safeFailure(error, 'saving OAuth tokens locally')); }
-  return Boolean(result.token.refreshToken);
+  return Boolean(token.refreshToken);
 }
 export interface AuthProvider { accessToken(): Promise<string>; refresh(): Promise<void> }
 export async function loadAuth(config: Config, client = makeClient(config)): Promise<AuthProvider> {

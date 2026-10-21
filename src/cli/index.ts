@@ -4,7 +4,7 @@ import { beginAuth, finishAuth, loadAuth } from '../auth/session.js';
 import { withLock } from '../storage/files.js';
 import { SnapshotRun } from '../storage/snapshots.js';
 import { ReadClient } from '../swc/read-client.js';
-import { syncStations } from '../swc/sync.js';
+import { syncStations, syncShips } from '../swc/sync.js';
 import { secretInput } from './secret-input.js';
 import { safeFailure } from '../config/errors.js';
 
@@ -13,14 +13,14 @@ let stage = 'configuration';
 async function main(): Promise<void> {
   const command = process.argv[2] || 'help';
   if (process.argv.length > 3) throw new SafeError('Extra arguments refused. Never pass authorization codes or tokens on the command line.');
-  if (command === 'help') { console.log('Commands: status | auth:start | auth:finish | sync:stations\nSee docs/oauth.md before live authorization.'); return; }
+  if (command === 'help') { console.log('Commands: status | auth:start | auth:finish | sync:stations | sync:ships\nSee docs/oauth.md before live authorization.'); return; }
   const config = loadConfig();
   if (command === 'status') {
     console.log(JSON.stringify({ activated: config.activated, regeneratedSecretAcknowledged: config.regenerated,
       clientIdConfigured: Boolean(config.clientId), clientSecretConfigured: Boolean(config.clientSecret),
       oobMode: config.oobMode, pkce: config.pkce, liveProof: 'Not established by configuration; requires a successful live sync.' }, null, 2)); return;
   }
-  if (!['auth:start', 'auth:finish', 'sync:stations'].includes(command)) throw new SafeError('Unknown command. Run npm run cli -- help.');
+  if (!['auth:start', 'auth:finish', 'sync:stations', 'sync:ships'].includes(command)) throw new SafeError('Unknown command. Run npm run cli -- help.');
   requireLive(config);
   await withLock(config.privateDir, async () => {
     if (command === 'auth:start') {
@@ -36,7 +36,8 @@ async function main(): Promise<void> {
       console.log(offline ? 'Authorization saved locally; refresh token available.' : 'Authorization saved; no refresh token returned. Offline access is not yet proven.');
     } else {
       const auth = await loadAuth(config), run = new SnapshotRun(config.privateDir);
-      const summary = await syncStations(new ReadClient(auth, run), run, config.privateDir);
+      const sync = command === 'sync:ships' ? syncShips : syncStations;
+      const summary = await sync(new ReadClient(auth, run), run, config.privateDir);
       console.log(JSON.stringify(summary, null, 2));
     }
   });

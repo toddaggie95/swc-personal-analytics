@@ -40,7 +40,7 @@ privately and submitted in the code exchange. Do not silently downgrade if autho
 
 ## First live proof
 
-1. Run `npm run auth:start`. Open the printed URL manually and review the four read-only scopes.
+1. Run `npm run auth:start`. Open the printed URL manually and review the five read-only scopes.
 2. Authorize in your own browser. SWC credentials belong only on SWC's login page.
 3. Within ten minutes run `npm run auth:finish` in an interactive terminal. Paste the displayed code at
    the hidden prompt, then returned state (or blank in confirmed code-only mode). No code is stored.
@@ -62,3 +62,15 @@ The SDK OAuth transport has no configured request timeout in this release. If ex
 cancel the process and inspect the local session state; follow stale-lock recovery in security.md. Do not
 replay a possibly consumed code. Token revocation endpoint is researched but no revoke command is exposed
 in this initial read-only CLI; use SWC's app/grant management when revocation is necessary.
+
+## Adding personally owned ships
+
+Run `npm run auth:start` and `npm run auth:finish` in the same terminal to grant the added
+`personal_inv_ships_read` scope. With verified code-only OOB mode, enter the new code at the hidden prompt
+and leave state blank. Re-consent retains an existing local refresh token if SWC omits a new one; the
+expanded permissions of a later refresh grant still require live verification.
+
+Then run `npm run sync:ships`. This reads `/inventory/{characterUid}/ships/owner`, never faction or
+commander/pilot assignments. Empty or unavailable coordinates remain null. No ship detail/write endpoints
+are exposed. Raw responses remain private; normalized snapshots keep names, types, owner-query provenance
+and available coordinates.

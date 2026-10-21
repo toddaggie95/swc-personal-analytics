@@ -1,5 +1,12 @@
 # Source review and confidence
 
+## Personally owned ships extension
+
+The installed SDK's `PersonalInventoryScopes.SHIPS.READ` is `personal_inv_ships_read`, and its inventory
+resource uses the same UID/entity-type/assignment route for ships. The extension adds only that scope
+and a fixed owner-assigned ship GET method. Offline tests cover ship pagination, normalization and
+preserving refresh tokens across re-consent. Live ship verification requires the added user consent.
+
 ## Live compatibility follow-up (2026-10-21 UTC)
 
 Installed/OOB authorization displayed a bare code, so the local configuration uses the documented

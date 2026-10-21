@@ -5,7 +5,7 @@ import { CharacterScopes, PersonalInventoryScopes } from 'swcombine-sdk';
 export const REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob';
 export const API_BASE = 'https://www.swcombine.com/ws/v2.0/';
 export const SCOPES = [CharacterScopes.AUTH, CharacterScopes.READ,
-  PersonalInventoryScopes.OVERVIEW, PersonalInventoryScopes.STATIONS.READ];
+  PersonalInventoryScopes.OVERVIEW, PersonalInventoryScopes.STATIONS.READ, PersonalInventoryScopes.SHIPS.READ];
 export class SafeError extends Error {}
 export interface Config {
   clientId: string; clientSecret: string; privateDir: string;
