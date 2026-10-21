@@ -18,6 +18,18 @@ export function retryDelay(header: string | null, attempt: number, now = Date.no
   }
   return 1000 * 2 ** attempt;
 }
+export class RateLimitError extends SafeError {}
+export function rateLimitDelay(headers: Headers, now = Date.now()): number | null {
+  const retry = headers.get('retry-after');
+  const reset = headers.get('x-ratelimit-reset');
+  const delays: number[] = [];
+  if (retry) {
+    const n = /^\d+(\.\d+)?$/.test(retry) ? Number(retry) * 1000 : Date.parse(retry) - now;
+    if (Number.isFinite(n)) delays.push(Math.max(0, n));
+  }
+  if (reset && /^\d+$/.test(reset)) delays.push(Math.max(0, Number(reset) * 1000 - now));
+  return delays.length ? Math.max(...delays) : null;
+}
 export class ReadClient {
   constructor(private auth: AuthProvider, private snapshots: SnapshotRun,
     private fetcher: typeof fetch = fetch,
@@ -57,6 +69,15 @@ export class ReadClient {
       const body = new Uint8Array(await response.arrayBuffer());
       // Only sanctioned data endpoints are captured; OAuth responses are never snapshots.
       await this.snapshots.capture(body, { endpoint, query }, response.status, response.headers.get('content-type'));
+      if (response.status === 429) {
+        const delay = rateLimitDelay(response.headers);
+        if (delay !== null && delay <= 60_000 && attempt < 3) {
+          await this.sleep(Math.max(1000, delay)); continue;
+        }
+        throw new RateLimitError(delay === null
+          ? 'SWC rate limit reached. No reset time supplied; stop syncing and try later. Partial data retained.'
+          : `SWC rate limit reached. Retry no earlier than ${new Date(Date.now() + delay).toISOString()}. Partial data retained.`);
+      }
       let parsed: unknown;
       try { parsed = JSON.parse(Buffer.from(body).toString('utf8')) as unknown; } catch {
         throw new SafeError('SWC returned non-JSON (possibly Anubis). Response preserved; no bypass attempted.');
@@ -65,7 +86,8 @@ export class ReadClient {
       const obj = record(parsed);
       const limited = response.status === 429 || (response.status === 400 && (obj.error === 'rate_limit_exceeded'
         || [obj.message, obj.error_description].some(v => typeof v === 'string' && /rate limit/i.test(v))));
-      if ((limited || response.status >= 500) && attempt < 3) {
+      if (limited) throw new RateLimitError('SWC rate limit reached. Stop syncing and try later; partial data retained.');
+      if ((response.status >= 500) && attempt < 3) {
         const delay = retryDelay(response.headers.get('retry-after'), attempt);
         if (delay > 60_000) throw new SafeError('SWC requested a long retry delay. Try later; partial raw data retained.');
         await this.sleep(delay); continue;

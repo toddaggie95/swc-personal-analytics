@@ -5,7 +5,7 @@ import { loadConfig, requireLive, SafeError } from '../config/index.js';
 import { beginAuth, finishAuth, loadAuth } from '../auth/session.js';
 import { withLock } from '../storage/files.js';
 import { SnapshotRun } from '../storage/snapshots.js';
-import { ReadClient } from '../swc/read-client.js';
+import { ReadClient, RateLimitError } from '../swc/read-client.js';
 import { syncStations, syncShips, syncFactionMaterials, syncFactionStations, syncFactionFacilities } from '../swc/sync.js';
 import { secretInput } from './secret-input.js';
 import { safeFailure } from '../config/errors.js';
@@ -51,6 +51,10 @@ async function main(): Promise<void> {
         } catch (error) {
           console.error(JSON.stringify({ faction, status: 'failed', error: safeFailure(error, 'faction inventory collection') }));
           process.exitCode = 1;
+          if (error instanceof RateLimitError) {
+            console.error('Remaining factions were not attempted because SWC rate-limited this batch.');
+            break;
+          }
         }
       }
     } else {

@@ -8,7 +8,7 @@ import { loadConfig, requireLive, REDIRECT_URI, SCOPES } from '../src/config/ind
 import { beginAuth, finishAuth, loadAuth, verifyOob } from '../src/auth/session.js';
 import { atomicWrite, withLock } from '../src/storage/files.js';
 import { SnapshotRun } from '../src/storage/snapshots.js';
-import { ReadClient, retryDelay } from '../src/swc/read-client.js';
+import { ReadClient, retryDelay, rateLimitDelay } from '../src/swc/read-client.js';
 import { syncStations, syncShips, syncFactionMaterials, syncFactionStations, syncFactionFacilities, MATERIAL_FACTIONS } from '../src/swc/sync.js';
 import { normalizeStation } from '../src/models/station.js';
 import { safeFailure } from '../src/config/errors.js';
@@ -225,11 +225,11 @@ test('rate-limit retries are bounded and long Retry-After stops without early re
   await assert.rejects(new ReadClient(auth, run, async () => {
     calls++; return new Response('{}', { status: 429 });
   }, async () => { sleeps++; }).me());
-  assert.equal(calls, 4); assert.equal(sleeps, 3);
+  assert.equal(calls, 1); assert.equal(sleeps, 0);
   calls = 0;
   await assert.rejects(new ReadClient(auth, run, async () => {
     calls++; return new Response('{}', { status: 429, headers: { 'Retry-After': '120' } });
-  }, async () => { assert.fail('Must not retry before Retry-After'); }).me(), /long retry/);
+  }, async () => { assert.fail('Must not retry before Retry-After'); }).me(), /Retry no earlier/);
   assert.equal(calls, 1);
 }));
 test('failed refresh never sends an unauthenticated data request', async () => fixture(async root => {
@@ -288,3 +288,9 @@ test('single-process lock rejects concurrent access and releases on failure', as
   await assert.rejects(withLock(root, async () => { throw new Error('fixture'); }));
   await withLock(root, async () => {});
 }));
+
+test('rate-limit reset headers take precedence over a shorter retry hint', () => {
+  assert.equal(rateLimitDelay(new Headers({ 'retry-after': '2', 'x-ratelimit-reset': '120' }), 100000), 20000);
+  assert.equal(rateLimitDelay(new Headers(), 100000), null);
+});
+
