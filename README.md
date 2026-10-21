@@ -32,11 +32,19 @@ npm run sync:stations
 The Installed application redirect is fixed to `urn:ietf:wg:oauth:2.0:oob`. There is no localhost callback server.
 Authorization codes are entered at a hidden terminal prompt, never as command arguments.
 Only `character_auth`, `character_read`, `personal_inv_overview`, `personal_inv_stations_read`, and
-`personal_inv_ships_read` are requested. Existing installations must authorize again to add ship access.
+`personal_inv_ships_read`, and `faction_inv_materials_read` are requested. Existing installations must
+authorize again when adding ship or faction-material access.
 
 For personally owned ships, run `npm run sync:ships` after reauthorization. It uses the same validated
 pagination and private raw snapshots, with normalized records under `ships` and an `ownedShips` summary.
 The count always comes from SWC; an expected user count is a comparison, never a hardcoded result.
+
+For TFF and TJO owned materials, run `npm run sync:materials` after granting material read access.
+Use `npm run sync:materials:tff` or `npm run sync:materials:tjo` for just one faction. Each faction gets
+an independent snapshot and status. Faction UIDs are resolved from the live authenticated character's
+faction references, with exact name matching; game privileges still control what SWC permits you to see.
+`materialLots` counts inventory records, not material units or tonnage. Available quantities are retained
+per lot; absent quantities remain null. No totals are inferred from unknown quantities.
 
 On success the CLI prints character UID, station count, page count and snapshot run ID. It never prints tokens,
 raw character profiles, station names, secrets or authorization codes. The authorization URL intentionally

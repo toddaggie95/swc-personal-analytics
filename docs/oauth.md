@@ -40,7 +40,7 @@ privately and submitted in the code exchange. Do not silently downgrade if autho
 
 ## First live proof
 
-1. Run `npm run auth:start`. Open the printed URL manually and review the five read-only scopes.
+1. Run `npm run auth:start`. Open the printed URL manually and review the six read-only scopes.
 2. Authorize in your own browser. SWC credentials belong only on SWC's login page.
 3. Within ten minutes run `npm run auth:finish` in an interactive terminal. Paste the displayed code at
    the hidden prompt, then returned state (or blank in confirmed code-only mode). No code is stored.
@@ -74,3 +74,13 @@ Then run `npm run sync:ships`. This reads `/inventory/{characterUid}/ships/owner
 commander/pilot assignments. Empty or unavailable coordinates remain null. No ship detail/write endpoints
 are exposed. Raw responses remain private; normalized snapshots keep names, types, owner-query provenance
 and available coordinates.
+
+## Faction-owned materials
+
+The only additional faction permission is `faction_inv_materials_read`. Run the authorization steps again,
+then `npm run sync:materials` to collect both The Faerytail Family and
+The Faerytail Family: The Je`daii Order. This requests owner-assigned materials only; no faction ship,
+credit, member, write or broad all scopes are requested. A grant does not create in-game privileges.
+Missing faction references, denied access and malformed/partial responses fail without a completion marker;
+they must never be interpreted as zero holdings. The CLI still attempts the other requested faction and
+exits nonzero if either collection fails. A successful response may be limited by SWC's visibility rules.

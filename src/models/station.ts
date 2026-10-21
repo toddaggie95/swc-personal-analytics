@@ -2,7 +2,8 @@ import { SafeError } from '../config/index.js';
 import { record } from '../swc/read-client.js';
 
 export interface InventoryEntity {
-  uid: string; entityType: 'stations' | 'ships'; name: string | null; typeUid: string | null; typeName: string | null;
+  uid: string; entityType: 'stations' | 'ships' | 'materials'; name: string | null; typeUid: string | null; typeName: string | null;
+  quantity?: number | null;
   ownerUid: string; observedAt: string; sourceRun: string;
   coordinates: Record<'galaxy' | 'system' | 'surface' | 'ground', { x: number; y: number } | null>;
 }
@@ -25,6 +26,12 @@ export function normalizeEntity(value: unknown, ownerUid: string, run: string, e
   const uid = text(v.uid);
   if (!uid || !/^\d+:\d+$/.test(uid)) throw new SafeError('Entity UID missing or invalid; snapshot is incomplete.');
   return { uid, entityType, name: text(v.name), typeUid: text(record(type.attributes).uid), typeName: text(type.value),
+    ...(entityType === 'materials' ? { quantity: materialQuantity(v.quantity) } : {}),
     ownerUid, observedAt: new Date().toISOString(), sourceRun: run,
     coordinates: { galaxy: point(coords.galaxy), system: point(coords.system), surface: point(coords.surface), ground: point(coords.ground) } };
+}
+function materialQuantity(value: unknown): number | null {
+  if (typeof value !== 'number' && (typeof value !== 'string' || value.trim() === '')) return null;
+  const quantity = Number(value);
+  return Number.isFinite(quantity) && quantity >= 0 ? quantity : null;
 }

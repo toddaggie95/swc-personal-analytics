@@ -9,7 +9,7 @@ import { beginAuth, finishAuth, loadAuth, verifyOob } from '../src/auth/session.
 import { atomicWrite, withLock } from '../src/storage/files.js';
 import { SnapshotRun } from '../src/storage/snapshots.js';
 import { ReadClient, retryDelay } from '../src/swc/read-client.js';
-import { syncStations, syncShips } from '../src/swc/sync.js';
+import { syncStations, syncShips, syncFactionMaterials, MATERIAL_FACTIONS } from '../src/swc/sync.js';
 import { normalizeStation } from '../src/models/station.js';
 import { safeFailure } from '../src/config/errors.js';
 
@@ -33,9 +33,51 @@ async function fixture(work: (root: string) => Promise<void>) {
   const root = await mkdtemp(join(tmpdir(), 'swc-test-'));
   try { await work(root); } finally { await rm(root, { recursive: true, force: true }); }
 }
-test('live access defaults closed; only five read scopes', () => {
+test('both faction material routes use discovered faction UIDs and preserve lot quantities', async () => fixture(async root => {
+  for (const faction of ['tff', 'tjo'] as const) {
+    const ownerUid = faction === 'tff' ? '20:101' : '20:102';
+    let calls = 0;
+    const run = new SnapshotRun(root);
+    const fetcher: typeof fetch = async (input, init) => {
+      assert.equal(init?.method, 'GET');
+      const url = new URL(String(input));
+      if (calls++ === 0) return new Response(envelope({ uid: '1:123', factions: [
+        { value: MATERIAL_FACTIONS.tff, attributes: { uid: '20:101' } },
+        { value: MATERIAL_FACTIONS.tjo, attributes: { uid: '20:102' } },
+      ] }));
+      assert.equal(url.pathname, `/ws/v2.0/inventory/${ownerUid}/materials/owner`);
+      const start = Number(url.searchParams.get('start_index'));
+      return new Response(envelope({ entities: { attributes: { total: 2, start }, entity: [{ value: {
+        uid: `17:${start}`, name: 'Synthetic lot', quantity: start === 1 ? '125' : undefined,
+        type: { value: 'Synthetic material', attributes: { uid: 'type:17' } },
+      } }] } }));
+    };
+    const summary = await syncFactionMaterials(new ReadClient(auth, run, fetcher), run, root, faction);
+    assert.equal(summary.materialLots, 2); assert.equal(summary.ownerUid, ownerUid); assert.equal(summary.characterUid, '1:123');
+    assert.equal(summary.ownedShips, undefined); assert.equal(summary.ownedStations, undefined);
+    const saved = JSON.parse(await readFile(join(root, 'normalized', `${run.id}.json`), 'utf8'));
+    assert.equal(saved.materials[0].ownerUid, ownerUid); assert.equal(saved.materials[0].quantity, 125);
+    assert.equal(saved.materials[1].quantity, null); assert.equal(calls, 3);
+  }
+}));
+test('missing faction and denied access never create successful empty material snapshots', async () => fixture(async root => {
+  const missingRun = new SnapshotRun(root);
+  let called = false;
+  await assert.rejects(syncFactionMaterials({ me: async () => ({ uid: '1:123', factions: [] }), factionMaterials: async () => {
+    called = true; return page(0, 1, []);
+  } }, missingRun, root, 'tff'), /not uniquely identified/);
+  assert.equal(called, false);
+  const deniedRun = new SnapshotRun(root);
+  const client = new ReadClient(auth, deniedRun, async input => new URL(String(input)).pathname.endsWith('/character/')
+    ? new Response(envelope({ uid: '1:123', factions: [{ value: MATERIAL_FACTIONS.tff, attributes: { uid: '20:101' } }] }))
+    : new Response('{}', { status: 403 }));
+  await assert.rejects(syncFactionMaterials(client, deniedRun, root, 'tff'), /HTTP 403/);
+  await assert.rejects(readFile(join(deniedRun.directory, 'complete.json')));
+  assert.throws(() => client.factionMaterials('1:123', 1), /Invalid faction/);
+}));
+test('live access defaults closed; only six read scopes', () => {
   assert.throws(() => requireLive(loadConfig({})), /activation/);
-  assert.deepEqual(SCOPES, ['character_auth', 'character_read', 'personal_inv_overview', 'personal_inv_stations_read', 'personal_inv_ships_read']);
+  assert.deepEqual(SCOPES, ['character_auth', 'character_read', 'personal_inv_overview', 'personal_inv_stations_read', 'personal_inv_ships_read', 'faction_inv_materials_read']);
   assert.throws(() => loadConfig({ SWC_PRIVATE_DIR: process.cwd() }), /outside/);
 });
 test('OOB URL uses SDK offline flow, fixed redirect, random state and optional S256', async () => fixture(async root => {

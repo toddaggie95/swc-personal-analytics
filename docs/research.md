@@ -1,5 +1,17 @@
 # Source review and confidence
 
+## Faction materials extension
+
+The [official permissions catalog](https://www.swcombine.com/ws/developers/permissions/) was accessible
+on this follow-up and documents `FACTION_INV_MATERIALS_READ` as basic faction material read access.
+The installed SDK maps it to `faction_inv_materials_read`; no other faction scopes are added.
+Its inventory resource explicitly accepts faction UIDs (`20:...`) in the same listing route used for
+personal inventories. The inventory endpoint documentation was still inaccessible during this check.
+Material detail types declare an optional numeric quantity; this implementation preserves valid numeric
+list quantities when present and does not assume the list always supplies one or infer its units.
+Both requested faction references were present in the saved authenticated character response. Membership
+alone is not proof of inventory access; live requests after re-consent determine that.
+
 ## Personally owned ships extension
 
 The installed SDK's `PersonalInventoryScopes.SHIPS.READ` is `personal_inv_ships_read`, and its inventory
