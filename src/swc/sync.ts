@@ -24,6 +24,11 @@ export async function syncFactionMaterials(client: Pick<ReadClient, 'me' | 'fact
 export async function syncStations(client: Pick<ReadClient, 'me' | 'stations'>, run: SnapshotRun, root: string) {
   return syncInventory({ me: () => client.me(), list: (uid, start) => client.stations(uid, start) }, run, root, 'stations');
 }
+export async function syncFactionStations(client: Pick<ReadClient, 'me' | 'factionStations'>,
+  run: SnapshotRun, root: string, faction: keyof typeof MATERIAL_FACTIONS) {
+  return syncInventory({ me: () => client.me(), list: (uid, start) => client.factionStations(uid, start) },
+    run, root, 'stations', MATERIAL_FACTIONS[faction]);
+}
 export async function syncShips(client: Pick<ReadClient, 'me' | 'ships'>, run: SnapshotRun, root: string) {
   return syncInventory({ me: () => client.me(), list: (uid, start) => client.ships(uid, start) }, run, root, 'ships');
 }

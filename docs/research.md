@@ -1,5 +1,17 @@
 # Source review and confidence
 
+## Location enrichment and faction stations
+
+Material raw responses contain location references with a display value and attributes for UID/type.
+These references are now retained for container, sector, system, planet and city. Missing references stay
+null; no location is inferred from a container name. Coordinates remain available separately. Existing
+snapshots are not rewritten; subsequent syncs produce enriched normalized exports.
+
+Faction-station listing uses the SDK's faction UID inventory route and `faction_inv_stations_read`
+(also documented as FACTION_INV_STATIONS_READ by the official permissions catalog). It reuses the tested
+owner-only pagination pipeline and resolves each faction from authenticated character references.
+Live faction-station collection still requires expanded OAuth consent and adequate game privileges.
+
 ## Faction materials extension
 
 The [official permissions catalog](https://www.swcombine.com/ws/developers/permissions/) was accessible

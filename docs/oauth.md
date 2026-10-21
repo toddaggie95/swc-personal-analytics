@@ -40,7 +40,7 @@ privately and submitted in the code exchange. Do not silently downgrade if autho
 
 ## First live proof
 
-1. Run `npm run auth:start`. Open the printed URL manually and review the six read-only scopes.
+1. Run `npm run auth:start`. Open the printed URL manually and review the seven read-only scopes.
 2. Authorize in your own browser. SWC credentials belong only on SWC's login page.
 3. Within ten minutes run `npm run auth:finish` in an interactive terminal. Paste the displayed code at
    the hidden prompt, then returned state (or blank in confirmed code-only mode). No code is stored.
@@ -77,10 +77,14 @@ and available coordinates.
 
 ## Faction-owned materials
 
-The only additional faction permission is `faction_inv_materials_read`. Run the authorization steps again,
+Faction materials use `faction_inv_materials_read`. Run the authorization steps again,
 then `npm run sync:materials` to collect both The Faerytail Family and
 The Faerytail Family: The Je`daii Order. This requests owner-assigned materials only; no faction ship,
 credit, member, write or broad all scopes are requested. A grant does not create in-game privileges.
 Missing faction references, denied access and malformed/partial responses fail without a completion marker;
 they must never be interpreted as zero holdings. The CLI still attempts the other requested faction and
 exits nonzero if either collection fails. A successful response may be limited by SWC's visibility rules.
+
+Faction station collection adds `faction_inv_stations_read`. After re-consent, run
+`npm run sync:faction-stations` to try both factions independently, or append `:tff` / `:tjo` to that
+script name. This exports station inventory and available locations, not full production-queue detail.
