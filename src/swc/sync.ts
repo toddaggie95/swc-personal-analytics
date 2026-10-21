@@ -7,7 +7,7 @@ import { record, type ReadClient } from './read-client.js';
 
 interface InventorySummary {
   schemaVersion: number; runId: string; completedAt: string; characterUid: string;
-  entityType: InventoryEntity['entityType']; ownedShips?: number; ownedStations?: number;
+  entityType: InventoryEntity['entityType']; ownedShips?: number; ownedStations?: number; ownedFacilities?: number;
   materialLots?: number; ownerUid: string; ownerName?: string;
   pages: number; consistency: string;
 }
@@ -28,6 +28,11 @@ export async function syncFactionStations(client: Pick<ReadClient, 'me' | 'facti
   run: SnapshotRun, root: string, faction: keyof typeof MATERIAL_FACTIONS) {
   return syncInventory({ me: () => client.me(), list: (uid, start) => client.factionStations(uid, start) },
     run, root, 'stations', MATERIAL_FACTIONS[faction]);
+}
+export async function syncFactionFacilities(client: Pick<ReadClient, 'me' | 'factionFacilities'>,
+  run: SnapshotRun, root: string, faction: keyof typeof MATERIAL_FACTIONS) {
+  return syncInventory({ me: () => client.me(), list: (uid, start) => client.factionFacilities(uid, start) },
+    run, root, 'facilities', MATERIAL_FACTIONS[faction]);
 }
 export async function syncShips(client: Pick<ReadClient, 'me' | 'ships'>, run: SnapshotRun, root: string) {
   return syncInventory({ me: () => client.me(), list: (uid, start) => client.ships(uid, start) }, run, root, 'ships');
@@ -74,7 +79,7 @@ async function syncInventory(client: { me: ReadClient['me']; list: ReadClient['s
     if (stations.length === total) {
       const summary: InventorySummary = { schemaVersion: 1, runId: run.id, completedAt: new Date().toISOString(), characterUid: uid,
         ownerUid, ...(factionName ? { ownerName: factionName } : {}),
-        entityType, ...(entityType === 'materials' ? { materialLots: stations.length } : entityType === 'ships' ? { ownedShips: stations.length } : { ownedStations: stations.length }),
+        entityType, ...(entityType === 'materials' ? { materialLots: stations.length } : entityType === 'ships' ? { ownedShips: stations.length } : entityType === 'facilities' ? { ownedFacilities: stations.length } : { ownedStations: stations.length }),
         pages, consistency: 'paginated observation, not a transactional snapshot' };
       await atomicWrite(join(root, 'normalized', `${run.id}.json`), JSON.stringify({ summary, [entityType]: stations }, null, 2));
       await run.complete(summary);

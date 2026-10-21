@@ -39,6 +39,10 @@ export class ReadClient {
     if (!/^20:\d+$/.test(uid) || !Number.isSafeInteger(start) || start < 1) throw new SafeError('Invalid faction UID or page index.');
     return this.get(`inventory/${uid}/stations/owner`, { start_index: start, item_count: 200 });
   }
+  factionFacilities(uid: string, start: number): Promise<Record<string, unknown>> {
+    if (!/^20:\d+$/.test(uid) || !Number.isSafeInteger(start) || start < 1) throw new SafeError('Invalid faction UID or page index.');
+    return this.get(`inventory/${uid}/facilities/owner`, { start_index: start, item_count: 200 });
+  }
   private async get(endpoint: string, query: Record<string, number>): Promise<Record<string, unknown>> {
     const url = new URL(endpoint, API_BASE);
     for (const [key, value] of Object.entries(query)) url.searchParams.set(key, String(value));

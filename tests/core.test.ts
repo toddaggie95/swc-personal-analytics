@@ -9,7 +9,7 @@ import { beginAuth, finishAuth, loadAuth, verifyOob } from '../src/auth/session.
 import { atomicWrite, withLock } from '../src/storage/files.js';
 import { SnapshotRun } from '../src/storage/snapshots.js';
 import { ReadClient, retryDelay } from '../src/swc/read-client.js';
-import { syncStations, syncShips, syncFactionMaterials, syncFactionStations, MATERIAL_FACTIONS } from '../src/swc/sync.js';
+import { syncStations, syncShips, syncFactionMaterials, syncFactionStations, syncFactionFacilities, MATERIAL_FACTIONS } from '../src/swc/sync.js';
 import { normalizeStation } from '../src/models/station.js';
 import { safeFailure } from '../src/config/errors.js';
 
@@ -75,9 +75,9 @@ test('missing faction and denied access never create successful empty material s
   await assert.rejects(readFile(join(deniedRun.directory, 'complete.json')));
   assert.throws(() => client.factionMaterials('1:123', 1), /Invalid faction/);
 }));
-test('live access defaults closed; only seven read scopes', () => {
+test('live access defaults closed; only eight read scopes', () => {
   assert.throws(() => requireLive(loadConfig({})), /activation/);
-  assert.deepEqual(SCOPES, ['character_auth', 'character_read', 'personal_inv_overview', 'personal_inv_stations_read', 'personal_inv_ships_read', 'faction_inv_materials_read', 'faction_inv_stations_read']);
+  assert.deepEqual(SCOPES, ['character_auth', 'character_read', 'personal_inv_overview', 'personal_inv_stations_read', 'personal_inv_ships_read', 'faction_inv_materials_read', 'faction_inv_stations_read', 'faction_inv_facilities_read']);
   assert.throws(() => loadConfig({ SWC_PRIVATE_DIR: process.cwd() }), /outside/);
 });
 test('OOB URL uses SDK offline flow, fixed redirect, random state and optional S256', async () => fixture(async root => {
@@ -268,6 +268,20 @@ test('faction station export uses faction owner route and follows pagination', a
   const summary = await syncFactionStations(client, run, root, 'tjo');
   assert.equal(summary.ownerUid, '20:102'); assert.equal(summary.ownedStations, 2); assert.equal(summary.pages, 2);
   assert.throws(() => client.factionStations('1:123', 1), /Invalid faction/);
+}));
+test('faction facility export uses faction owner route and follows pagination', async () => fixture(async root => {
+  let calls = 0;
+  const run = new SnapshotRun(root);
+  const client = new ReadClient(auth, run, async input => {
+    const url = new URL(String(input));
+    if (calls++ === 0) return new Response(envelope({ uid: '1:123', factions: [{ value: MATERIAL_FACTIONS.tjo, attributes: { uid: '20:102' } }] }));
+    assert.equal(url.pathname, '/ws/v2.0/inventory/20:102/facilities/owner');
+    const start = Number(url.searchParams.get('start_index'));
+    return new Response(envelope(page(2, start, [start])));
+  });
+  const summary = await syncFactionFacilities(client, run, root, 'tjo');
+  assert.equal(summary.ownerUid, '20:102'); assert.equal(summary.ownedFacilities, 2); assert.equal(summary.pages, 2);
+  assert.throws(() => client.factionFacilities('1:123', 1), /Invalid faction/);
 }));
 test('single-process lock rejects concurrent access and releases on failure', async () => fixture(async root => {
   await withLock(root, async () => { await assert.rejects(withLock(root, async () => {}), /locked/); });

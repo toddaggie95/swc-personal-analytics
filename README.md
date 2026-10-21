@@ -32,7 +32,7 @@ npm run sync:stations
 The Installed application redirect is fixed to `urn:ietf:wg:oauth:2.0:oob`. There is no localhost callback server.
 Authorization codes are entered at a hidden terminal prompt, never as command arguments.
 Only `character_auth`, `character_read`, `personal_inv_overview`, `personal_inv_stations_read`, and
-`personal_inv_ships_read`, `faction_inv_materials_read`, and `faction_inv_stations_read` are requested. Existing installations must
+`personal_inv_ships_read`, `faction_inv_materials_read`, `faction_inv_stations_read`, and `faction_inv_facilities_read` are requested. Existing installations must
 authorize again when adding ship or faction-material access.
 
 For personally owned ships, run `npm run sync:ships` after reauthorization. It uses the same validated
@@ -82,3 +82,8 @@ pages fail instead of claiming success. A successful empty inventory is a valid 
 SQLite, entity-detail enrichment, galaxy/types joins, analytics and a small authenticated ChatGPT bridge
 are deliberately deferred. See [architecture](docs/architecture.md), [security](docs/security.md),
 and [SDK/API research and unresolved compatibility](docs/research.md).
+
+For faction-owned facilities, grant the added facility read permission using `npm run auth:start`
+and `npm run auth:finish`, then run `npm run sync:faction-facilities` (both factions),
+`npm run sync:faction-facilities:tff`, or `npm run sync:faction-facilities:tjo`.
+Operational detail enrichment is planned in [the OAuth runbook](docs/oauth.md#operational-detail-enrichment-plan).

@@ -2,7 +2,7 @@ import { SafeError } from '../config/index.js';
 import { record } from '../swc/read-client.js';
 
 export interface InventoryEntity {
-  uid: string; entityType: 'stations' | 'ships' | 'materials'; name: string | null; typeUid: string | null; typeName: string | null;
+  uid: string; entityType: 'stations' | 'ships' | 'materials' | 'facilities'; name: string | null; typeUid: string | null; typeName: string | null;
   quantity?: number | null;
   ownerUid: string; observedAt: string; sourceRun: string;
   location: Record<'container' | 'sector' | 'system' | 'planet' | 'city', { uid: string | null; name: string | null; type: string | null } | null>;

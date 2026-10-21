@@ -40,7 +40,7 @@ privately and submitted in the code exchange. Do not silently downgrade if autho
 
 ## First live proof
 
-1. Run `npm run auth:start`. Open the printed URL manually and review the seven read-only scopes.
+1. Run `npm run auth:start`. Open the printed URL manually and review the eight read-only scopes.
 2. Authorize in your own browser. SWC credentials belong only on SWC's login page.
 3. Within ten minutes run `npm run auth:finish` in an interactive terminal. Paste the displayed code at
    the hidden prompt, then returned state (or blank in confirmed code-only mode). No code is stored.
@@ -88,3 +88,33 @@ exits nonzero if either collection fails. A successful response may be limited b
 Faction station collection adds `faction_inv_stations_read`. After re-consent, run
 `npm run sync:faction-stations` to try both factions independently, or append `:tff` / `:tjo` to that
 script name. This exports station inventory and available locations, not full production-queue detail.
+
+## Faction-owned facilities
+
+Facility collection requests `faction_inv_facilities_read`. Run `npm run auth:start`, approve
+in SWC, then `npm run auth:finish` in the same terminal. Keep codes and credentials local.
+Run `npm run sync:faction-facilities` for both TFF and TJO, or
+`npm run sync:faction-facilities:tjo` / `npm run sync:faction-facilities:tff` for one faction.
+This reads owner-assigned facilities in pages of 200 and saves raw and normalized snapshots.
+The completion summary reports ownedFacilities. Existing grants need expanded consent;
+offline tests do not establish live facility access.
+
+## Operational detail enrichment plan
+
+Use the documented GET /inventory/stations/{uid} and /inventory/facilities/{uid} detail
+endpoints, not write/action endpoints. Documentation:
+https://www.swcombine.com/ws/v2.0/documentation/inventory/entity_type/uid/
+
+1. Sample known producing, idle, constructing and tooled stations from the web CSV.
+2. Inspect raw detail actions, queueitems and cargo. The installed SDK describes action
+   status, delay.total/remaining, workers, producing entities and quantity, plus total/remaining
+   cargo capacities. These are candidates until verified against our live entities.
+3. Validate current tooling separately from RetoolingAction (a change in progress).
+   Preserve unknown/missing values; do not equate a missing field with idle or zero.
+4. Compare by UID with the web CSV, accounting for elapsed time. Verify timer units and
+   distinguish active workers from queue staffing and total capacity from remaining capacity.
+5. Once validated, add bounded, resumable detail enrichment with observation timestamps,
+   rate-limit handling and explicit per-entity failures. Do not mark partial detail collection
+   complete or silently overwrite earlier known fields with missing values.
+
+The facility list feature does not yet fetch these individual details.
