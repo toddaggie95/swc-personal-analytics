@@ -3,7 +3,8 @@
 Personal, read-only analytics foundation for Star Wars Combine Web Services.
 Initial proof: **OAuth → authenticated character → owned station inventory → preserved raw responses**.
 
-Implemented and tested offline. **Live proof is pending SWC application activation and a regenerated client secret.**
+Implemented with offline regression tests and a successful live OAuth/character/station collection check.
+New installations still require SWC application activation and a regenerated client secret.
 The original exposed secret must never be used. This project does not scrape game pages, bypass Anubis,
 automate Darkness, accept a game password, or expose an arbitrary API proxy.
 

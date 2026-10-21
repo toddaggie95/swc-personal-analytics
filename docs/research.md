@@ -1,5 +1,21 @@
 # Source review and confidence
 
+## Live compatibility follow-up (2026-10-21 UTC)
+
+Installed/OOB authorization displayed a bare code, so the local configuration uses the documented
+code-only mode. Authorization returned a refresh token, and authenticated character and owner-assigned
+station collection completed with raw snapshots stored outside the repository. No credentials or live
+response contents are committed. Refresh-token issuance does not by itself prove a later refresh grant.
+
+Live inventory responses can omit `entities.attributes.count`. Pagination now uses the returned array
+length when count is absent, matching the reviewed SDK behavior, while still validating total, start,
+explicit counts and duplicate UIDs. Regression tests cover empty and multiple pages without count.
+
+CLI diagnostics now distinguish missing/inaccessible session files and token-save failures using fixed
+messages, without printing underlying exception messages, request details, credentials or private paths.
+
+The sections below record the original pre-activation research; their pending items describe that time.
+
 Reviewed 2026-09-25 UTC (2026-09-24 America/Chicago). npm reported `swcombine-sdk` **3.5.0**;
 that version is pinned and locked. Upstream main at review was
 `0969ed9f850dedb4861b49d3dba3ceee04903dae`.

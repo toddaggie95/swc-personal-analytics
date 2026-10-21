@@ -1,13 +1,14 @@
 # Installed/OOB authorization runbook
 
-## Current blockers
+## Initial setup prerequisites
 
-1. SWC Personal Analytics is Pending Activation by an ASIM.
+1. SWC Personal Analytics must be activated by an ASIM (the original application is now Active).
 2. SWC must regenerate/reset the original exposed app secret. Do not reuse it or send it to ChatGPT.
 3. Confirm the Installed application's actual OOB result format and PKCE support with SWC documentation/support.
    Official documentation access during implementation returned Anubis; no bypass was attempted.
 
-No live authorization, token exchange or private API access has been attempted during implementation.
+Follow-up: the original application completed live code-only OOB authorization and an authenticated
+character/station collection. See research.md. Keep the safeguards below for new installations.
 
 ## Configure after activation
 

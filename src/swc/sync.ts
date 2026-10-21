@@ -19,8 +19,10 @@ export async function syncStations(client: Pick<ReadClient, 'me' | 'stations'>, 
       if ((typeof value !== 'number' && typeof value !== 'string') || String(value).trim() === '') return NaN;
       return Number(value);
     };
-    const total = integer(attrs.total), pageStart = integer(attrs.start), count = integer(attrs.count);
     const rows = entities.entity;
+    // SWC may omit count; the SDK also derives it from the returned array.
+    const total = integer(attrs.total), pageStart = integer(attrs.start);
+    const count = attrs.count == null && Array.isArray(rows) ? rows.length : integer(attrs.count);
     if (![total, pageStart, count].every(Number.isSafeInteger) || total < 0 || pageStart !== start || count < 0 || count > 200
       || !Array.isArray(rows) || count !== rows.length || (expectedTotal !== undefined && expectedTotal !== total)) {
       throw new SafeError('Inventory pagination metadata is inconsistent; partial snapshot retained.');

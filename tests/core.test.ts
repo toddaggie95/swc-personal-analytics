@@ -11,6 +11,19 @@ import { SnapshotRun } from '../src/storage/snapshots.js';
 import { ReadClient, retryDelay } from '../src/swc/read-client.js';
 import { syncStations } from '../src/swc/sync.js';
 import { normalizeStation } from '../src/models/station.js';
+import { safeFailure } from '../src/config/errors.js';
+
+test('diagnostics identify filesystem failures without revealing error messages or secrets', () => {
+  const error = Object.assign(new Error('synthetic-sensitive-value'), { code: 'ENOENT', path: 'synthetic-private-path' });
+  const message = safeFailure(error, 'reading the pending authorization session');
+  assert.match(message, /required local file is missing/);
+  assert.ok(!message.includes('synthetic'));
+  assert.ok(!safeFailure(new Error('synthetic-sensitive-value'), 'input').includes('synthetic'));
+});
+test('missing OAuth session gives actionable diagnostics before exchange', async () => fixture(async root => {
+  const config = { ...loadConfig({}), privateDir: root, clientId: 'fixture', clientSecret: 'fixture' };
+  await assert.rejects(finishAuth(config, 'synthetic-code', ''), /reading the pending authorization session.*file is missing/);
+}));
 
 const auth = { accessToken: async () => 'synthetic-token', refresh: async () => {} };
 const envelope = (value: unknown) => JSON.stringify({ swcapi: { result: value } });
@@ -97,6 +110,19 @@ test('empty inventory succeeds; incomplete, repeated and changing pages fail', a
     await assert.rejects(syncStations({ me: async () => ({ uid: '1:1' }), stations: async () => pages[index++]! }, failedRun, root));
     await assert.rejects(readFile(join(failedRun.directory, 'complete.json')));
   }
+}));
+test('SWC pages without optional count handle empty and multipage inventories', async () => fixture(async root => {
+  const withoutCount = (total: number, start: number, ids: number[]) => {
+    const p = page(total, start, ids);
+    return { entities: { attributes: { total: p.entities.attributes.total, start: p.entities.attributes.start }, entity: p.entities.entity } };
+  };
+  const empty = await syncStations({ me: async () => ({ uid: '1:1' }), stations: async () => withoutCount(0, 1, []) }, new SnapshotRun(root), root);
+  assert.equal(empty.ownedStations, 0);
+  const starts: number[] = [];
+  const result = await syncStations({ me: async () => ({ uid: '1:1' }), stations: async (_uid, start) => {
+    starts.push(start); return start === 1 ? withoutCount(3, 1, [1, 2]) : withoutCount(3, 3, [3]);
+  } }, new SnapshotRun(root), root);
+  assert.equal(result.ownedStations, 3); assert.deepEqual(starts, [1, 3]);
 }));
 test('429 Retry-After then success, and bounded 401 refresh', async () => fixture(async root => {
   let calls = 0, refreshed = 0; const delays: number[] = [];

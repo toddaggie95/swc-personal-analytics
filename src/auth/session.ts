@@ -4,6 +4,7 @@ import { rm } from 'node:fs/promises';
 import { SWCombine, AccessType, createPkcePair, type OAuthToken } from 'swcombine-sdk';
 import { type Config, REDIRECT_URI, SCOPES, SafeError } from '../config/index.js';
 import { atomicWrite, readJson } from '../storage/files.js';
+import { safeFailure } from '../config/errors.js';
 
 interface Pending { state: string; createdAt: number; clientId: string; verifier?: string; oobMode: Config['oobMode'] }
 export function makeClient(config: Config): SWCombine {
@@ -35,15 +36,20 @@ export function verifyOob(pending: Pending, code: string, state: string, now = D
 }
 export async function finishAuth(config: Config, code: string, state: string, client = makeClient(config)): Promise<boolean> {
   const path = join(config.privateDir, 'pending.json');
-  const pending = await readJson(path) as Pending;
+  let pending: Pending;
+  try { pending = await readJson(path) as Pending; }
+  catch (error) { throw new SafeError(safeFailure(error, 'reading the pending authorization session')); }
+  if (!pending || typeof pending !== 'object') throw new SafeError('Invalid pending session; start again.');
   if (pending.clientId !== config.clientId || typeof pending.state !== 'string' || !Number.isFinite(pending.createdAt)
     || !['state-required', 'code-only'].includes(pending.oobMode)) throw new SafeError('Invalid pending session; start again.');
   verifyOob(pending, code, state);
   // Consume before exchange; failed/uncertain exchanges require a fresh authorization.
-  await rm(path);
+  try { await rm(path); }
+  catch (error) { throw new SafeError(safeFailure(error, 'consuming the pending authorization session')); }
   const result = await client.auth.handleCallback({ code, ...(state ? { state } : {}) }, pending.verifier);
   if (!result.success || !validToken(result.token)) throw new SafeError('OAuth exchange failed. Check activation, regenerated secret and OOB compatibility; start again.');
-  await atomicWrite(join(config.privateDir, 'tokens.json'), JSON.stringify(result.token));
+  try { await atomicWrite(join(config.privateDir, 'tokens.json'), JSON.stringify(result.token)); }
+  catch (error) { throw new SafeError(safeFailure(error, 'saving OAuth tokens locally')); }
   return Boolean(result.token.refreshToken);
 }
 export interface AuthProvider { accessToken(): Promise<string>; refresh(): Promise<void> }

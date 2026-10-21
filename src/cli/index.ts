@@ -6,8 +6,10 @@ import { SnapshotRun } from '../storage/snapshots.js';
 import { ReadClient } from '../swc/read-client.js';
 import { syncStations } from '../swc/sync.js';
 import { secretInput } from './secret-input.js';
+import { safeFailure } from '../config/errors.js';
 
 dotenv({ quiet: true });
+let stage = 'configuration';
 async function main(): Promise<void> {
   const command = process.argv[2] || 'help';
   if (process.argv.length > 3) throw new SafeError('Extra arguments refused. Never pass authorization codes or tokens on the command line.');
@@ -25,8 +27,11 @@ async function main(): Promise<void> {
       console.log('Open this authorization URL yourself. It expires locally in 10 minutes.');
       console.log(await beginAuth(config));
     } else if (command === 'auth:finish') {
+      stage = 'authorization code input';
       const code = await secretInput('SWC OOB authorization code (hidden): ');
+      stage = 'returned state input';
       const state = await secretInput('State returned by SWC (hidden; blank only in verified code-only mode): ');
+      stage = 'authorization session completion';
       const offline = await finishAuth(config, code, state);
       console.log(offline ? 'Authorization saved locally; refresh token available.' : 'Authorization saved; no refresh token returned. Offline access is not yet proven.');
     } else {
@@ -37,6 +42,6 @@ async function main(): Promise<void> {
   });
 }
 main().catch((error: unknown) => {
-  console.error(error instanceof SafeError ? error.message : 'Operation failed. Check local configuration, storage permissions, or SWC connectivity. Sensitive error details suppressed.');
+  console.error(safeFailure(error, stage));
   process.exitCode = 1;
 });
