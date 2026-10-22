@@ -22,7 +22,7 @@ export function run(argv) {
   [...load('tff-stations'),...load('tjo-stations')],destinations);
  let changes=[];
  if(report.errors.length===0){
-  try {changes=planHasChanges(report,JSON.parse(fs.readFileSync(o.baseline,'utf8')))}
+  try {const raw=JSON.parse(fs.readFileSync(o.baseline,'utf8'));changes=planHasChanges(report,raw.baseline||raw)}
   catch(e){report.errors.push({code:'baseline-validation',message:e.message})}
  }
  const output={...report,changes,writeEnabled:false,source:'audited dry run'};
