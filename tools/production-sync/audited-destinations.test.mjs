@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {reconcileDestinations,planHasChanges} from './audited-destinations.mjs';
-const station=(uid,x)=>({uid,system:'Kashyyyk',sector:'Mytaranor',sysX:String(x),sysY:'10'});
+const station=(uid,x)=>({uid,system:'Kashyyyk',sector:'Mytaranor',sysX:String(x),sysY:'10',type_name:'Shipyard IV'});
 const pile=(uid,stationUid,quantity=7)=>({uid,type_name:'meleenium',quantity:String(quantity),system:'Kashyyyk',sector:'Mytaranor',container_type_name:'Stations',container_uid:stationUid});
 const hub={id:'hub',kind:'hub',system:'Kashyyyk',sector:'Mytaranor',memberStationUids:['5:1','5:2'],target:{sheet:'Kashyyyk',hasColumn:2,materialStartRow:13}};
 const one={id:'solo',kind:'oneoff',system:'Kashyyyk',sector:'Mytaranor',stationUid:'5:3',target:{sheet:'Kashyyyk',hasColumn:2,materialStartRow:134}};
