@@ -1,0 +1,7569 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "spreadsheetId": "1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8",
+    "description": "Explicit order coordinates read from audited 20 system tabs; not inventory ownership proof"
+  },
+  "orders": [
+    {
+      "destinationId": "Kashyyyk-hub-1-0",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 3,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-0",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 3,
+      "ship": "TIE/sr Starfighter",
+      "row": 4
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-0",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 3,
+      "ship": "TIE/sa Bomber",
+      "row": 5
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-0",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 4,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-0",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 4,
+      "ship": "TIE/sa Bomber",
+      "row": 8
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-0",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-0",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-0",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 5,
+      "ship": "Behemoth-class Star Dreadnaught",
+      "row": 11
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-1",
+      "system": "Kashyyyk",
+      "x": 17,
+      "y": 3,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-1",
+      "system": "Kashyyyk",
+      "x": 18,
+      "y": 3,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-1",
+      "system": "Kashyyyk",
+      "x": 19,
+      "y": 3,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-1",
+      "system": "Kashyyyk",
+      "x": 17,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-1",
+      "system": "Kashyyyk",
+      "x": 19,
+      "y": 4,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-1",
+      "system": "Kashyyyk",
+      "x": 17,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-1",
+      "system": "Kashyyyk",
+      "x": 18,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-1",
+      "system": "Kashyyyk",
+      "x": 19,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-2",
+      "system": "Kashyyyk",
+      "x": 12,
+      "y": 9,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 4
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-2",
+      "system": "Kashyyyk",
+      "x": 13,
+      "y": 9,
+      "ship": "TIE/sa Bomber",
+      "row": 5
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-2",
+      "system": "Kashyyyk",
+      "x": 11,
+      "y": 10,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 6
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-2",
+      "system": "Kashyyyk",
+      "x": 13,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-2",
+      "system": "Kashyyyk",
+      "x": 11,
+      "y": 11,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 9
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-2",
+      "system": "Kashyyyk",
+      "x": 12,
+      "y": 11,
+      "ship": "TIE/sa Bomber",
+      "row": 10
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-2",
+      "system": "Kashyyyk",
+      "x": 13,
+      "y": 11,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 11
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-3",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-3",
+      "system": "Kashyyyk",
+      "x": 5,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-3",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-3",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-3",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-3",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-3",
+      "system": "Kashyyyk",
+      "x": 5,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-3",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-4",
+      "system": "Kashyyyk",
+      "x": 7,
+      "y": 10,
+      "ship": "TIE/sa Bomber",
+      "row": 3
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-4",
+      "system": "Kashyyyk",
+      "x": 8,
+      "y": 10,
+      "ship": "TIE/sa Bomber",
+      "row": 4
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-4",
+      "system": "Kashyyyk",
+      "x": 9,
+      "y": 10,
+      "ship": "TIE/sa Bomber",
+      "row": 5
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-4",
+      "system": "Kashyyyk",
+      "x": 9,
+      "y": 11,
+      "ship": "TIE/sa Bomber",
+      "row": 8
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-4",
+      "system": "Kashyyyk",
+      "x": 7,
+      "y": 12,
+      "ship": "TIE/sa Bomber",
+      "row": 9
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-4",
+      "system": "Kashyyyk",
+      "x": 8,
+      "y": 12,
+      "ship": "TIE/sa Bomber",
+      "row": 10
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-4",
+      "system": "Kashyyyk",
+      "x": 9,
+      "y": 12,
+      "ship": "TIE/sa Bomber",
+      "row": 11
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-5",
+      "system": "Kashyyyk",
+      "x": 11,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-5",
+      "system": "Kashyyyk",
+      "x": 12,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-5",
+      "system": "Kashyyyk",
+      "x": 13,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-5",
+      "system": "Kashyyyk",
+      "x": 11,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-5",
+      "system": "Kashyyyk",
+      "x": 13,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-5",
+      "system": "Kashyyyk",
+      "x": 11,
+      "y": 14,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-5",
+      "system": "Kashyyyk",
+      "x": 12,
+      "y": 14,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-5",
+      "system": "Kashyyyk",
+      "x": 13,
+      "y": 14,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-6",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-6",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-6",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-6",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-6",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-6",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 14,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-6",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 14,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-6",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 14,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-7",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-7",
+      "system": "Kashyyyk",
+      "x": 5,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-7",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-7",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-7",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-7",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 15,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-7",
+      "system": "Kashyyyk",
+      "x": 5,
+      "y": 15,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Kashyyyk-hub-1-7",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 15,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-0",
+      "system": "Kashyyyk",
+      "x": 7,
+      "y": 13,
+      "ship": "TIE/sa Bomber",
+      "row": 37
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-0",
+      "system": "Kashyyyk",
+      "x": 8,
+      "y": 13,
+      "ship": "TIE/sa Bomber",
+      "row": 38
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-0",
+      "system": "Kashyyyk",
+      "x": 9,
+      "y": 13,
+      "ship": "TIE/sa Bomber",
+      "row": 39
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-0",
+      "system": "Kashyyyk",
+      "x": 7,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 40
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-0",
+      "system": "Kashyyyk",
+      "x": 7,
+      "y": 15,
+      "ship": "TIE/sa Bomber",
+      "row": 43
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-0",
+      "system": "Kashyyyk",
+      "x": 8,
+      "y": 15,
+      "ship": "TIE/sa Bomber",
+      "row": 44
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-0",
+      "system": "Kashyyyk",
+      "x": 9,
+      "y": 15,
+      "ship": "TIE/sa Bomber",
+      "row": 45
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-1",
+      "system": "Kashyyyk",
+      "x": 17,
+      "y": 13,
+      "ship": "TIE/sa Bomber",
+      "row": 37
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-1",
+      "system": "Kashyyyk",
+      "x": 18,
+      "y": 13,
+      "ship": "TIE/sa Bomber",
+      "row": 38
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-1",
+      "system": "Kashyyyk",
+      "x": 19,
+      "y": 13,
+      "ship": "TIE/sa Bomber",
+      "row": 39
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-1",
+      "system": "Kashyyyk",
+      "x": 17,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 40
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-1",
+      "system": "Kashyyyk",
+      "x": 19,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 42
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-1",
+      "system": "Kashyyyk",
+      "x": 17,
+      "y": 15,
+      "ship": "TIE/sa Bomber",
+      "row": 43
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-1",
+      "system": "Kashyyyk",
+      "x": 18,
+      "y": 15,
+      "ship": "TIE/sa Bomber",
+      "row": 44
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-1",
+      "system": "Kashyyyk",
+      "x": 19,
+      "y": 15,
+      "ship": "TIE/sa Bomber",
+      "row": 45
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-2",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 16,
+      "ship": "TIE/in Interceptor",
+      "row": 37
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-2",
+      "system": "Kashyyyk",
+      "x": 5,
+      "y": 16,
+      "ship": "TIE/in Interceptor",
+      "row": 38
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-2",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 16,
+      "ship": "TIE/in Interceptor",
+      "row": 39
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-2",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 40
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-2",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 42
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-2",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 18,
+      "ship": "TIE/in Interceptor",
+      "row": 43
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-2",
+      "system": "Kashyyyk",
+      "x": 5,
+      "y": 18,
+      "ship": "TIE/in Interceptor",
+      "row": 44
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-2",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 18,
+      "ship": "TIE/in Interceptor",
+      "row": 45
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-3",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 16,
+      "ship": "TIE/sa Bomber",
+      "row": 37
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-3",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 16,
+      "ship": "TIE/sa Bomber",
+      "row": 38
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-3",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 16,
+      "ship": "TIE/sa Bomber",
+      "row": 39
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-3",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 17,
+      "ship": "TIE/sa Bomber",
+      "row": 40
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-3",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 17,
+      "ship": "TIE/sa Bomber",
+      "row": 42
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-3",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 18,
+      "ship": "TIE/sa Bomber",
+      "row": 43
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-3",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 18,
+      "ship": "TIE/sa Bomber",
+      "row": 44
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-3",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 18,
+      "ship": "TIE/sa Bomber",
+      "row": 45
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-4",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 37
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-4",
+      "system": "Kashyyyk",
+      "x": 5,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 38
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-4",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 39
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-4",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 40
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-4",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 42
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-4",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 43
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-4",
+      "system": "Kashyyyk",
+      "x": 5,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 44
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-4",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 45
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-5",
+      "system": "Kashyyyk",
+      "x": 0,
+      "y": 12,
+      "ship": "TIE/sa Bomber",
+      "row": 37
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-5",
+      "system": "Kashyyyk",
+      "x": 1,
+      "y": 12,
+      "ship": "TIE/sa Bomber",
+      "row": 38
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-5",
+      "system": "Kashyyyk",
+      "x": 2,
+      "y": 12,
+      "ship": "TIE/sa Bomber",
+      "row": 39
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-5",
+      "system": "Kashyyyk",
+      "x": 0,
+      "y": 13,
+      "ship": "TIE/sa Bomber",
+      "row": 40
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-5",
+      "system": "Kashyyyk",
+      "x": 2,
+      "y": 13,
+      "ship": "TIE/sa Bomber",
+      "row": 42
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-5",
+      "system": "Kashyyyk",
+      "x": 0,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 43
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-5",
+      "system": "Kashyyyk",
+      "x": 1,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 44
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-5",
+      "system": "Kashyyyk",
+      "x": 2,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 45
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-6",
+      "system": "Kashyyyk",
+      "x": 0,
+      "y": 5,
+      "ship": "TIE/sa Bomber",
+      "row": 37
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-6",
+      "system": "Kashyyyk",
+      "x": 1,
+      "y": 5,
+      "ship": "TIE/sa Bomber",
+      "row": 38
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-6",
+      "system": "Kashyyyk",
+      "x": 2,
+      "y": 5,
+      "ship": "TIE/sa Bomber",
+      "row": 39
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-6",
+      "system": "Kashyyyk",
+      "x": 0,
+      "y": 6,
+      "ship": "TIE/sa Bomber",
+      "row": 40
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-6",
+      "system": "Kashyyyk",
+      "x": 2,
+      "y": 6,
+      "ship": "TIE/sa Bomber",
+      "row": 42
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-6",
+      "system": "Kashyyyk",
+      "x": 0,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 43
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-6",
+      "system": "Kashyyyk",
+      "x": 1,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 44
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-6",
+      "system": "Kashyyyk",
+      "x": 2,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 45
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-7",
+      "system": "Kashyyyk",
+      "x": 3,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 37
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-7",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 38
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-7",
+      "system": "Kashyyyk",
+      "x": 5,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 39
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-7",
+      "system": "Kashyyyk",
+      "x": 3,
+      "y": 1,
+      "ship": "TIE/sa Bomber",
+      "row": 40
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-7",
+      "system": "Kashyyyk",
+      "x": 5,
+      "y": 1,
+      "ship": "TIE/sa Bomber",
+      "row": 42
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-7",
+      "system": "Kashyyyk",
+      "x": 3,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 43
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-7",
+      "system": "Kashyyyk",
+      "x": 4,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 44
+    },
+    {
+      "destinationId": "Kashyyyk-hub-35-7",
+      "system": "Kashyyyk",
+      "x": 5,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 45
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-0",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 71
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-0",
+      "system": "Kashyyyk",
+      "x": 7,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 72
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-0",
+      "system": "Kashyyyk",
+      "x": 8,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 73
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-0",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 1,
+      "ship": "TIE/sa Bomber",
+      "row": 74
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-0",
+      "system": "Kashyyyk",
+      "x": 8,
+      "y": 1,
+      "ship": "TIE/sa Bomber",
+      "row": 76
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-0",
+      "system": "Kashyyyk",
+      "x": 6,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 77
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-0",
+      "system": "Kashyyyk",
+      "x": 7,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 78
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-0",
+      "system": "Kashyyyk",
+      "x": 8,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 79
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-1",
+      "system": "Kashyyyk",
+      "x": 11,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 71
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-1",
+      "system": "Kashyyyk",
+      "x": 12,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 72
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-1",
+      "system": "Kashyyyk",
+      "x": 13,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 73
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-1",
+      "system": "Kashyyyk",
+      "x": 11,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 74
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-1",
+      "system": "Kashyyyk",
+      "x": 13,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 76
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-1",
+      "system": "Kashyyyk",
+      "x": 11,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 77
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-1",
+      "system": "Kashyyyk",
+      "x": 12,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 78
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-1",
+      "system": "Kashyyyk",
+      "x": 13,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 79
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-2",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 71
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-2",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 72
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-2",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 73
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-2",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 1,
+      "ship": "TIE/sa Bomber",
+      "row": 74
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-2",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 1,
+      "ship": "TIE/sa Bomber",
+      "row": 76
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-2",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 77
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-2",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 78
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-2",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 79
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-3",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 71
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-3",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 72
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-3",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 73
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-3",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 74
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-3",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 76
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-3",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 77
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-3",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 78
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-3",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 79
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-4",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 71
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-4",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 72
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-4",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 73
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-4",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 74
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-4",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 76
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-4",
+      "system": "Kashyyyk",
+      "x": 14,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 77
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-4",
+      "system": "Kashyyyk",
+      "x": 15,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 78
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-4",
+      "system": "Kashyyyk",
+      "x": 16,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 79
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-5",
+      "system": "Kashyyyk",
+      "x": 17,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 71
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-5",
+      "system": "Kashyyyk",
+      "x": 18,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 72
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-5",
+      "system": "Kashyyyk",
+      "x": 19,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 73
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-5",
+      "system": "Kashyyyk",
+      "x": 17,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 74
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-5",
+      "system": "Kashyyyk",
+      "x": 19,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 76
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-5",
+      "system": "Kashyyyk",
+      "x": 17,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 77
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-5",
+      "system": "Kashyyyk",
+      "x": 18,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 78
+    },
+    {
+      "destinationId": "Kashyyyk-hub-69-5",
+      "system": "Kashyyyk",
+      "x": 19,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 79
+    },
+    {
+      "destinationId": "Eberon-hub-1-0",
+      "system": "Eberon",
+      "x": 4,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Eberon-hub-1-0",
+      "system": "Eberon",
+      "x": 5,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Eberon-hub-1-0",
+      "system": "Eberon",
+      "x": 6,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Eberon-hub-1-0",
+      "system": "Eberon",
+      "x": 4,
+      "y": 10,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 6
+    },
+    {
+      "destinationId": "Eberon-hub-1-0",
+      "system": "Eberon",
+      "x": 6,
+      "y": 10,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 8
+    },
+    {
+      "destinationId": "Eberon-hub-1-0",
+      "system": "Eberon",
+      "x": 4,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Eberon-hub-1-0",
+      "system": "Eberon",
+      "x": 5,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Eberon-hub-1-0",
+      "system": "Eberon",
+      "x": 6,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Dalchon-hub-1-0",
+      "system": "Dalchon",
+      "x": 5,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Dalchon-hub-1-0",
+      "system": "Dalchon",
+      "x": 6,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Dalchon-hub-1-0",
+      "system": "Dalchon",
+      "x": 7,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Dalchon-hub-1-0",
+      "system": "Dalchon",
+      "x": 5,
+      "y": 10,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 6
+    },
+    {
+      "destinationId": "Dalchon-hub-1-0",
+      "system": "Dalchon",
+      "x": 6,
+      "y": 10,
+      "ship": "Behemoth-class Star Dreadnaught",
+      "row": 7
+    },
+    {
+      "destinationId": "Dalchon-hub-1-0",
+      "system": "Dalchon",
+      "x": 7,
+      "y": 10,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 8
+    },
+    {
+      "destinationId": "Dalchon-hub-1-0",
+      "system": "Dalchon",
+      "x": 5,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Dalchon-hub-1-0",
+      "system": "Dalchon",
+      "x": 6,
+      "y": 11,
+      "ship": "KRS-1 Ore Hauler",
+      "row": 10
+    },
+    {
+      "destinationId": "Dalchon-hub-1-0",
+      "system": "Dalchon",
+      "x": 7,
+      "y": 11,
+      "ship": "KRS-1 Ore Hauler",
+      "row": 11
+    },
+    {
+      "destinationId": "Dalchon-hub-1-1",
+      "system": "Dalchon",
+      "x": 5,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Dalchon-hub-1-1",
+      "system": "Dalchon",
+      "x": 6,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Dalchon-hub-1-1",
+      "system": "Dalchon",
+      "x": 7,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Dalchon-hub-1-1",
+      "system": "Dalchon",
+      "x": 5,
+      "y": 7,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 6
+    },
+    {
+      "destinationId": "Dalchon-hub-1-1",
+      "system": "Dalchon",
+      "x": 6,
+      "y": 7,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 7
+    },
+    {
+      "destinationId": "Dalchon-hub-1-1",
+      "system": "Dalchon",
+      "x": 7,
+      "y": 7,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 8
+    },
+    {
+      "destinationId": "Dalchon-hub-1-1",
+      "system": "Dalchon",
+      "x": 5,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Dalchon-hub-1-1",
+      "system": "Dalchon",
+      "x": 6,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Dalchon-hub-1-1",
+      "system": "Dalchon",
+      "x": 7,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Dalchon-hub-1-2",
+      "system": "Dalchon",
+      "x": 2,
+      "y": 11,
+      "ship": "I-BEAM Starfighter",
+      "row": 3
+    },
+    {
+      "destinationId": "Dalchon-hub-1-2",
+      "system": "Dalchon",
+      "x": 3,
+      "y": 11,
+      "ship": "I-BEAM Starfighter",
+      "row": 4
+    },
+    {
+      "destinationId": "Dalchon-hub-1-2",
+      "system": "Dalchon",
+      "x": 4,
+      "y": 11,
+      "ship": "I-BEAM Starfighter",
+      "row": 5
+    },
+    {
+      "destinationId": "Dalchon-hub-1-2",
+      "system": "Dalchon",
+      "x": 2,
+      "y": 12,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 6
+    },
+    {
+      "destinationId": "Dalchon-hub-1-2",
+      "system": "Dalchon",
+      "x": 4,
+      "y": 12,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 8
+    },
+    {
+      "destinationId": "Dalchon-hub-1-2",
+      "system": "Dalchon",
+      "x": 2,
+      "y": 13,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 9
+    },
+    {
+      "destinationId": "Dalchon-hub-1-2",
+      "system": "Dalchon",
+      "x": 3,
+      "y": 13,
+      "ship": "I-BEAM Starfighter",
+      "row": 10
+    },
+    {
+      "destinationId": "Dalchon-hub-1-2",
+      "system": "Dalchon",
+      "x": 4,
+      "y": 13,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 11
+    },
+    {
+      "destinationId": "Dalchon-hub-1-3",
+      "system": "Dalchon",
+      "x": 2,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Dalchon-hub-1-3",
+      "system": "Dalchon",
+      "x": 3,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Dalchon-hub-1-3",
+      "system": "Dalchon",
+      "x": 4,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Dalchon-hub-1-3",
+      "system": "Dalchon",
+      "x": 2,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Dalchon-hub-1-3",
+      "system": "Dalchon",
+      "x": 4,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Dalchon-hub-1-3",
+      "system": "Dalchon",
+      "x": 2,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Dalchon-hub-1-3",
+      "system": "Dalchon",
+      "x": 3,
+      "y": 8,
+      "ship": "TIE/sa Bomber",
+      "row": 10
+    },
+    {
+      "destinationId": "Dalchon-hub-1-3",
+      "system": "Dalchon",
+      "x": 4,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Randon-hub-1-0",
+      "system": "Randon",
+      "x": 12,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Randon-hub-1-0",
+      "system": "Randon",
+      "x": 13,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Randon-hub-1-0",
+      "system": "Randon",
+      "x": 14,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Randon-hub-1-0",
+      "system": "Randon",
+      "x": 12,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Randon-hub-1-0",
+      "system": "Randon",
+      "x": 14,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Randon-hub-1-0",
+      "system": "Randon",
+      "x": 12,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Randon-hub-1-0",
+      "system": "Randon",
+      "x": 13,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Randon-hub-1-0",
+      "system": "Randon",
+      "x": 14,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Oshora-hub-1-0",
+      "system": "Oshora",
+      "x": 7,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Oshora-hub-1-0",
+      "system": "Oshora",
+      "x": 9,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Oshora-hub-1-0",
+      "system": "Oshora",
+      "x": 9,
+      "y": 18,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Oshora-hub-1-0",
+      "system": "Oshora",
+      "x": 7,
+      "y": 19,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Oshora-hub-1-0",
+      "system": "Oshora",
+      "x": 8,
+      "y": 19,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Oshora-hub-1-0",
+      "system": "Oshora",
+      "x": 9,
+      "y": 19,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Clantaano-hub-1-0",
+      "system": "Clantaano",
+      "x": 6,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Clantaano-hub-1-0",
+      "system": "Clantaano",
+      "x": 7,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Clantaano-hub-1-0",
+      "system": "Clantaano",
+      "x": 8,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Clantaano-hub-1-0",
+      "system": "Clantaano",
+      "x": 7,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Clantaano-hub-1-0",
+      "system": "Clantaano",
+      "x": 8,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Clantaano-hub-1-0",
+      "system": "Clantaano",
+      "x": 6,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Clantaano-hub-1-0",
+      "system": "Clantaano",
+      "x": 7,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Clantaano-hub-1-0",
+      "system": "Clantaano",
+      "x": 8,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Clantaano-hub-1-1",
+      "system": "Clantaano",
+      "x": 9,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Clantaano-hub-1-1",
+      "system": "Clantaano",
+      "x": 10,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Clantaano-hub-1-1",
+      "system": "Clantaano",
+      "x": 11,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Clantaano-hub-1-1",
+      "system": "Clantaano",
+      "x": 9,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Tholatin-hub-1-0",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Tholatin-hub-1-0",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Tholatin-hub-1-0",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Tholatin-hub-1-0",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Tholatin-hub-1-0",
+      "system": "Tholatin",
+      "x": 10,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 7
+    },
+    {
+      "destinationId": "Tholatin-hub-1-0",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Tholatin-hub-1-0",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Tholatin-hub-1-0",
+      "system": "Tholatin",
+      "x": 10,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Tholatin-hub-1-0",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Tholatin-hub-1-1",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Tholatin-hub-1-1",
+      "system": "Tholatin",
+      "x": 10,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Tholatin-hub-1-2",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Tholatin-hub-1-2",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Tholatin-hub-1-2",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Tholatin-hub-1-2",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Tholatin-hub-1-2",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Tholatin-hub-1-2",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Tholatin-hub-1-2",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Tholatin-hub-1-2",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Tholatin-hub-1-2",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Tholatin-hub-1-3",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 15,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Tholatin-hub-1-3",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 15,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Tholatin-hub-1-3",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 15,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Tholatin-hub-1-3",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 16,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Tholatin-hub-1-3",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 16,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Tholatin-hub-1-3",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 16,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Tholatin-hub-1-3",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Tholatin-hub-1-3",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Tholatin-hub-1-3",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Tholatin-hub-1-4",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Tholatin-hub-1-4",
+      "system": "Tholatin",
+      "x": 15,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Tholatin-hub-1-4",
+      "system": "Tholatin",
+      "x": 16,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Tholatin-hub-1-4",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Tholatin-hub-1-4",
+      "system": "Tholatin",
+      "x": 15,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 7
+    },
+    {
+      "destinationId": "Tholatin-hub-1-4",
+      "system": "Tholatin",
+      "x": 16,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Tholatin-hub-1-4",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Tholatin-hub-1-4",
+      "system": "Tholatin",
+      "x": 15,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Tholatin-hub-1-4",
+      "system": "Tholatin",
+      "x": 16,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Tholatin-hub-1-5",
+      "system": "Tholatin",
+      "x": 13,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Tholatin-hub-1-5",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Tholatin-hub-1-5",
+      "system": "Tholatin",
+      "x": 15,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Tholatin-hub-1-5",
+      "system": "Tholatin",
+      "x": 13,
+      "y": 18,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Tholatin-hub-1-5",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 18,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Tholatin-hub-1-5",
+      "system": "Tholatin",
+      "x": 15,
+      "y": 18,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Tholatin-hub-1-5",
+      "system": "Tholatin",
+      "x": 13,
+      "y": 19,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Tholatin-hub-1-5",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 19,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Tholatin-hub-1-5",
+      "system": "Tholatin",
+      "x": 15,
+      "y": 19,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Tholatin-hub-1-6",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 15,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Tholatin-hub-1-6",
+      "system": "Tholatin",
+      "x": 10,
+      "y": 15,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Tholatin-hub-1-6",
+      "system": "Tholatin",
+      "x": 11,
+      "y": 15,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Tholatin-hub-1-6",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 16,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Tholatin-hub-1-6",
+      "system": "Tholatin",
+      "x": 10,
+      "y": 16,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 7
+    },
+    {
+      "destinationId": "Tholatin-hub-1-6",
+      "system": "Tholatin",
+      "x": 11,
+      "y": 16,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Tholatin-hub-1-6",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 17,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Tholatin-hub-1-6",
+      "system": "Tholatin",
+      "x": 10,
+      "y": 17,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Tholatin-hub-1-6",
+      "system": "Tholatin",
+      "x": 11,
+      "y": 17,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Tholatin-hub-1-7",
+      "system": "Tholatin",
+      "x": 12,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Tholatin-hub-1-7",
+      "system": "Tholatin",
+      "x": 13,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Tholatin-hub-1-7",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Tholatin-hub-1-7",
+      "system": "Tholatin",
+      "x": 12,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Tholatin-hub-1-7",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 7
+    },
+    {
+      "destinationId": "Tholatin-hub-1-7",
+      "system": "Tholatin",
+      "x": 12,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Tholatin-hub-1-7",
+      "system": "Tholatin",
+      "x": 13,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Tholatin-hub-1-7",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Tholatin-hub-35-0",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 37
+    },
+    {
+      "destinationId": "Tholatin-hub-35-0",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 38
+    },
+    {
+      "destinationId": "Tholatin-hub-35-0",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 39
+    },
+    {
+      "destinationId": "Tholatin-hub-35-0",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 40
+    },
+    {
+      "destinationId": "Tholatin-hub-35-0",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 41
+    },
+    {
+      "destinationId": "Tholatin-hub-35-0",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 42
+    },
+    {
+      "destinationId": "Tholatin-hub-35-0",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 43
+    },
+    {
+      "destinationId": "Tholatin-hub-35-0",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 44
+    },
+    {
+      "destinationId": "Tholatin-hub-35-1",
+      "system": "Tholatin",
+      "x": 17,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 37
+    },
+    {
+      "destinationId": "Tholatin-hub-35-1",
+      "system": "Tholatin",
+      "x": 18,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 38
+    },
+    {
+      "destinationId": "Tholatin-hub-35-1",
+      "system": "Tholatin",
+      "x": 19,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 39
+    },
+    {
+      "destinationId": "Tholatin-hub-35-1",
+      "system": "Tholatin",
+      "x": 17,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 40
+    },
+    {
+      "destinationId": "Tholatin-hub-35-1",
+      "system": "Tholatin",
+      "x": 19,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 41
+    },
+    {
+      "destinationId": "Tholatin-hub-35-1",
+      "system": "Tholatin",
+      "x": 17,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 42
+    },
+    {
+      "destinationId": "Tholatin-hub-35-1",
+      "system": "Tholatin",
+      "x": 18,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 43
+    },
+    {
+      "destinationId": "Tholatin-hub-35-1",
+      "system": "Tholatin",
+      "x": 19,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 44
+    },
+    {
+      "destinationId": "Tholatin-hub-35-2",
+      "system": "Tholatin",
+      "x": 12,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 37
+    },
+    {
+      "destinationId": "Tholatin-hub-35-2",
+      "system": "Tholatin",
+      "x": 13,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 38
+    },
+    {
+      "destinationId": "Tholatin-hub-35-2",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 39
+    },
+    {
+      "destinationId": "Tholatin-hub-35-2",
+      "system": "Tholatin",
+      "x": 12,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 40
+    },
+    {
+      "destinationId": "Tholatin-hub-35-2",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 41
+    },
+    {
+      "destinationId": "Tholatin-hub-35-2",
+      "system": "Tholatin",
+      "x": 12,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 42
+    },
+    {
+      "destinationId": "Tholatin-hub-35-2",
+      "system": "Tholatin",
+      "x": 13,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 43
+    },
+    {
+      "destinationId": "Tholatin-hub-35-2",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 44
+    },
+    {
+      "destinationId": "Tholatin-hub-35-3",
+      "system": "Tholatin",
+      "x": 0,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 37
+    },
+    {
+      "destinationId": "Tholatin-hub-35-3",
+      "system": "Tholatin",
+      "x": 1,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 38
+    },
+    {
+      "destinationId": "Tholatin-hub-35-3",
+      "system": "Tholatin",
+      "x": 2,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 39
+    },
+    {
+      "destinationId": "Tholatin-hub-35-3",
+      "system": "Tholatin",
+      "x": 0,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 40
+    },
+    {
+      "destinationId": "Tholatin-hub-35-3",
+      "system": "Tholatin",
+      "x": 2,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 41
+    },
+    {
+      "destinationId": "Tholatin-hub-35-3",
+      "system": "Tholatin",
+      "x": 0,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 42
+    },
+    {
+      "destinationId": "Tholatin-hub-35-3",
+      "system": "Tholatin",
+      "x": 1,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 43
+    },
+    {
+      "destinationId": "Tholatin-hub-35-3",
+      "system": "Tholatin",
+      "x": 2,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 44
+    },
+    {
+      "destinationId": "Tholatin-hub-35-4",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 37
+    },
+    {
+      "destinationId": "Tholatin-hub-35-4",
+      "system": "Tholatin",
+      "x": 15,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 38
+    },
+    {
+      "destinationId": "Tholatin-hub-35-4",
+      "system": "Tholatin",
+      "x": 16,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 39
+    },
+    {
+      "destinationId": "Tholatin-hub-35-4",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 40
+    },
+    {
+      "destinationId": "Tholatin-hub-35-4",
+      "system": "Tholatin",
+      "x": 16,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 41
+    },
+    {
+      "destinationId": "Tholatin-hub-35-4",
+      "system": "Tholatin",
+      "x": 14,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 42
+    },
+    {
+      "destinationId": "Tholatin-hub-35-4",
+      "system": "Tholatin",
+      "x": 15,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 43
+    },
+    {
+      "destinationId": "Tholatin-hub-35-4",
+      "system": "Tholatin",
+      "x": 16,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 44
+    },
+    {
+      "destinationId": "Tholatin-hub-35-5",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 37
+    },
+    {
+      "destinationId": "Tholatin-hub-35-5",
+      "system": "Tholatin",
+      "x": 10,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 38
+    },
+    {
+      "destinationId": "Tholatin-hub-35-5",
+      "system": "Tholatin",
+      "x": 11,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 39
+    },
+    {
+      "destinationId": "Tholatin-hub-35-5",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 40
+    },
+    {
+      "destinationId": "Tholatin-hub-35-5",
+      "system": "Tholatin",
+      "x": 11,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 41
+    },
+    {
+      "destinationId": "Tholatin-hub-35-5",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 42
+    },
+    {
+      "destinationId": "Tholatin-hub-35-5",
+      "system": "Tholatin",
+      "x": 10,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 43
+    },
+    {
+      "destinationId": "Tholatin-hub-35-5",
+      "system": "Tholatin",
+      "x": 11,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 44
+    },
+    {
+      "destinationId": "Tholatin-hub-35-6",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 37
+    },
+    {
+      "destinationId": "Tholatin-hub-35-6",
+      "system": "Tholatin",
+      "x": 4,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 38
+    },
+    {
+      "destinationId": "Tholatin-hub-35-6",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 39
+    },
+    {
+      "destinationId": "Tholatin-hub-35-6",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 40
+    },
+    {
+      "destinationId": "Tholatin-hub-35-6",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 41
+    },
+    {
+      "destinationId": "Tholatin-hub-35-6",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 42
+    },
+    {
+      "destinationId": "Tholatin-hub-35-6",
+      "system": "Tholatin",
+      "x": 4,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 43
+    },
+    {
+      "destinationId": "Tholatin-hub-35-6",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 44
+    },
+    {
+      "destinationId": "Tholatin-hub-35-7",
+      "system": "Tholatin",
+      "x": 0,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 37
+    },
+    {
+      "destinationId": "Tholatin-hub-35-7",
+      "system": "Tholatin",
+      "x": 1,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 38
+    },
+    {
+      "destinationId": "Tholatin-hub-35-7",
+      "system": "Tholatin",
+      "x": 2,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 39
+    },
+    {
+      "destinationId": "Tholatin-hub-35-7",
+      "system": "Tholatin",
+      "x": 0,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 40
+    },
+    {
+      "destinationId": "Tholatin-hub-35-7",
+      "system": "Tholatin",
+      "x": 2,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 41
+    },
+    {
+      "destinationId": "Tholatin-hub-35-7",
+      "system": "Tholatin",
+      "x": 0,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 42
+    },
+    {
+      "destinationId": "Tholatin-hub-35-7",
+      "system": "Tholatin",
+      "x": 1,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 43
+    },
+    {
+      "destinationId": "Tholatin-hub-35-7",
+      "system": "Tholatin",
+      "x": 2,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 44
+    },
+    {
+      "destinationId": "Tholatin-hub-69-0",
+      "system": "Tholatin",
+      "x": 15,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 71
+    },
+    {
+      "destinationId": "Tholatin-hub-69-0",
+      "system": "Tholatin",
+      "x": 16,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 72
+    },
+    {
+      "destinationId": "Tholatin-hub-69-0",
+      "system": "Tholatin",
+      "x": 17,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 73
+    },
+    {
+      "destinationId": "Tholatin-hub-69-0",
+      "system": "Tholatin",
+      "x": 15,
+      "y": 15,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 74
+    },
+    {
+      "destinationId": "Tholatin-hub-69-0",
+      "system": "Tholatin",
+      "x": 17,
+      "y": 15,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 75
+    },
+    {
+      "destinationId": "Tholatin-hub-69-0",
+      "system": "Tholatin",
+      "x": 15,
+      "y": 16,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 76
+    },
+    {
+      "destinationId": "Tholatin-hub-69-0",
+      "system": "Tholatin",
+      "x": 16,
+      "y": 16,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 77
+    },
+    {
+      "destinationId": "Tholatin-hub-69-0",
+      "system": "Tholatin",
+      "x": 17,
+      "y": 16,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 78
+    },
+    {
+      "destinationId": "Tholatin-hub-69-1",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 71
+    },
+    {
+      "destinationId": "Tholatin-hub-69-1",
+      "system": "Tholatin",
+      "x": 4,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 72
+    },
+    {
+      "destinationId": "Tholatin-hub-69-1",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 73
+    },
+    {
+      "destinationId": "Tholatin-hub-69-1",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 1,
+      "ship": "TIE/sa Bomber",
+      "row": 74
+    },
+    {
+      "destinationId": "Tholatin-hub-69-1",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 1,
+      "ship": "TIE/sa Bomber",
+      "row": 75
+    },
+    {
+      "destinationId": "Tholatin-hub-69-1",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 76
+    },
+    {
+      "destinationId": "Tholatin-hub-69-1",
+      "system": "Tholatin",
+      "x": 4,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 77
+    },
+    {
+      "destinationId": "Tholatin-hub-69-1",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 78
+    },
+    {
+      "destinationId": "Tholatin-hub-69-2",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 71
+    },
+    {
+      "destinationId": "Tholatin-hub-69-2",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 72
+    },
+    {
+      "destinationId": "Tholatin-hub-69-2",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 73
+    },
+    {
+      "destinationId": "Tholatin-hub-69-2",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 8,
+      "ship": "Behemoth-class Star Dreadnaught",
+      "row": 74
+    },
+    {
+      "destinationId": "Tholatin-hub-69-2",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 75
+    },
+    {
+      "destinationId": "Tholatin-hub-69-2",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 76
+    },
+    {
+      "destinationId": "Tholatin-hub-69-2",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 77
+    },
+    {
+      "destinationId": "Tholatin-hub-69-2",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 78
+    },
+    {
+      "destinationId": "Tholatin-hub-69-3",
+      "system": "Tholatin",
+      "x": 2,
+      "y": 12,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 71
+    },
+    {
+      "destinationId": "Tholatin-hub-69-3",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 12,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 72
+    },
+    {
+      "destinationId": "Tholatin-hub-69-3",
+      "system": "Tholatin",
+      "x": 4,
+      "y": 12,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 73
+    },
+    {
+      "destinationId": "Tholatin-hub-69-3",
+      "system": "Tholatin",
+      "x": 2,
+      "y": 13,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 74
+    },
+    {
+      "destinationId": "Tholatin-hub-69-3",
+      "system": "Tholatin",
+      "x": 4,
+      "y": 13,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 75
+    },
+    {
+      "destinationId": "Tholatin-hub-69-3",
+      "system": "Tholatin",
+      "x": 2,
+      "y": 14,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 76
+    },
+    {
+      "destinationId": "Tholatin-hub-69-3",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 14,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 77
+    },
+    {
+      "destinationId": "Tholatin-hub-69-3",
+      "system": "Tholatin",
+      "x": 4,
+      "y": 14,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 78
+    },
+    {
+      "destinationId": "Tholatin-hub-69-4",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 17,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 71
+    },
+    {
+      "destinationId": "Tholatin-hub-69-4",
+      "system": "Tholatin",
+      "x": 4,
+      "y": 17,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 72
+    },
+    {
+      "destinationId": "Tholatin-hub-69-4",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 18,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 73
+    },
+    {
+      "destinationId": "Tholatin-hub-69-4",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 18,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 74
+    },
+    {
+      "destinationId": "Tholatin-hub-69-4",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 19,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 75
+    },
+    {
+      "destinationId": "Tholatin-hub-69-4",
+      "system": "Tholatin",
+      "x": 4,
+      "y": 19,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 76
+    },
+    {
+      "destinationId": "Tholatin-hub-69-4",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 19,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 77
+    },
+    {
+      "destinationId": "Tholatin-hub-69-5",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 71
+    },
+    {
+      "destinationId": "Tholatin-hub-69-5",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 72
+    },
+    {
+      "destinationId": "Tholatin-hub-69-5",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 0,
+      "ship": "TIE/sa Bomber",
+      "row": 73
+    },
+    {
+      "destinationId": "Tholatin-hub-69-5",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 1,
+      "ship": "TIE/sa Bomber",
+      "row": 74
+    },
+    {
+      "destinationId": "Tholatin-hub-69-5",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 1,
+      "ship": "TIE/sa Bomber",
+      "row": 76
+    },
+    {
+      "destinationId": "Tholatin-hub-69-5",
+      "system": "Tholatin",
+      "x": 6,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 77
+    },
+    {
+      "destinationId": "Tholatin-hub-69-5",
+      "system": "Tholatin",
+      "x": 7,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 78
+    },
+    {
+      "destinationId": "Tholatin-hub-69-5",
+      "system": "Tholatin",
+      "x": 8,
+      "y": 2,
+      "ship": "TIE/sa Bomber",
+      "row": 79
+    },
+    {
+      "destinationId": "Tholatin-hub-69-6",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 6,
+      "ship": "TIE/sa Bomber",
+      "row": 71
+    },
+    {
+      "destinationId": "Tholatin-hub-69-6",
+      "system": "Tholatin",
+      "x": 4,
+      "y": 6,
+      "ship": "TIE/sa Bomber",
+      "row": 72
+    },
+    {
+      "destinationId": "Tholatin-hub-69-6",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 6,
+      "ship": "TIE/sa Bomber",
+      "row": 73
+    },
+    {
+      "destinationId": "Tholatin-hub-69-6",
+      "system": "Tholatin",
+      "x": 3,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 74
+    },
+    {
+      "destinationId": "Tholatin-hub-69-6",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 75
+    },
+    {
+      "destinationId": "Tholatin-hub-69-6",
+      "system": "Tholatin",
+      "x": 4,
+      "y": 8,
+      "ship": "TIE/sa Bomber",
+      "row": 76
+    },
+    {
+      "destinationId": "Tholatin-hub-69-6",
+      "system": "Tholatin",
+      "x": 5,
+      "y": 8,
+      "ship": "TIE/sa Bomber",
+      "row": 77
+    },
+    {
+      "destinationId": "Tholatin-hub-69-7",
+      "system": "Tholatin",
+      "x": 10,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 71
+    },
+    {
+      "destinationId": "Tholatin-hub-69-7",
+      "system": "Tholatin",
+      "x": 11,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 72
+    },
+    {
+      "destinationId": "Tholatin-hub-69-7",
+      "system": "Tholatin",
+      "x": 11,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 73
+    },
+    {
+      "destinationId": "Tholatin-hub-69-7",
+      "system": "Tholatin",
+      "x": 9,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 74
+    },
+    {
+      "destinationId": "Tholatin-hub-69-7",
+      "system": "Tholatin",
+      "x": 10,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 75
+    },
+    {
+      "destinationId": "Tholatin-hub-69-7",
+      "system": "Tholatin",
+      "x": 11,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 76
+    },
+    {
+      "destinationId": "Messert-hub-1-0",
+      "system": "Messert",
+      "x": 3,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Messert-hub-1-0",
+      "system": "Messert",
+      "x": 4,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Messert-hub-1-0",
+      "system": "Messert",
+      "x": 3,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Messert-hub-1-0",
+      "system": "Messert",
+      "x": 4,
+      "y": 8,
+      "ship": "Behemoth-class Star Dreadnaught",
+      "row": 6
+    },
+    {
+      "destinationId": "Messert-hub-1-0",
+      "system": "Messert",
+      "x": 3,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Messert-hub-1-0",
+      "system": "Messert",
+      "x": 5,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Messert-hub-1-1",
+      "system": "Messert",
+      "x": 6,
+      "y": 7,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 3
+    },
+    {
+      "destinationId": "Messert-hub-1-1",
+      "system": "Messert",
+      "x": 7,
+      "y": 7,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 4
+    },
+    {
+      "destinationId": "Messert-hub-1-1",
+      "system": "Messert",
+      "x": 8,
+      "y": 7,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 5
+    },
+    {
+      "destinationId": "Messert-hub-1-1",
+      "system": "Messert",
+      "x": 6,
+      "y": 8,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 6
+    },
+    {
+      "destinationId": "Messert-hub-1-1",
+      "system": "Messert",
+      "x": 8,
+      "y": 8,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 7
+    },
+    {
+      "destinationId": "Messert-hub-1-1",
+      "system": "Messert",
+      "x": 6,
+      "y": 9,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 8
+    },
+    {
+      "destinationId": "Messert-hub-1-1",
+      "system": "Messert",
+      "x": 7,
+      "y": 9,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 9
+    },
+    {
+      "destinationId": "Messert-hub-1-1",
+      "system": "Messert",
+      "x": 8,
+      "y": 9,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 10
+    },
+    {
+      "destinationId": "Messert-hub-1-2",
+      "system": "Messert",
+      "x": 17,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Messert-hub-1-2",
+      "system": "Messert",
+      "x": 18,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Messert-hub-1-2",
+      "system": "Messert",
+      "x": 19,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Messert-hub-1-2",
+      "system": "Messert",
+      "x": 17,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Messert-hub-1-2",
+      "system": "Messert",
+      "x": 18,
+      "y": 6,
+      "ship": "Behemoth-class Star Dreadnaught",
+      "row": 7
+    },
+    {
+      "destinationId": "Messert-hub-1-2",
+      "system": "Messert",
+      "x": 19,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Messert-hub-1-2",
+      "system": "Messert",
+      "x": 17,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Messert-hub-1-2",
+      "system": "Messert",
+      "x": 18,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Messert-hub-1-2",
+      "system": "Messert",
+      "x": 19,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Messert-hub-1-3",
+      "system": "Messert",
+      "x": 11,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Messert-hub-1-3",
+      "system": "Messert",
+      "x": 13,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Messert-hub-1-3",
+      "system": "Messert",
+      "x": 11,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Messert-hub-1-3",
+      "system": "Messert",
+      "x": 13,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Messert-hub-1-3",
+      "system": "Messert",
+      "x": 11,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Messert-hub-1-3",
+      "system": "Messert",
+      "x": 12,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Messert-hub-1-4",
+      "system": "Messert",
+      "x": 14,
+      "y": 14,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Messert-hub-1-4",
+      "system": "Messert",
+      "x": 15,
+      "y": 14,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Messert-hub-1-4",
+      "system": "Messert",
+      "x": 16,
+      "y": 14,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Messert-hub-1-4",
+      "system": "Messert",
+      "x": 14,
+      "y": 15,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Messert-hub-1-4",
+      "system": "Messert",
+      "x": 15,
+      "y": 16,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Messert-hub-1-4",
+      "system": "Messert",
+      "x": 16,
+      "y": 16,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Messert-hub-1-5",
+      "system": "Messert",
+      "x": 8,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Messert-hub-1-5",
+      "system": "Messert",
+      "x": 9,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Messert-hub-1-5",
+      "system": "Messert",
+      "x": 10,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Messert-hub-1-5",
+      "system": "Messert",
+      "x": 8,
+      "y": 14,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Messert-hub-1-5",
+      "system": "Messert",
+      "x": 10,
+      "y": 14,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Messert-hub-1-5",
+      "system": "Messert",
+      "x": 9,
+      "y": 15,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Saki-hub-1-0",
+      "system": "Saki",
+      "x": 9,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Saki-hub-1-0",
+      "system": "Saki",
+      "x": 10,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Saki-hub-1-0",
+      "system": "Saki",
+      "x": 11,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Saki-hub-1-0",
+      "system": "Saki",
+      "x": 9,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Saki-hub-1-0",
+      "system": "Saki",
+      "x": 10,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 7
+    },
+    {
+      "destinationId": "Saki-hub-1-0",
+      "system": "Saki",
+      "x": 11,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Saki-hub-1-0",
+      "system": "Saki",
+      "x": 9,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Saki-hub-1-0",
+      "system": "Saki",
+      "x": 10,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Saki-hub-1-0",
+      "system": "Saki",
+      "x": 11,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Saki-hub-1-1",
+      "system": "Saki",
+      "x": 9,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Saki-hub-1-1",
+      "system": "Saki",
+      "x": 10,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Saki-hub-1-1",
+      "system": "Saki",
+      "x": 11,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Saki-hub-1-1",
+      "system": "Saki",
+      "x": 9,
+      "y": 12,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 6
+    },
+    {
+      "destinationId": "Saki-hub-1-1",
+      "system": "Saki",
+      "x": 10,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Saki-hub-1-1",
+      "system": "Saki",
+      "x": 11,
+      "y": 12,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 8
+    },
+    {
+      "destinationId": "Saki-hub-1-1",
+      "system": "Saki",
+      "x": 9,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Saki-hub-1-1",
+      "system": "Saki",
+      "x": 10,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Saki-hub-1-1",
+      "system": "Saki",
+      "x": 11,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Saki-hub-1-2",
+      "system": "Saki",
+      "x": 0,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Saki-hub-1-2",
+      "system": "Saki",
+      "x": 1,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Saki-hub-1-2",
+      "system": "Saki",
+      "x": 1,
+      "y": 14,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 5
+    },
+    {
+      "destinationId": "Saki-hub-1-2",
+      "system": "Saki",
+      "x": 0,
+      "y": 15,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Saki-hub-1-2",
+      "system": "Saki",
+      "x": 1,
+      "y": 15,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Saki-hub-1-3",
+      "system": "Saki",
+      "x": 12,
+      "y": 11,
+      "ship": "I-BEAM Starfighter",
+      "row": 3
+    },
+    {
+      "destinationId": "Saki-hub-1-3",
+      "system": "Saki",
+      "x": 13,
+      "y": 11,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 4
+    },
+    {
+      "destinationId": "Saki-hub-1-3",
+      "system": "Saki",
+      "x": 14,
+      "y": 11,
+      "ship": "Arquitens-class Light Cruiser",
+      "row": 5
+    },
+    {
+      "destinationId": "Saki-hub-1-3",
+      "system": "Saki",
+      "x": 12,
+      "y": 12,
+      "ship": "I-BEAM Starfighter",
+      "row": 6
+    },
+    {
+      "destinationId": "Saki-hub-1-3",
+      "system": "Saki",
+      "x": 14,
+      "y": 12,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 7
+    },
+    {
+      "destinationId": "Saki-hub-1-3",
+      "system": "Saki",
+      "x": 12,
+      "y": 13,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 8
+    },
+    {
+      "destinationId": "Saki-hub-1-3",
+      "system": "Saki",
+      "x": 13,
+      "y": 13,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 9
+    },
+    {
+      "destinationId": "Saki-hub-1-3",
+      "system": "Saki",
+      "x": 14,
+      "y": 13,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 10
+    },
+    {
+      "destinationId": "Saki-hub-1-4",
+      "system": "Saki",
+      "x": 9,
+      "y": 14,
+      "ship": "Mining Barque",
+      "row": 3
+    },
+    {
+      "destinationId": "Saki-hub-1-4",
+      "system": "Saki",
+      "x": 10,
+      "y": 14,
+      "ship": "Mining Barque",
+      "row": 4
+    },
+    {
+      "destinationId": "Saki-hub-1-4",
+      "system": "Saki",
+      "x": 11,
+      "y": 14,
+      "ship": "Mining Barque",
+      "row": 5
+    },
+    {
+      "destinationId": "Saki-hub-1-4",
+      "system": "Saki",
+      "x": 9,
+      "y": 15,
+      "ship": "Mining Barque",
+      "row": 6
+    },
+    {
+      "destinationId": "Saki-hub-1-4",
+      "system": "Saki",
+      "x": 11,
+      "y": 15,
+      "ship": "Mining Barque",
+      "row": 7
+    },
+    {
+      "destinationId": "Saki-hub-1-4",
+      "system": "Saki",
+      "x": 9,
+      "y": 16,
+      "ship": "Mining Barque",
+      "row": 8
+    },
+    {
+      "destinationId": "Saki-hub-1-4",
+      "system": "Saki",
+      "x": 10,
+      "y": 16,
+      "ship": "Mining Barque",
+      "row": 9
+    },
+    {
+      "destinationId": "Saki-hub-1-4",
+      "system": "Saki",
+      "x": 11,
+      "y": 16,
+      "ship": "Mining Barque",
+      "row": 10
+    },
+    {
+      "destinationId": "Saki-hub-1-5",
+      "system": "Saki",
+      "x": 9,
+      "y": 4,
+      "ship": "Modular Conveyor",
+      "row": 3
+    },
+    {
+      "destinationId": "Saki-hub-1-5",
+      "system": "Saki",
+      "x": 10,
+      "y": 4,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 4
+    },
+    {
+      "destinationId": "Saki-hub-1-5",
+      "system": "Saki",
+      "x": 11,
+      "y": 4,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 5
+    },
+    {
+      "destinationId": "Saki-hub-1-5",
+      "system": "Saki",
+      "x": 9,
+      "y": 5,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 6
+    },
+    {
+      "destinationId": "Saki-hub-1-5",
+      "system": "Saki",
+      "x": 11,
+      "y": 5,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 7
+    },
+    {
+      "destinationId": "Saki-hub-1-5",
+      "system": "Saki",
+      "x": 9,
+      "y": 6,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 8
+    },
+    {
+      "destinationId": "Saki-hub-1-5",
+      "system": "Saki",
+      "x": 10,
+      "y": 6,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 9
+    },
+    {
+      "destinationId": "Saki-hub-1-5",
+      "system": "Saki",
+      "x": 11,
+      "y": 6,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 10
+    },
+    {
+      "destinationId": "Saki-hub-1-6",
+      "system": "Saki",
+      "x": 12,
+      "y": 7,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 3
+    },
+    {
+      "destinationId": "Saki-hub-1-6",
+      "system": "Saki",
+      "x": 13,
+      "y": 7,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 4
+    },
+    {
+      "destinationId": "Saki-hub-1-6",
+      "system": "Saki",
+      "x": 14,
+      "y": 7,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 5
+    },
+    {
+      "destinationId": "Saki-hub-1-6",
+      "system": "Saki",
+      "x": 12,
+      "y": 8,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 6
+    },
+    {
+      "destinationId": "Saki-hub-1-6",
+      "system": "Saki",
+      "x": 14,
+      "y": 8,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 7
+    },
+    {
+      "destinationId": "Saki-hub-1-6",
+      "system": "Saki",
+      "x": 12,
+      "y": 9,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 8
+    },
+    {
+      "destinationId": "Saki-hub-1-6",
+      "system": "Saki",
+      "x": 13,
+      "y": 9,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 9
+    },
+    {
+      "destinationId": "Saki-hub-1-6",
+      "system": "Saki",
+      "x": 14,
+      "y": 9,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 10
+    },
+    {
+      "destinationId": "Saki-hub-1-7",
+      "system": "Saki",
+      "x": 6,
+      "y": 7,
+      "ship": "I-BEAM Starfighter",
+      "row": 3
+    },
+    {
+      "destinationId": "Saki-hub-1-7",
+      "system": "Saki",
+      "x": 7,
+      "y": 7,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 4
+    },
+    {
+      "destinationId": "Saki-hub-1-7",
+      "system": "Saki",
+      "x": 8,
+      "y": 7,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 5
+    },
+    {
+      "destinationId": "Saki-hub-1-7",
+      "system": "Saki",
+      "x": 6,
+      "y": 8,
+      "ship": "I-BEAM Starfighter",
+      "row": 6
+    },
+    {
+      "destinationId": "Saki-hub-1-7",
+      "system": "Saki",
+      "x": 8,
+      "y": 8,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 7
+    },
+    {
+      "destinationId": "Saki-hub-1-7",
+      "system": "Saki",
+      "x": 6,
+      "y": 9,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 8
+    },
+    {
+      "destinationId": "Saki-hub-1-7",
+      "system": "Saki",
+      "x": 7,
+      "y": 9,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 9
+    },
+    {
+      "destinationId": "Saki-hub-1-7",
+      "system": "Saki",
+      "x": 8,
+      "y": 9,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 10
+    },
+    {
+      "destinationId": "Saki-hub-35-0",
+      "system": "Saki",
+      "x": 6,
+      "y": 11,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 37
+    },
+    {
+      "destinationId": "Saki-hub-35-0",
+      "system": "Saki",
+      "x": 7,
+      "y": 11,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 38
+    },
+    {
+      "destinationId": "Saki-hub-35-0",
+      "system": "Saki",
+      "x": 8,
+      "y": 11,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 39
+    },
+    {
+      "destinationId": "Saki-hub-35-0",
+      "system": "Saki",
+      "x": 6,
+      "y": 12,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 40
+    },
+    {
+      "destinationId": "Saki-hub-35-0",
+      "system": "Saki",
+      "x": 8,
+      "y": 12,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 41
+    },
+    {
+      "destinationId": "Saki-hub-35-0",
+      "system": "Saki",
+      "x": 6,
+      "y": 13,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 42
+    },
+    {
+      "destinationId": "Saki-hub-35-0",
+      "system": "Saki",
+      "x": 7,
+      "y": 13,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 43
+    },
+    {
+      "destinationId": "Saki-hub-35-0",
+      "system": "Saki",
+      "x": 8,
+      "y": 13,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 44
+    },
+    {
+      "destinationId": "Saki-hub-35-1",
+      "system": "Saki",
+      "x": 6,
+      "y": 14,
+      "ship": "Mining Barque",
+      "row": 37
+    },
+    {
+      "destinationId": "Saki-hub-35-1",
+      "system": "Saki",
+      "x": 7,
+      "y": 14,
+      "ship": "Mining Barque",
+      "row": 38
+    },
+    {
+      "destinationId": "Saki-hub-35-1",
+      "system": "Saki",
+      "x": 8,
+      "y": 14,
+      "ship": "Mining Barque",
+      "row": 39
+    },
+    {
+      "destinationId": "Saki-hub-35-1",
+      "system": "Saki",
+      "x": 6,
+      "y": 15,
+      "ship": "Mining Barque",
+      "row": 40
+    },
+    {
+      "destinationId": "Saki-hub-35-1",
+      "system": "Saki",
+      "x": 8,
+      "y": 15,
+      "ship": "Mining Barque",
+      "row": 41
+    },
+    {
+      "destinationId": "Saki-hub-35-1",
+      "system": "Saki",
+      "x": 6,
+      "y": 16,
+      "ship": "Mining Barque",
+      "row": 42
+    },
+    {
+      "destinationId": "Saki-hub-35-1",
+      "system": "Saki",
+      "x": 7,
+      "y": 16,
+      "ship": "Mining Barque",
+      "row": 43
+    },
+    {
+      "destinationId": "Saki-hub-35-1",
+      "system": "Saki",
+      "x": 8,
+      "y": 16,
+      "ship": "Mining Barque",
+      "row": 44
+    },
+    {
+      "destinationId": "Saki-hub-35-2",
+      "system": "Saki",
+      "x": 12,
+      "y": 14,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 37
+    },
+    {
+      "destinationId": "Saki-hub-35-2",
+      "system": "Saki",
+      "x": 13,
+      "y": 14,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 38
+    },
+    {
+      "destinationId": "Saki-hub-35-2",
+      "system": "Saki",
+      "x": 14,
+      "y": 14,
+      "ship": "I-BEAM Starfighter",
+      "row": 39
+    },
+    {
+      "destinationId": "Saki-hub-35-2",
+      "system": "Saki",
+      "x": 12,
+      "y": 15,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 40
+    },
+    {
+      "destinationId": "Saki-hub-35-2",
+      "system": "Saki",
+      "x": 14,
+      "y": 15,
+      "ship": "I-BEAM Starfighter",
+      "row": 41
+    },
+    {
+      "destinationId": "Saki-hub-35-2",
+      "system": "Saki",
+      "x": 12,
+      "y": 16,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 42
+    },
+    {
+      "destinationId": "Saki-hub-35-2",
+      "system": "Saki",
+      "x": 13,
+      "y": 16,
+      "ship": "I-BEAM Starfighter",
+      "row": 43
+    },
+    {
+      "destinationId": "Saki-hub-35-2",
+      "system": "Saki",
+      "x": 14,
+      "y": 16,
+      "ship": "I-BEAM Starfighter",
+      "row": 44
+    },
+    {
+      "destinationId": "Mechis-hub-1-0",
+      "system": "Mechis",
+      "x": 12,
+      "y": 15,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Mechis-hub-1-0",
+      "system": "Mechis",
+      "x": 13,
+      "y": 15,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Mechis-hub-1-0",
+      "system": "Mechis",
+      "x": 14,
+      "y": 15,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Mechis-hub-1-0",
+      "system": "Mechis",
+      "x": 12,
+      "y": 16,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Mechis-hub-1-0",
+      "system": "Mechis",
+      "x": 13,
+      "y": 16,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Mechis-hub-1-0",
+      "system": "Mechis",
+      "x": 14,
+      "y": 16,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Mechis-hub-1-0",
+      "system": "Mechis",
+      "x": 12,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Mechis-hub-1-0",
+      "system": "Mechis",
+      "x": 13,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Mechis-hub-1-0",
+      "system": "Mechis",
+      "x": 14,
+      "y": 17,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Mechis-hub-1-1",
+      "system": "Mechis",
+      "x": 2,
+      "y": 2,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Mechis-hub-1-1",
+      "system": "Mechis",
+      "x": 4,
+      "y": 2,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Mechis-hub-1-1",
+      "system": "Mechis",
+      "x": 3,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Mechis-hub-1-1",
+      "system": "Mechis",
+      "x": 2,
+      "y": 4,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Mechis-hub-1-1",
+      "system": "Mechis",
+      "x": 4,
+      "y": 4,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Mechis-hub-1-2",
+      "system": "Mechis",
+      "x": 5,
+      "y": 2,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Mechis-hub-1-2",
+      "system": "Mechis",
+      "x": 6,
+      "y": 2,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Mechis-hub-1-2",
+      "system": "Mechis",
+      "x": 7,
+      "y": 2,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Mechis-hub-1-2",
+      "system": "Mechis",
+      "x": 5,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Mechis-hub-1-2",
+      "system": "Mechis",
+      "x": 6,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Mechis-hub-1-2",
+      "system": "Mechis",
+      "x": 7,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Mechis-hub-1-2",
+      "system": "Mechis",
+      "x": 5,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Mechis-hub-1-2",
+      "system": "Mechis",
+      "x": 6,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Mechis-hub-1-2",
+      "system": "Mechis",
+      "x": 7,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Mechis-hub-1-3",
+      "system": "Mechis",
+      "x": 7,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Mechis-hub-1-3",
+      "system": "Mechis",
+      "x": 8,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Mechis-hub-1-3",
+      "system": "Mechis",
+      "x": 9,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Mechis-hub-1-3",
+      "system": "Mechis",
+      "x": 7,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Mechis-hub-1-3",
+      "system": "Mechis",
+      "x": 8,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Mechis-hub-1-3",
+      "system": "Mechis",
+      "x": 9,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Mechis-hub-1-3",
+      "system": "Mechis",
+      "x": 7,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Mechis-hub-1-3",
+      "system": "Mechis",
+      "x": 8,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Mechis-hub-1-3",
+      "system": "Mechis",
+      "x": 9,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Mechis-hub-1-4",
+      "system": "Mechis",
+      "x": 7,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Mechis-hub-1-4",
+      "system": "Mechis",
+      "x": 8,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Mechis-hub-1-4",
+      "system": "Mechis",
+      "x": 9,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Mechis-hub-1-4",
+      "system": "Mechis",
+      "x": 7,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Mechis-hub-1-4",
+      "system": "Mechis",
+      "x": 8,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Mechis-hub-1-4",
+      "system": "Mechis",
+      "x": 9,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Mechis-hub-1-4",
+      "system": "Mechis",
+      "x": 7,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Mechis-hub-1-4",
+      "system": "Mechis",
+      "x": 8,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Mechis-hub-1-4",
+      "system": "Mechis",
+      "x": 9,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Lexrul-hub-1-0",
+      "system": "Lexrul",
+      "x": 4,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Lexrul-hub-1-0",
+      "system": "Lexrul",
+      "x": 5,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Lexrul-hub-1-0",
+      "system": "Lexrul",
+      "x": 6,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Lexrul-hub-1-0",
+      "system": "Lexrul",
+      "x": 4,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Lexrul-hub-1-0",
+      "system": "Lexrul",
+      "x": 6,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Lexrul-hub-1-0",
+      "system": "Lexrul",
+      "x": 4,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Lexrul-hub-1-0",
+      "system": "Lexrul",
+      "x": 5,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Lexrul-hub-1-0",
+      "system": "Lexrul",
+      "x": 6,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Lexrul-hub-1-1",
+      "system": "Lexrul",
+      "x": 4,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Lexrul-hub-1-1",
+      "system": "Lexrul",
+      "x": 5,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Lexrul-hub-1-1",
+      "system": "Lexrul",
+      "x": 6,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Lexrul-hub-1-1",
+      "system": "Lexrul",
+      "x": 4,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Lexrul-hub-1-1",
+      "system": "Lexrul",
+      "x": 6,
+      "y": 11,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Lexrul-hub-1-1",
+      "system": "Lexrul",
+      "x": 4,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Lexrul-hub-1-1",
+      "system": "Lexrul",
+      "x": 5,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Lexrul-hub-1-1",
+      "system": "Lexrul",
+      "x": 6,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Lexrul-hub-1-2",
+      "system": "Lexrul",
+      "x": 4,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 3
+    },
+    {
+      "destinationId": "Lexrul-hub-1-2",
+      "system": "Lexrul",
+      "x": 5,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 4
+    },
+    {
+      "destinationId": "Lexrul-hub-1-2",
+      "system": "Lexrul",
+      "x": 6,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 5
+    },
+    {
+      "destinationId": "Lexrul-hub-1-2",
+      "system": "Lexrul",
+      "x": 4,
+      "y": 15,
+      "ship": "TIE/sa Bomber",
+      "row": 6
+    },
+    {
+      "destinationId": "Lexrul-hub-1-2",
+      "system": "Lexrul",
+      "x": 6,
+      "y": 15,
+      "ship": "TIE/sa Bomber",
+      "row": 8
+    },
+    {
+      "destinationId": "Lexrul-hub-1-2",
+      "system": "Lexrul",
+      "x": 4,
+      "y": 16,
+      "ship": "TIE/sa Bomber",
+      "row": 9
+    },
+    {
+      "destinationId": "Lexrul-hub-1-2",
+      "system": "Lexrul",
+      "x": 5,
+      "y": 16,
+      "ship": "TIE/sa Bomber",
+      "row": 10
+    },
+    {
+      "destinationId": "Lexrul-hub-1-2",
+      "system": "Lexrul",
+      "x": 6,
+      "y": 16,
+      "ship": "TIE/sa Bomber",
+      "row": 11
+    },
+    {
+      "destinationId": "Lexrul-hub-1-3",
+      "system": "Lexrul",
+      "x": 7,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Lexrul-hub-1-3",
+      "system": "Lexrul",
+      "x": 8,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Lexrul-hub-1-3",
+      "system": "Lexrul",
+      "x": 9,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Lexrul-hub-1-3",
+      "system": "Lexrul",
+      "x": 7,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Lexrul-hub-1-3",
+      "system": "Lexrul",
+      "x": 9,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Lexrul-hub-1-3",
+      "system": "Lexrul",
+      "x": 7,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Lexrul-hub-1-3",
+      "system": "Lexrul",
+      "x": 8,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Lexrul-hub-1-3",
+      "system": "Lexrul",
+      "x": 9,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Lexrul-hub-1-4",
+      "system": "Lexrul",
+      "x": 7,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 3
+    },
+    {
+      "destinationId": "Lexrul-hub-1-4",
+      "system": "Lexrul",
+      "x": 8,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 4
+    },
+    {
+      "destinationId": "Lexrul-hub-1-4",
+      "system": "Lexrul",
+      "x": 9,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 5
+    },
+    {
+      "destinationId": "Lexrul-hub-1-4",
+      "system": "Lexrul",
+      "x": 7,
+      "y": 15,
+      "ship": "TIE/sa Bomber",
+      "row": 6
+    },
+    {
+      "destinationId": "Lexrul-hub-1-4",
+      "system": "Lexrul",
+      "x": 9,
+      "y": 15,
+      "ship": "TIE/sa Bomber",
+      "row": 8
+    },
+    {
+      "destinationId": "Lexrul-hub-1-4",
+      "system": "Lexrul",
+      "x": 7,
+      "y": 16,
+      "ship": "TIE/sa Bomber",
+      "row": 9
+    },
+    {
+      "destinationId": "Lexrul-hub-1-4",
+      "system": "Lexrul",
+      "x": 8,
+      "y": 16,
+      "ship": "TIE/sa Bomber",
+      "row": 10
+    },
+    {
+      "destinationId": "Lexrul-hub-1-5",
+      "system": "Lexrul",
+      "x": 10,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 3
+    },
+    {
+      "destinationId": "Lexrul-hub-1-5",
+      "system": "Lexrul",
+      "x": 10,
+      "y": 15,
+      "ship": "TIE/sa Bomber",
+      "row": 6
+    },
+    {
+      "destinationId": "Lexrul-hub-1-5",
+      "system": "Lexrul",
+      "x": 10,
+      "y": 16,
+      "ship": "TIE/sa Bomber",
+      "row": 9
+    },
+    {
+      "destinationId": "Lexrul-hub-1-6",
+      "system": "Lexrul",
+      "x": 11,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Lexrul-hub-1-6",
+      "system": "Lexrul",
+      "x": 12,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Lexrul-hub-1-6",
+      "system": "Lexrul",
+      "x": 13,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Lexrul-hub-1-6",
+      "system": "Lexrul",
+      "x": 11,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Lexrul-hub-1-6",
+      "system": "Lexrul",
+      "x": 13,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 7
+    },
+    {
+      "destinationId": "Lexrul-hub-1-6",
+      "system": "Lexrul",
+      "x": 11,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Lexrul-hub-1-6",
+      "system": "Lexrul",
+      "x": 12,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Lexrul-hub-1-6",
+      "system": "Lexrul",
+      "x": 13,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Lexrul-hub-1-7",
+      "system": "Lexrul",
+      "x": 11,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Lexrul-hub-1-7",
+      "system": "Lexrul",
+      "x": 12,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Lexrul-hub-1-7",
+      "system": "Lexrul",
+      "x": 13,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Lexrul-hub-1-7",
+      "system": "Lexrul",
+      "x": 11,
+      "y": 12,
+      "ship": "Imperial I-class Star Destroyer",
+      "row": 6
+    },
+    {
+      "destinationId": "Lexrul-hub-1-7",
+      "system": "Lexrul",
+      "x": 13,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Lexrul-hub-1-7",
+      "system": "Lexrul",
+      "x": 11,
+      "y": 13,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 9
+    },
+    {
+      "destinationId": "Lexrul-hub-1-7",
+      "system": "Lexrul",
+      "x": 12,
+      "y": 13,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 10
+    },
+    {
+      "destinationId": "Lexrul-hub-1-7",
+      "system": "Lexrul",
+      "x": 13,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Lexrul-hub-35-1",
+      "system": "Lexrul",
+      "x": 14,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 37
+    },
+    {
+      "destinationId": "Lexrul-hub-35-1",
+      "system": "Lexrul",
+      "x": 15,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 38
+    },
+    {
+      "destinationId": "Lexrul-hub-35-1",
+      "system": "Lexrul",
+      "x": 16,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 39
+    },
+    {
+      "destinationId": "Lexrul-hub-35-1",
+      "system": "Lexrul",
+      "x": 14,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 40
+    },
+    {
+      "destinationId": "Lexrul-hub-35-1",
+      "system": "Lexrul",
+      "x": 16,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 42
+    },
+    {
+      "destinationId": "Lexrul-hub-35-1",
+      "system": "Lexrul",
+      "x": 14,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 43
+    },
+    {
+      "destinationId": "Lexrul-hub-35-1",
+      "system": "Lexrul",
+      "x": 15,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 44
+    },
+    {
+      "destinationId": "Lexrul-hub-35-1",
+      "system": "Lexrul",
+      "x": 16,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 45
+    },
+    {
+      "destinationId": "Lexrul-hub-35-2",
+      "system": "Lexrul",
+      "x": 14,
+      "y": 8,
+      "ship": "TIE/sa Bomber",
+      "row": 37
+    },
+    {
+      "destinationId": "Lexrul-hub-35-2",
+      "system": "Lexrul",
+      "x": 15,
+      "y": 8,
+      "ship": "TIE/sa Bomber",
+      "row": 38
+    },
+    {
+      "destinationId": "Lexrul-hub-35-2",
+      "system": "Lexrul",
+      "x": 16,
+      "y": 8,
+      "ship": "TIE/sa Bomber",
+      "row": 39
+    },
+    {
+      "destinationId": "Lexrul-hub-35-2",
+      "system": "Lexrul",
+      "x": 14,
+      "y": 9,
+      "ship": "TIE/sa Bomber",
+      "row": 40
+    },
+    {
+      "destinationId": "Lexrul-hub-35-2",
+      "system": "Lexrul",
+      "x": 16,
+      "y": 9,
+      "ship": "TIE/sa Bomber",
+      "row": 42
+    },
+    {
+      "destinationId": "Lexrul-hub-35-2",
+      "system": "Lexrul",
+      "x": 14,
+      "y": 10,
+      "ship": "TIE/sa Bomber",
+      "row": 43
+    },
+    {
+      "destinationId": "Lexrul-hub-35-2",
+      "system": "Lexrul",
+      "x": 15,
+      "y": 10,
+      "ship": "TIE/sa Bomber",
+      "row": 44
+    },
+    {
+      "destinationId": "Lexrul-hub-35-2",
+      "system": "Lexrul",
+      "x": 16,
+      "y": 10,
+      "ship": "TIE/sa Bomber",
+      "row": 45
+    },
+    {
+      "destinationId": "Lexrul-hub-35-3",
+      "system": "Lexrul",
+      "x": 14,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 37
+    },
+    {
+      "destinationId": "Lexrul-hub-35-3",
+      "system": "Lexrul",
+      "x": 15,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 38
+    },
+    {
+      "destinationId": "Lexrul-hub-35-3",
+      "system": "Lexrul",
+      "x": 16,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 39
+    },
+    {
+      "destinationId": "Lexrul-hub-35-3",
+      "system": "Lexrul",
+      "x": 14,
+      "y": 12,
+      "ship": "TIE/in Interceptor",
+      "row": 40
+    },
+    {
+      "destinationId": "Lexrul-hub-35-3",
+      "system": "Lexrul",
+      "x": 16,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 42
+    },
+    {
+      "destinationId": "Lexrul-hub-35-3",
+      "system": "Lexrul",
+      "x": 14,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 43
+    },
+    {
+      "destinationId": "Lexrul-hub-35-3",
+      "system": "Lexrul",
+      "x": 15,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 44
+    },
+    {
+      "destinationId": "Lexrul-hub-35-3",
+      "system": "Lexrul",
+      "x": 16,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 45
+    },
+    {
+      "destinationId": "Lexrul-hub-35-4",
+      "system": "Lexrul",
+      "x": 11,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 37
+    },
+    {
+      "destinationId": "Lexrul-hub-35-4",
+      "system": "Lexrul",
+      "x": 12,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 38
+    },
+    {
+      "destinationId": "Lexrul-hub-35-4",
+      "system": "Lexrul",
+      "x": 12,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 39
+    },
+    {
+      "destinationId": "Lexrul-hub-35-4",
+      "system": "Lexrul",
+      "x": 13,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 40
+    },
+    {
+      "destinationId": "Lexrul-hub-35-4",
+      "system": "Lexrul",
+      "x": 13,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 41
+    },
+    {
+      "destinationId": "Lexrul-hub-35-4",
+      "system": "Lexrul",
+      "x": 13,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 42
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-1",
+      "system": "Uogo`cor",
+      "x": 4,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-1",
+      "system": "Uogo`cor",
+      "x": 5,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-1",
+      "system": "Uogo`cor",
+      "x": 6,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-1",
+      "system": "Uogo`cor",
+      "x": 4,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-1",
+      "system": "Uogo`cor",
+      "x": 6,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-1",
+      "system": "Uogo`cor",
+      "x": 4,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-1",
+      "system": "Uogo`cor",
+      "x": 5,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-1",
+      "system": "Uogo`cor",
+      "x": 6,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-2",
+      "system": "Uogo`cor",
+      "x": 7,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-2",
+      "system": "Uogo`cor",
+      "x": 8,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-2",
+      "system": "Uogo`cor",
+      "x": 9,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-2",
+      "system": "Uogo`cor",
+      "x": 7,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-2",
+      "system": "Uogo`cor",
+      "x": 9,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-2",
+      "system": "Uogo`cor",
+      "x": 7,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-2",
+      "system": "Uogo`cor",
+      "x": 8,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-2",
+      "system": "Uogo`cor",
+      "x": 9,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-3",
+      "system": "Uogo`cor",
+      "x": 10,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-3",
+      "system": "Uogo`cor",
+      "x": 11,
+      "y": 4,
+      "ship": "TIE/sa Bomber",
+      "row": 4
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-3",
+      "system": "Uogo`cor",
+      "x": 12,
+      "y": 4,
+      "ship": "TIE/sa Bomber",
+      "row": 5
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-3",
+      "system": "Uogo`cor",
+      "x": 10,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-3",
+      "system": "Uogo`cor",
+      "x": 12,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-3",
+      "system": "Uogo`cor",
+      "x": 10,
+      "y": 6,
+      "ship": "TIE/sa Bomber",
+      "row": 9
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-3",
+      "system": "Uogo`cor",
+      "x": 11,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-3",
+      "system": "Uogo`cor",
+      "x": 12,
+      "y": 6,
+      "ship": "TIE/sa Bomber",
+      "row": 11
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-4",
+      "system": "Uogo`cor",
+      "x": 13,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-4",
+      "system": "Uogo`cor",
+      "x": 14,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-4",
+      "system": "Uogo`cor",
+      "x": 15,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-4",
+      "system": "Uogo`cor",
+      "x": 13,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-4",
+      "system": "Uogo`cor",
+      "x": 15,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-4",
+      "system": "Uogo`cor",
+      "x": 13,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-4",
+      "system": "Uogo`cor",
+      "x": 14,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-4",
+      "system": "Uogo`cor",
+      "x": 15,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-5",
+      "system": "Uogo`cor",
+      "x": 17,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-5",
+      "system": "Uogo`cor",
+      "x": 18,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-5",
+      "system": "Uogo`cor",
+      "x": 19,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-5",
+      "system": "Uogo`cor",
+      "x": 17,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-5",
+      "system": "Uogo`cor",
+      "x": 19,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-5",
+      "system": "Uogo`cor",
+      "x": 17,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-5",
+      "system": "Uogo`cor",
+      "x": 18,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Uogo`cor-hub-1-5",
+      "system": "Uogo`cor",
+      "x": 19,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Daluuj-hub-1-0",
+      "system": "Daluuj",
+      "x": 6,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Daluuj-hub-1-0",
+      "system": "Daluuj",
+      "x": 7,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Daluuj-hub-1-0",
+      "system": "Daluuj",
+      "x": 8,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Daluuj-hub-1-0",
+      "system": "Daluuj",
+      "x": 6,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Daluuj-hub-1-0",
+      "system": "Daluuj",
+      "x": 7,
+      "y": 5,
+      "ship": "Behemoth-class Star Dreadnaught",
+      "row": 7
+    },
+    {
+      "destinationId": "Daluuj-hub-1-0",
+      "system": "Daluuj",
+      "x": 8,
+      "y": 5,
+      "ship": "KRS-1 Ore Hauler",
+      "row": 8
+    },
+    {
+      "destinationId": "Daluuj-hub-1-0",
+      "system": "Daluuj",
+      "x": 6,
+      "y": 6,
+      "ship": "KRS-1 Ore Hauler",
+      "row": 9
+    },
+    {
+      "destinationId": "Daluuj-hub-1-0",
+      "system": "Daluuj",
+      "x": 7,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Daluuj-hub-1-0",
+      "system": "Daluuj",
+      "x": 8,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Daluuj-hub-1-1",
+      "system": "Daluuj",
+      "x": 12,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Daluuj-hub-1-1",
+      "system": "Daluuj",
+      "x": 13,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Daluuj-hub-1-1",
+      "system": "Daluuj",
+      "x": 14,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Daluuj-hub-1-1",
+      "system": "Daluuj",
+      "x": 12,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Daluuj-hub-1-1",
+      "system": "Daluuj",
+      "x": 14,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Daluuj-hub-1-1",
+      "system": "Daluuj",
+      "x": 12,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Daluuj-hub-1-1",
+      "system": "Daluuj",
+      "x": 13,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Daluuj-hub-1-1",
+      "system": "Daluuj",
+      "x": 14,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Daluuj-hub-1-2",
+      "system": "Daluuj",
+      "x": 3,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Daluuj-hub-1-2",
+      "system": "Daluuj",
+      "x": 4,
+      "y": 4,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 4
+    },
+    {
+      "destinationId": "Daluuj-hub-1-2",
+      "system": "Daluuj",
+      "x": 5,
+      "y": 4,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 5
+    },
+    {
+      "destinationId": "Daluuj-hub-1-2",
+      "system": "Daluuj",
+      "x": 3,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Daluuj-hub-1-2",
+      "system": "Daluuj",
+      "x": 5,
+      "y": 5,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 8
+    },
+    {
+      "destinationId": "Daluuj-hub-1-2",
+      "system": "Daluuj",
+      "x": 3,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Daluuj-hub-1-2",
+      "system": "Daluuj",
+      "x": 4,
+      "y": 6,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 10
+    },
+    {
+      "destinationId": "Daluuj-hub-1-2",
+      "system": "Daluuj",
+      "x": 5,
+      "y": 6,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 11
+    },
+    {
+      "destinationId": "Daluuj-hub-1-3",
+      "system": "Daluuj",
+      "x": 9,
+      "y": 4,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 3
+    },
+    {
+      "destinationId": "Daluuj-hub-1-3",
+      "system": "Daluuj",
+      "x": 10,
+      "y": 4,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 4
+    },
+    {
+      "destinationId": "Daluuj-hub-1-3",
+      "system": "Daluuj",
+      "x": 11,
+      "y": 4,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 5
+    },
+    {
+      "destinationId": "Daluuj-hub-1-3",
+      "system": "Daluuj",
+      "x": 9,
+      "y": 5,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 6
+    },
+    {
+      "destinationId": "Daluuj-hub-1-3",
+      "system": "Daluuj",
+      "x": 11,
+      "y": 5,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 8
+    },
+    {
+      "destinationId": "Daluuj-hub-1-3",
+      "system": "Daluuj",
+      "x": 9,
+      "y": 6,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 9
+    },
+    {
+      "destinationId": "Daluuj-hub-1-3",
+      "system": "Daluuj",
+      "x": 10,
+      "y": 6,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 10
+    },
+    {
+      "destinationId": "Daluuj-hub-1-3",
+      "system": "Daluuj",
+      "x": 11,
+      "y": 6,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 11
+    },
+    {
+      "destinationId": "Daluuj-hub-1-4",
+      "system": "Daluuj",
+      "x": 3,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Daluuj-hub-1-4",
+      "system": "Daluuj",
+      "x": 4,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Daluuj-hub-1-4",
+      "system": "Daluuj",
+      "x": 5,
+      "y": 7,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Daluuj-hub-1-4",
+      "system": "Daluuj",
+      "x": 3,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Daluuj-hub-1-4",
+      "system": "Daluuj",
+      "x": 5,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Daluuj-hub-1-4",
+      "system": "Daluuj",
+      "x": 3,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Daluuj-hub-1-4",
+      "system": "Daluuj",
+      "x": 4,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Daluuj-hub-1-4",
+      "system": "Daluuj",
+      "x": 5,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Daluuj-hub-1-5",
+      "system": "Daluuj",
+      "x": 6,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Daluuj-hub-1-5",
+      "system": "Daluuj",
+      "x": 7,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Daluuj-hub-1-5",
+      "system": "Daluuj",
+      "x": 8,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Daluuj-hub-1-5",
+      "system": "Daluuj",
+      "x": 6,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Daluuj-hub-1-5",
+      "system": "Daluuj",
+      "x": 8,
+      "y": 8,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Daluuj-hub-1-5",
+      "system": "Daluuj",
+      "x": 6,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Daluuj-hub-1-5",
+      "system": "Daluuj",
+      "x": 7,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Daluuj-hub-1-5",
+      "system": "Daluuj",
+      "x": 8,
+      "y": 9,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Daluuj-hub-1-6",
+      "system": "Daluuj",
+      "x": 7,
+      "y": 0,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 4
+    },
+    {
+      "destinationId": "Daluuj-hub-1-6",
+      "system": "Daluuj",
+      "x": 8,
+      "y": 0,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 5
+    },
+    {
+      "destinationId": "Daluuj-hub-1-6",
+      "system": "Daluuj",
+      "x": 6,
+      "y": 1,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 6
+    },
+    {
+      "destinationId": "Daluuj-hub-1-6",
+      "system": "Daluuj",
+      "x": 8,
+      "y": 1,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 8
+    },
+    {
+      "destinationId": "Daluuj-hub-1-6",
+      "system": "Daluuj",
+      "x": 7,
+      "y": 2,
+      "ship": "Sysat T-24",
+      "row": 10
+    },
+    {
+      "destinationId": "Daluuj-hub-1-6",
+      "system": "Daluuj",
+      "x": 8,
+      "y": 2,
+      "ship": "Sysat T-24",
+      "row": 11
+    },
+    {
+      "destinationId": "Daluuj-hub-1-7",
+      "system": "Daluuj",
+      "x": 12,
+      "y": 0,
+      "ship": "Mining Barque",
+      "row": 3
+    },
+    {
+      "destinationId": "Daluuj-hub-1-7",
+      "system": "Daluuj",
+      "x": 13,
+      "y": 0,
+      "ship": "Mining Barque",
+      "row": 4
+    },
+    {
+      "destinationId": "Daluuj-hub-1-7",
+      "system": "Daluuj",
+      "x": 14,
+      "y": 0,
+      "ship": "Mining Barque",
+      "row": 5
+    },
+    {
+      "destinationId": "Daluuj-hub-1-7",
+      "system": "Daluuj",
+      "x": 12,
+      "y": 1,
+      "ship": "Mining Barque",
+      "row": 6
+    },
+    {
+      "destinationId": "Krmar-hub-1-0",
+      "system": "Krmar",
+      "x": 7,
+      "y": 1,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Krmar-hub-1-0",
+      "system": "Krmar",
+      "x": 8,
+      "y": 1,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Krmar-hub-1-0",
+      "system": "Krmar",
+      "x": 9,
+      "y": 1,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Krmar-hub-1-0",
+      "system": "Krmar",
+      "x": 7,
+      "y": 2,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 6
+    },
+    {
+      "destinationId": "Krmar-hub-1-0",
+      "system": "Krmar",
+      "x": 9,
+      "y": 2,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Krmar-hub-1-0",
+      "system": "Krmar",
+      "x": 7,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Krmar-hub-1-0",
+      "system": "Krmar",
+      "x": 8,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Krmar-hub-1-0",
+      "system": "Krmar",
+      "x": 9,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Krmar-hub-1-1",
+      "system": "Krmar",
+      "x": 10,
+      "y": 2,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Krmar-hub-1-1",
+      "system": "Krmar",
+      "x": 11,
+      "y": 2,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Krmar-hub-1-1",
+      "system": "Krmar",
+      "x": 12,
+      "y": 2,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Krmar-hub-1-1",
+      "system": "Krmar",
+      "x": 10,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Krmar-hub-1-1",
+      "system": "Krmar",
+      "x": 11,
+      "y": 3,
+      "ship": "Imperial I-class Star Destroyer",
+      "row": 7
+    },
+    {
+      "destinationId": "Krmar-hub-1-1",
+      "system": "Krmar",
+      "x": 12,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Krmar-hub-1-1",
+      "system": "Krmar",
+      "x": 10,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Krmar-hub-1-1",
+      "system": "Krmar",
+      "x": 11,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Krmar-hub-1-1",
+      "system": "Krmar",
+      "x": 12,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Krmar-hub-1-2",
+      "system": "Krmar",
+      "x": 7,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Krmar-hub-1-2",
+      "system": "Krmar",
+      "x": 8,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Krmar-hub-1-2",
+      "system": "Krmar",
+      "x": 9,
+      "y": 4,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Krmar-hub-1-2",
+      "system": "Krmar",
+      "x": 7,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Krmar-hub-1-2",
+      "system": "Krmar",
+      "x": 9,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Krmar-hub-1-2",
+      "system": "Krmar",
+      "x": 7,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Krmar-hub-1-2",
+      "system": "Krmar",
+      "x": 8,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Krmar-hub-1-2",
+      "system": "Krmar",
+      "x": 9,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Krmar-hub-1-3",
+      "system": "Krmar",
+      "x": 10,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Krmar-hub-1-3",
+      "system": "Krmar",
+      "x": 11,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Krmar-hub-1-3",
+      "system": "Krmar",
+      "x": 12,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Krmar-hub-1-3",
+      "system": "Krmar",
+      "x": 10,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Krmar-hub-1-3",
+      "system": "Krmar",
+      "x": 12,
+      "y": 6,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Krmar-hub-1-3",
+      "system": "Krmar",
+      "x": 10,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Krmar-hub-1-3",
+      "system": "Krmar",
+      "x": 11,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Krmar-hub-1-3",
+      "system": "Krmar",
+      "x": 12,
+      "y": 7,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Krmar-hub-1-4",
+      "system": "Krmar",
+      "x": 4,
+      "y": 6,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 3
+    },
+    {
+      "destinationId": "Krmar-hub-1-4",
+      "system": "Krmar",
+      "x": 5,
+      "y": 6,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 4
+    },
+    {
+      "destinationId": "Krmar-hub-1-4",
+      "system": "Krmar",
+      "x": 6,
+      "y": 6,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 5
+    },
+    {
+      "destinationId": "Krmar-hub-1-4",
+      "system": "Krmar",
+      "x": 4,
+      "y": 7,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 6
+    },
+    {
+      "destinationId": "Krmar-hub-1-4",
+      "system": "Krmar",
+      "x": 6,
+      "y": 7,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 8
+    },
+    {
+      "destinationId": "Krmar-hub-1-4",
+      "system": "Krmar",
+      "x": 4,
+      "y": 8,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 9
+    },
+    {
+      "destinationId": "Krmar-hub-1-4",
+      "system": "Krmar",
+      "x": 5,
+      "y": 8,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 10
+    },
+    {
+      "destinationId": "Krmar-hub-1-4",
+      "system": "Krmar",
+      "x": 6,
+      "y": 8,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 11
+    },
+    {
+      "destinationId": "Krmar-hub-1-5",
+      "system": "Krmar",
+      "x": 7,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 3
+    },
+    {
+      "destinationId": "Krmar-hub-1-5",
+      "system": "Krmar",
+      "x": 8,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 4
+    },
+    {
+      "destinationId": "Krmar-hub-1-5",
+      "system": "Krmar",
+      "x": 9,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 5
+    },
+    {
+      "destinationId": "Krmar-hub-1-5",
+      "system": "Krmar",
+      "x": 7,
+      "y": 8,
+      "ship": "TIE/sa Bomber",
+      "row": 6
+    },
+    {
+      "destinationId": "Krmar-hub-1-5",
+      "system": "Krmar",
+      "x": 9,
+      "y": 8,
+      "ship": "TIE/sa Bomber",
+      "row": 8
+    },
+    {
+      "destinationId": "Krmar-hub-1-5",
+      "system": "Krmar",
+      "x": 7,
+      "y": 9,
+      "ship": "TIE/sa Bomber",
+      "row": 9
+    },
+    {
+      "destinationId": "Krmar-hub-1-5",
+      "system": "Krmar",
+      "x": 8,
+      "y": 9,
+      "ship": "TIE/sa Bomber",
+      "row": 10
+    },
+    {
+      "destinationId": "Krmar-hub-1-5",
+      "system": "Krmar",
+      "x": 9,
+      "y": 9,
+      "ship": "TIE/sa Bomber",
+      "row": 11
+    },
+    {
+      "destinationId": "Krmar-hub-1-6",
+      "system": "Krmar",
+      "x": 10,
+      "y": 9,
+      "ship": "TIE/sa Bomber",
+      "row": 3
+    },
+    {
+      "destinationId": "Krmar-hub-1-6",
+      "system": "Krmar",
+      "x": 11,
+      "y": 9,
+      "ship": "TIE/sa Bomber",
+      "row": 4
+    },
+    {
+      "destinationId": "Krmar-hub-1-6",
+      "system": "Krmar",
+      "x": 12,
+      "y": 9,
+      "ship": "TIE/sa Bomber",
+      "row": 5
+    },
+    {
+      "destinationId": "Krmar-hub-1-6",
+      "system": "Krmar",
+      "x": 10,
+      "y": 10,
+      "ship": "TIE/sa Bomber",
+      "row": 6
+    },
+    {
+      "destinationId": "Krmar-hub-1-6",
+      "system": "Krmar",
+      "x": 12,
+      "y": 10,
+      "ship": "TIE/sa Bomber",
+      "row": 8
+    },
+    {
+      "destinationId": "Krmar-hub-1-6",
+      "system": "Krmar",
+      "x": 10,
+      "y": 11,
+      "ship": "TIE/sa Bomber",
+      "row": 9
+    },
+    {
+      "destinationId": "Krmar-hub-1-6",
+      "system": "Krmar",
+      "x": 11,
+      "y": 11,
+      "ship": "TIE/sa Bomber",
+      "row": 10
+    },
+    {
+      "destinationId": "Krmar-hub-1-6",
+      "system": "Krmar",
+      "x": 12,
+      "y": 11,
+      "ship": "TIE/sa Bomber",
+      "row": 11
+    },
+    {
+      "destinationId": "Lannik-hub-1-0",
+      "system": "Lannik",
+      "x": 3,
+      "y": 0,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 3
+    },
+    {
+      "destinationId": "Lannik-hub-1-0",
+      "system": "Lannik",
+      "x": 4,
+      "y": 0,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 4
+    },
+    {
+      "destinationId": "Lannik-hub-1-0",
+      "system": "Lannik",
+      "x": 5,
+      "y": 0,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 5
+    },
+    {
+      "destinationId": "Lannik-hub-1-0",
+      "system": "Lannik",
+      "x": 3,
+      "y": 1,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 6
+    },
+    {
+      "destinationId": "Lannik-hub-1-0",
+      "system": "Lannik",
+      "x": 5,
+      "y": 1,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 8
+    },
+    {
+      "destinationId": "Lannik-hub-1-0",
+      "system": "Lannik",
+      "x": 3,
+      "y": 2,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 9
+    },
+    {
+      "destinationId": "Lannik-hub-1-0",
+      "system": "Lannik",
+      "x": 4,
+      "y": 2,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 10
+    },
+    {
+      "destinationId": "Lannik-hub-1-0",
+      "system": "Lannik",
+      "x": 5,
+      "y": 2,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 11
+    },
+    {
+      "destinationId": "Lannik-hub-1-1",
+      "system": "Lannik",
+      "x": 6,
+      "y": 0,
+      "ship": "Mining Barque",
+      "row": 3
+    },
+    {
+      "destinationId": "Lannik-hub-1-1",
+      "system": "Lannik",
+      "x": 7,
+      "y": 0,
+      "ship": "Mining Barque",
+      "row": 4
+    },
+    {
+      "destinationId": "Lannik-hub-1-1",
+      "system": "Lannik",
+      "x": 8,
+      "y": 0,
+      "ship": "Mining Barque",
+      "row": 5
+    },
+    {
+      "destinationId": "Lannik-hub-1-1",
+      "system": "Lannik",
+      "x": 6,
+      "y": 1,
+      "ship": "Mining Barque",
+      "row": 6
+    },
+    {
+      "destinationId": "Lannik-hub-1-1",
+      "system": "Lannik",
+      "x": 8,
+      "y": 1,
+      "ship": "Mining Barque",
+      "row": 8
+    },
+    {
+      "destinationId": "Lannik-hub-1-1",
+      "system": "Lannik",
+      "x": 6,
+      "y": 2,
+      "ship": "Mining Barque",
+      "row": 9
+    },
+    {
+      "destinationId": "Lannik-hub-1-1",
+      "system": "Lannik",
+      "x": 7,
+      "y": 2,
+      "ship": "Mining Barque",
+      "row": 10
+    },
+    {
+      "destinationId": "Lannik-hub-1-1",
+      "system": "Lannik",
+      "x": 8,
+      "y": 2,
+      "ship": "Mining Barque",
+      "row": 11
+    },
+    {
+      "destinationId": "Lannik-hub-1-2",
+      "system": "Lannik",
+      "x": 1,
+      "y": 3,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 3
+    },
+    {
+      "destinationId": "Lannik-hub-1-2",
+      "system": "Lannik",
+      "x": 2,
+      "y": 3,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 4
+    },
+    {
+      "destinationId": "Lannik-hub-1-2",
+      "system": "Lannik",
+      "x": 3,
+      "y": 3,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 5
+    },
+    {
+      "destinationId": "Lannik-hub-1-2",
+      "system": "Lannik",
+      "x": 1,
+      "y": 4,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 6
+    },
+    {
+      "destinationId": "Lannik-hub-1-2",
+      "system": "Lannik",
+      "x": 3,
+      "y": 4,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 8
+    },
+    {
+      "destinationId": "Lannik-hub-1-2",
+      "system": "Lannik",
+      "x": 1,
+      "y": 5,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 9
+    },
+    {
+      "destinationId": "Lannik-hub-1-2",
+      "system": "Lannik",
+      "x": 2,
+      "y": 5,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 10
+    },
+    {
+      "destinationId": "Lannik-hub-1-2",
+      "system": "Lannik",
+      "x": 3,
+      "y": 5,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 11
+    },
+    {
+      "destinationId": "Lannik-hub-1-3",
+      "system": "Lannik",
+      "x": 4,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Lannik-hub-1-3",
+      "system": "Lannik",
+      "x": 5,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Lannik-hub-1-3",
+      "system": "Lannik",
+      "x": 6,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Lannik-hub-1-3",
+      "system": "Lannik",
+      "x": 4,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Lannik-hub-1-3",
+      "system": "Lannik",
+      "x": 6,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Lannik-hub-1-3",
+      "system": "Lannik",
+      "x": 4,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Lannik-hub-1-3",
+      "system": "Lannik",
+      "x": 5,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Lannik-hub-1-3",
+      "system": "Lannik",
+      "x": 6,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Lannik-hub-1-4",
+      "system": "Lannik",
+      "x": 1,
+      "y": 6,
+      "ship": "Corona-class Frigate",
+      "row": 3
+    },
+    {
+      "destinationId": "Lannik-hub-1-4",
+      "system": "Lannik",
+      "x": 2,
+      "y": 6,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 4
+    },
+    {
+      "destinationId": "Lannik-hub-1-4",
+      "system": "Lannik",
+      "x": 3,
+      "y": 6,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 5
+    },
+    {
+      "destinationId": "Lannik-hub-1-4",
+      "system": "Lannik",
+      "x": 3,
+      "y": 7,
+      "ship": "Behemoth-class Star Dreadnaught",
+      "row": 8
+    },
+    {
+      "destinationId": "Lannik-hub-1-4",
+      "system": "Lannik",
+      "x": 1,
+      "y": 8,
+      "ship": "Star Saber XC-01 Starfighter MkI",
+      "row": 9
+    },
+    {
+      "destinationId": "Lannik-hub-1-4",
+      "system": "Lannik",
+      "x": 2,
+      "y": 8,
+      "ship": "Brayl-class Bulk Freighter",
+      "row": 10
+    },
+    {
+      "destinationId": "Lannik-hub-1-4",
+      "system": "Lannik",
+      "x": 3,
+      "y": 8,
+      "ship": "Brayl-class Bulk Freighter",
+      "row": 11
+    },
+    {
+      "destinationId": "Lannik-hub-1-5",
+      "system": "Lannik",
+      "x": 7,
+      "y": 4,
+      "ship": "TIE/sa Bomber",
+      "row": 3
+    },
+    {
+      "destinationId": "Lannik-hub-1-5",
+      "system": "Lannik",
+      "x": 8,
+      "y": 4,
+      "ship": "AEA-500 Asteroid Prospector",
+      "row": 4
+    },
+    {
+      "destinationId": "Lannik-hub-1-5",
+      "system": "Lannik",
+      "x": 9,
+      "y": 4,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 5
+    },
+    {
+      "destinationId": "Lannik-hub-1-5",
+      "system": "Lannik",
+      "x": 7,
+      "y": 5,
+      "ship": "TIE/sa Bomber",
+      "row": 6
+    },
+    {
+      "destinationId": "Lannik-hub-1-5",
+      "system": "Lannik",
+      "x": 9,
+      "y": 5,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 8
+    },
+    {
+      "destinationId": "Lannik-hub-1-5",
+      "system": "Lannik",
+      "x": 7,
+      "y": 6,
+      "ship": "TIE/sa Bomber",
+      "row": 9
+    },
+    {
+      "destinationId": "Lannik-hub-1-5",
+      "system": "Lannik",
+      "x": 8,
+      "y": 6,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 10
+    },
+    {
+      "destinationId": "Lannik-hub-1-5",
+      "system": "Lannik",
+      "x": 9,
+      "y": 6,
+      "ship": "Star Saber XC-01 Starfighter MkII",
+      "row": 11
+    },
+    {
+      "destinationId": "Lannik-hub-1-6",
+      "system": "Lannik",
+      "x": 4,
+      "y": 7,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 3
+    },
+    {
+      "destinationId": "Lannik-hub-1-6",
+      "system": "Lannik",
+      "x": 5,
+      "y": 7,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 4
+    },
+    {
+      "destinationId": "Lannik-hub-1-6",
+      "system": "Lannik",
+      "x": 6,
+      "y": 7,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 5
+    },
+    {
+      "destinationId": "Lannik-hub-1-6",
+      "system": "Lannik",
+      "x": 4,
+      "y": 8,
+      "ship": "Endurance-Class Fleet Carrier",
+      "row": 6
+    },
+    {
+      "destinationId": "Lannik-hub-1-6",
+      "system": "Lannik",
+      "x": 6,
+      "y": 8,
+      "ship": "Colossal-class Heavy Carrier",
+      "row": 8
+    },
+    {
+      "destinationId": "Lannik-hub-1-6",
+      "system": "Lannik",
+      "x": 4,
+      "y": 9,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 9
+    },
+    {
+      "destinationId": "Lannik-hub-1-6",
+      "system": "Lannik",
+      "x": 5,
+      "y": 9,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 10
+    },
+    {
+      "destinationId": "Lannik-hub-1-6",
+      "system": "Lannik",
+      "x": 6,
+      "y": 9,
+      "ship": "Kaloth-class Battlecruiser",
+      "row": 11
+    },
+    {
+      "destinationId": "Chamble-hub-1-0",
+      "system": "Chamble",
+      "x": 3,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Chamble-hub-1-0",
+      "system": "Chamble",
+      "x": 5,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Chamble-hub-1-0",
+      "system": "Chamble",
+      "x": 3,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Chamble-hub-1-0",
+      "system": "Chamble",
+      "x": 4,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Chamble-hub-1-0",
+      "system": "Chamble",
+      "x": 5,
+      "y": 5,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Chamble-hub-1-0",
+      "system": "Chamble",
+      "x": 4,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Chamble-hub-1-0",
+      "system": "Chamble",
+      "x": 5,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Chamble-hub-1-1",
+      "system": "Chamble",
+      "x": 3,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 3
+    },
+    {
+      "destinationId": "Chamble-hub-1-1",
+      "system": "Chamble",
+      "x": 4,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 4
+    },
+    {
+      "destinationId": "Chamble-hub-1-1",
+      "system": "Chamble",
+      "x": 5,
+      "y": 7,
+      "ship": "TIE/sa Bomber",
+      "row": 5
+    },
+    {
+      "destinationId": "Chamble-hub-1-1",
+      "system": "Chamble",
+      "x": 3,
+      "y": 8,
+      "ship": "TIE/sa Bomber",
+      "row": 6
+    },
+    {
+      "destinationId": "Chamble-hub-1-1",
+      "system": "Chamble",
+      "x": 5,
+      "y": 8,
+      "ship": "TIE/sa Bomber",
+      "row": 8
+    },
+    {
+      "destinationId": "Chamble-hub-1-1",
+      "system": "Chamble",
+      "x": 3,
+      "y": 9,
+      "ship": "TIE/sa Bomber",
+      "row": 9
+    },
+    {
+      "destinationId": "Chamble-hub-1-1",
+      "system": "Chamble",
+      "x": 5,
+      "y": 9,
+      "ship": "TIE/sa Bomber",
+      "row": 11
+    },
+    {
+      "destinationId": "Chamble-hub-1-2",
+      "system": "Chamble",
+      "x": 6,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Chamble-hub-1-2",
+      "system": "Chamble",
+      "x": 7,
+      "y": 6,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Chamble-hub-1-2",
+      "system": "Chamble",
+      "x": 6,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 9
+    },
+    {
+      "destinationId": "Chamble-hub-1-2",
+      "system": "Chamble",
+      "x": 7,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Chamble-hub-1-2",
+      "system": "Chamble",
+      "x": 8,
+      "y": 8,
+      "ship": "TIE/in Interceptor",
+      "row": 11
+    },
+    {
+      "destinationId": "Chamble-hub-1-3",
+      "system": "Chamble",
+      "x": 11,
+      "y": 3,
+      "ship": "TIE/in Interceptor",
+      "row": 3
+    },
+    {
+      "destinationId": "Chamble-hub-1-3",
+      "system": "Chamble",
+      "x": 11,
+      "y": 4,
+      "ship": "TIE/in Interceptor",
+      "row": 6
+    },
+    {
+      "destinationId": "Chamble-hub-1-3",
+      "system": "Chamble",
+      "x": 13,
+      "y": 4,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Chamble-hub-1-3",
+      "system": "Chamble",
+      "x": 11,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Chamble-hub-1-3",
+      "system": "Chamble",
+      "x": 12,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 10
+    },
+    {
+      "destinationId": "Chamble-hub-1-3",
+      "system": "Chamble",
+      "x": 13,
+      "y": 5,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 11
+    },
+    {
+      "destinationId": "Chamble-hub-1-4",
+      "system": "Chamble",
+      "x": 8,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 3
+    },
+    {
+      "destinationId": "Chamble-hub-1-4",
+      "system": "Chamble",
+      "x": 9,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 4
+    },
+    {
+      "destinationId": "Chamble-hub-1-4",
+      "system": "Chamble",
+      "x": 10,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 5
+    },
+    {
+      "destinationId": "Chamble-hub-1-4",
+      "system": "Chamble",
+      "x": 8,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 6
+    },
+    {
+      "destinationId": "Chamble-hub-1-4",
+      "system": "Chamble",
+      "x": 10,
+      "y": 13,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 8
+    },
+    {
+      "destinationId": "Chamble-hub-1-4",
+      "system": "Chamble",
+      "x": 8,
+      "y": 14,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 9
+    },
+    {
+      "destinationId": "Chamble-hub-1-5",
+      "system": "Chamble",
+      "x": 3,
+      "y": 12,
+      "ship": "TIE/sa Bomber",
+      "row": 3
+    },
+    {
+      "destinationId": "Chamble-hub-1-5",
+      "system": "Chamble",
+      "x": 4,
+      "y": 12,
+      "ship": "TIE/sa Bomber",
+      "row": 4
+    },
+    {
+      "destinationId": "Chamble-hub-1-5",
+      "system": "Chamble",
+      "x": 5,
+      "y": 12,
+      "ship": "TIE/sa Bomber",
+      "row": 5
+    },
+    {
+      "destinationId": "Chamble-hub-1-5",
+      "system": "Chamble",
+      "x": 3,
+      "y": 13,
+      "ship": "TIE/sa Bomber",
+      "row": 6
+    },
+    {
+      "destinationId": "Chamble-hub-1-5",
+      "system": "Chamble",
+      "x": 5,
+      "y": 13,
+      "ship": "TIE/sa Bomber",
+      "row": 8
+    },
+    {
+      "destinationId": "Chamble-hub-1-5",
+      "system": "Chamble",
+      "x": 3,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 9
+    },
+    {
+      "destinationId": "Chamble-hub-1-5",
+      "system": "Chamble",
+      "x": 4,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 10
+    },
+    {
+      "destinationId": "Chamble-hub-1-5",
+      "system": "Chamble",
+      "x": 5,
+      "y": 14,
+      "ship": "TIE/sa Bomber",
+      "row": 11
+    },
+    {
+      "destinationId": "Chamble-hub-1-6",
+      "system": "Chamble",
+      "x": 0,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Chamble-hub-1-6",
+      "system": "Chamble",
+      "x": 1,
+      "y": 11,
+      "ship": "TIE/in Interceptor",
+      "row": 5
+    },
+    {
+      "destinationId": "Chamble-hub-1-6",
+      "system": "Chamble",
+      "x": 0,
+      "y": 12,
+      "ship": "Behemoth-class Star Dreadnaught",
+      "row": 7
+    },
+    {
+      "destinationId": "Chamble-hub-1-6",
+      "system": "Chamble",
+      "x": 0,
+      "y": 13,
+      "ship": "TIE/in Interceptor",
+      "row": 10
+    },
+    {
+      "destinationId": "Harrin-hub-1-0",
+      "system": "Harrin",
+      "x": 14,
+      "y": 9,
+      "ship": "TIE/in Interceptor",
+      "row": 4
+    },
+    {
+      "destinationId": "Harrin-hub-1-0",
+      "system": "Harrin",
+      "x": 14,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Harrin-hub-1-0",
+      "system": "Harrin",
+      "x": 15,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    },
+    {
+      "destinationId": "Ota-hub-1-0",
+      "system": "Ota",
+      "x": 13,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 7
+    },
+    {
+      "destinationId": "Ota-hub-1-0",
+      "system": "Ota",
+      "x": 14,
+      "y": 10,
+      "ship": "TIE/in Interceptor",
+      "row": 8
+    }
+  ]
+}
