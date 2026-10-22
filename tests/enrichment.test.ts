@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { atomicWrite } from '../src/storage/files.js';
 import { SnapshotRun } from '../src/storage/snapshots.js';
-import { stationOperations, enrichFactionStations } from '../src/swc/enrich-stations.js';
+import { stationOperations, enrichFactionStations, syncCompleteFactionStations } from '../src/swc/enrich-stations.js';
 import { MATERIAL_FACTIONS } from '../src/swc/sync.js';
 
 test('production details retain design, workers and timers without inventing idle status', () => {
@@ -41,6 +41,29 @@ test('station enrichment resumes completed details and writes only a complete sc
     assert.deepEqual(calls, ['5:1', '5:2', '5:2']); assert.equal(summary.ownedStations, 2);
     const saved = JSON.parse(await readFile(summary.exportFile, 'utf8'));
     assert.equal(saved.stations.length, 2); assert.ok(saved.stations[0].operations.observedAt);
-    assert.match(summary.exportFile, /stations-production__system-kashyyyk/);
+    assert.match(summary.exportFile, /stations__system-kashyyyk/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('standard station sync resumes automatically and refreshes after completion', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'swc-auto-'));
+  try {
+    let lists = 0, details = 0, fail = true;
+    const client = {
+      me: async () => ({ uid: '1:1', factions: [{ value: MATERIAL_FACTIONS.tjo, attributes: { uid: '20:102' } }] }),
+      factionStations: async () => { lists++; return { entities: { attributes: { start: 1, total: 1 }, entity: [{ uid: '5:1' }] } }; },
+      resolveLocation: async () => ({ kind: 'system' as const, name: 'Test', uid: '9:1' }),
+      stationDetail: async () => { details++; if (fail) throw new Error('interrupted'); return { uid: '5:1', owner: { attributes: { uid: '20:102' } }, actions: { action: [] } }; },
+    };
+    const run = new SnapshotRun(root);
+    await assert.rejects(syncCompleteFactionStations(client, run, root, 'tjo', undefined, async () => {}, () => {}), /interrupted/);
+    await assert.rejects(readFile(join(run.directory, 'complete.json')));
+    fail = false;
+    const result = await syncCompleteFactionStations(client, new SnapshotRun(root), root, 'tjo', undefined, async () => {}, () => {});
+    assert.equal(lists, 1); assert.equal(details, 2);
+    const output = JSON.parse(await readFile(result.exportFile, 'utf8'));
+    assert.deepEqual(output.stations[0].operations.productionActions, []);
+    await syncCompleteFactionStations(client, new SnapshotRun(root), root, 'tjo', undefined, async () => {}, () => {});
+    assert.equal(lists, 2); assert.equal(details, 3);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

@@ -94,4 +94,5 @@ Faction materials also accept optional `-- --system "Name"` or `-- --planet "Nam
 
 New inventory exports and raw run folders use `owner__inventory__scope__UTC-timestamp-UUID` names. Successful summaries print `exportFile` and `rawDirectory`. See the [naming guide](docs/command-cheat-sheet.md#export-naming-convention).
 
-Station production details: run `npm run enrich:faction-stations:tjo -- --system "Kashyyyk"` (or `:tff`) after a station inventory sync. This creates a separate resumable, individually timestamped `stations-production` export. See the [cheat-sheet](docs/command-cheat-sheet.md#station-production-details) for refresh and resume behavior.
+
+Faction station sync now automatically includes individual production details in the standard export. Optional `-- --system "Name"` or `-- --planet "Name"` limits detail collection. Interrupted runs resume with the same command; after completion, the next run refreshes everything.
