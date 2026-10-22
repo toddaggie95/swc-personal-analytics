@@ -18,7 +18,7 @@ export function reconcileDestinations(materials, stations, destinations) {
  for(const d of destinations) {
   if(!d.id||ids.has(d.id))errors.push({code:'duplicate-or-missing-destination',id:d.id});
   ids.add(d.id);
-  if(!['hub','oneoff'].includes(d.kind))errors.push({code:'invalid-kind',id:d.id});
+  if(!['hub','oneoff','oneoff-group'].includes(d.kind))errors.push({code:'invalid-kind',id:d.id});
   const members=d.kind==='oneoff'?[d.stationUid]:d.memberStationUids;
   if(!Array.isArray(members)||!members.length||members.some(x=>!x))errors.push({code:'missing-members',id:d.id});
   const t=d.target;
