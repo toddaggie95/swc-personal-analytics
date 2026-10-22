@@ -18,6 +18,7 @@ export function run(argv) {
  const config=JSON.parse(fs.readFileSync(o.config,'utf8'));
  const destinations=Array.isArray(config)?config:config.destinations;
  if(!Array.isArray(destinations))throw Error('Configuration must contain destinations array');
+ if(config.approval!=='approved')throw Error('Refusing dry-run HAS plan: audited membership manifest not approved');
  const report=reconcileDestinations([...load('tff-materials'),...load('tjo-materials')],
   [...load('tff-stations'),...load('tjo-stations')],destinations);
  let changes=[];
