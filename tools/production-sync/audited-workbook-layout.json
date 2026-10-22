@@ -2385,13 +2385,13 @@
       "kind": "oneoff-group",
       "system": "Harrin",
       "memberStationUids": [
-        "5:17800"
+        "5:17856"
       ],
       "oneoffs": [
         {
           "row": 109,
           "coordinate": "10,14",
-          "stationUid": "5:17800",
+          "stationUid": "5:17856",
           "ship": "TIE/in Interceptor"
         }
       ],
