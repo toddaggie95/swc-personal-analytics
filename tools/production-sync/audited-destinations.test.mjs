@@ -39,3 +39,11 @@ test('one-off group row UIDs must match membership UIDs',()=>{
  const r=reconcileDestinations([],[{...station('5:3',5),type_name:'Shipyard IV'}],[oneoff]);
  assert.ok(r.errors.some(e=>e.code==='oneoff-membership-mismatch'));
 });
+
+test('blank HAS baseline must never be silently treated as zero',()=>{
+ const d={id:'one',kind:'hub',system:'Kashyyyk',memberStationUids:['5:1'],target:{sheet:'Kashyyyk',hasColumn:2,materialStartRow:13}};
+ const r=reconcileDestinations([],[station('5:1',5)],[d]);
+ const existing=Object.fromEntries(MATERIALS.map((m,i)=>[['Kashyyyk',13+i,2].join('|'),0]));
+ existing['Kashyyyk|13|2']=null;
+ assert.throws(()=>planHasChanges(r,existing),/Invalid baseline/);
+});
