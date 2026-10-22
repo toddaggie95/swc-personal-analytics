@@ -122,10 +122,10 @@ The facility list feature does not yet fetch these individual details.
 ### Location-limited facility collection
 
 Facility commands require exactly one of `--system "Name"` or `--planet "Name"` after npm's `--`.
-Names are passed as server-side inventory filters on every page. System includes all planets in that
-system; planet limits collection to that planet. Matching is checked against returned location names
-(case-insensitive); missing or different locations stop the run rather than silently broadening it.
+Names are resolved through the galaxy endpoint, then the returned UID is passed as the server-side filter on every page. System includes all planets in that
+system; planet limits collection to that planet. Matching is checked against returned location UIDs; missing or different locations stop the run rather than silently broadening it.
 The summary's locationFilter identifies the scope: ownedFacilities is a location count, not a faction total.
 Pages are spaced by 6.5 seconds, and a rate-limit cooldown stops remaining factions. Smaller collections
-still share SWC's rate allowance and cannot bypass an existing cooldown. Live filter behavior has not yet
-been verified; empty results alone do not prove a location contains no facilities.
+still share SWC's rate allowance and cannot bypass an existing cooldown. A bounded live planet probe confirmed names return a false zero while numeric IDs and full UIDs match.
+Planet Kashyyyk (8:896) returned 8,165 TFF facilities at probe time. Full collection still requires a
+successful completed run. Older name-filtered zero snapshots are unverified and must not be used as holdings totals.

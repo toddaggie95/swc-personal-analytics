@@ -18,7 +18,7 @@ export function retryDelay(header: string | null, attempt: number, now = Date.no
   }
   return 1000 * 2 ** attempt;
 }
-export interface LocationFilter { kind: 'system' | 'planet'; name: string }
+export interface LocationFilter { kind: 'system' | 'planet'; name: string; uid?: string }
 export function facilityFilter(args: string[]): LocationFilter {
   if (args.length !== 2 || !['--system', '--planet'].includes(args[0]!) || !args[1]?.trim() || args[1].trim().length > 120) {
     throw new SafeError('Facility sync requires --system "System name" or --planet "Planet name".');
@@ -58,11 +58,23 @@ export class ReadClient {
     if (!/^20:\d+$/.test(uid) || !Number.isSafeInteger(start) || start < 1) throw new SafeError('Invalid faction UID or page index.');
     return this.get(`inventory/${uid}/stations/owner`, { start_index: start, item_count: 200 });
   }
+  async resolveLocation(filter: LocationFilter): Promise<LocationFilter> {
+    const kind = filter.kind;
+    if (!['system', 'planet'].includes(kind) || !filter.name.trim()) throw new SafeError('Invalid location filter.');
+    const data = await this.get(`galaxy/${kind === 'planet' ? 'planets' : 'systems'}/${encodeURIComponent(filter.name)}/`, {});
+    const prefix = kind === 'planet' ? '8:' : '9:';
+    if (typeof data.uid !== 'string' || !data.uid.startsWith(prefix) || !/^\d+:\d+$/.test(data.uid)
+      || typeof data.name !== 'string' || data.name.toLowerCase() !== filter.name.toLowerCase()) {
+      throw new SafeError('Location could not be resolved exactly; facility collection was not started.');
+    }
+    return { kind, name: data.name, uid: data.uid };
+  }
   factionFacilities(uid: string, start: number, filter: LocationFilter): Promise<Record<string, unknown>> {
     if (!/^20:\d+$/.test(uid) || !Number.isSafeInteger(start) || start < 1) throw new SafeError('Invalid faction UID or page index.');
     if (!filter || !['system', 'planet'].includes(filter.kind) || !filter.name.trim()) throw new SafeError('A facility location filter is required.');
+    if (!filter.uid || !(filter.kind === 'planet' ? /^8:\d+$/ : /^9:\d+$/).test(filter.uid)) throw new SafeError('Resolve location to a UID before collecting facilities.');
     return this.get(`inventory/${uid}/facilities/owner`, { start_index: start, item_count: 200,
-      'filter_type[0]': filter.kind, 'filter_value[0]': filter.name, 'filter_inclusion[0]': 'includes' });
+      'filter_type[0]': filter.kind, 'filter_value[0]': filter.uid!, 'filter_inclusion[0]': 'includes' });
   }
   private async get(endpoint: string, query: Record<string, number | string>): Promise<Record<string, unknown>> {
     const url = new URL(endpoint, API_BASE);

@@ -29,10 +29,11 @@ export async function syncFactionStations(client: Pick<ReadClient, 'me' | 'facti
   return syncInventory({ me: () => client.me(), list: (uid, start) => client.factionStations(uid, start) },
     run, root, 'stations', MATERIAL_FACTIONS[faction]);
 }
-export async function syncFactionFacilities(client: Pick<ReadClient, 'me' | 'factionFacilities'>,
+export async function syncFactionFacilities(client: Pick<ReadClient, 'me' | 'factionFacilities' | 'resolveLocation'>,
   run: SnapshotRun, root: string, faction: keyof typeof MATERIAL_FACTIONS, filter: LocationFilter,
   wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms))) {
   if (!filter || !['system', 'planet'].includes(filter.kind) || !filter.name.trim()) throw new SafeError('A facility location filter is required.');
+  filter = await client.resolveLocation(filter);
   return syncInventory({ me: () => client.me(), list: async (uid, start) => {
     if (start > 1) await wait(6500);
     return client.factionFacilities(uid, start, filter);
@@ -76,7 +77,7 @@ async function syncInventory(client: { me: ReadClient['me']; list: ReadClient['s
     expectedTotal = total;
     for (const row of rows) {
       const station = normalizeEntity(row, ownerUid, run.id, entityType);
-      if (filter && station.location[filter.kind]?.name?.toLowerCase() !== filter.name.toLowerCase()) {
+      if (filter && station.location[filter.kind]?.uid !== filter.uid) {
         throw new SafeError('SWC returned a facility outside the requested location or with an unknown location. Collection stopped; partial snapshot retained.');
       }
       if (seen.has(station.uid)) throw new SafeError('Repeated inventory entity; snapshot incomplete.');
