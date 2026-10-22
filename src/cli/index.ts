@@ -13,12 +13,10 @@ import { safeFailure } from '../config/errors.js';
 dotenv({ quiet: true });
 let stage = 'configuration';
 async function main(): Promise<void> {
-  const requestedCommand = process.argv[2] || 'help';
-  const command = /^sync:materials(?::(?:tff|tjo))?$/.test(requestedCommand)
-    ? requestedCommand.replace('sync:materials', 'sync:faction-materials') : requestedCommand;
+  const command = process.argv[2] || 'help';
   const filter = command.startsWith('sync:faction-facilities') ? facilityFilter(process.argv.slice(3)) : undefined;
   if (!filter && process.argv.length > 3) throw new SafeError('Extra arguments refused. Never pass authorization codes or tokens on the command line.');
-  if (command === 'help') { console.log('Commands: status | auth:start | auth:finish | sync:stations | sync:ships | sync:faction-materials | sync:faction-materials:tff | sync:faction-materials:tjo | sync:faction-stations | sync:faction-stations:tff | sync:faction-stations:tjo | sync:faction-facilities | sync:faction-facilities:tff | sync:faction-facilities:tjo\nCompatibility aliases: sync:materials, sync:materials:tff, sync:materials:tjo.\nFacility commands require --system "Name" or --planet "Name".\nSee docs/oauth.md before live authorization.'); return; }
+  if (command === 'help') { console.log('Commands: status | auth:start | auth:finish | sync:stations | sync:ships | sync:faction-materials | sync:faction-materials:tff | sync:faction-materials:tjo | sync:faction-stations | sync:faction-stations:tff | sync:faction-stations:tjo | sync:faction-facilities | sync:faction-facilities:tff | sync:faction-facilities:tjo\nFacility commands require --system "Name" or --planet "Name".\nSee docs/oauth.md before live authorization.'); return; }
   const config = loadConfig();
   if (command === 'status') {
     const tokenStat = await stat(join(config.privateDir, 'tokens.json')).catch(() => null);

@@ -24,10 +24,6 @@ Faction visibility depends on your SWC permissions. Counts represent what the AP
 Personal inventory uses `sync:ships` and `sync:stations`; faction inventory uses the
 `sync:faction-` prefix. Personal material export is not implemented.
 
-Older commands remain compatibility aliases: `npm run sync:materials`,
-`npm run sync:materials:tff`, and `npm run sync:materials:tjo`. They still export faction materials,
-not personal materials. Prefer the explicit faction names above for new workflows.
-
 ## Facilities: choose one planet or system
 
 Facility commands require exactly one location option. Replace Kashyyyk with the desired name.
