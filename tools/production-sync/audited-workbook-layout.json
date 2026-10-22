@@ -1,0 +1,2470 @@
+{
+  "schemaVersion": 2,
+  "source": {
+    "spreadsheetId": "1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8",
+    "description": "Audited live workbook snapshot; station membership must be hydrated and validated from exports; do not use for writes"
+  },
+  "destinations": [
+    {
+      "id": "Kashyyyk-hub-1-0",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (15,4)",
+      "center": {
+        "x": 15,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-1-1",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (18,4)",
+      "center": {
+        "x": 18,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-1-2",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (12,10)",
+      "center": {
+        "x": 12,
+        "y": 10
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-1-3",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (5,11)",
+      "center": {
+        "x": 5,
+        "y": 11
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-1-4",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (8,11)",
+      "center": {
+        "x": 8,
+        "y": 11
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 18,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-1-5",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (12,13)",
+      "center": {
+        "x": 12,
+        "y": 13
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 22,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-1-6",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (15,13)",
+      "center": {
+        "x": 15,
+        "y": 13
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 26,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-1-7",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (5,14)",
+      "center": {
+        "x": 5,
+        "y": 14
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 30,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-35-0",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (8,14)",
+      "center": {
+        "x": 8,
+        "y": 14
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 2,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-35-1",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (18,14)",
+      "center": {
+        "x": 18,
+        "y": 14
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 6,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-35-2",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (5,17)",
+      "center": {
+        "x": 5,
+        "y": 17
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 10,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-35-3",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (15,17)",
+      "center": {
+        "x": 15,
+        "y": 17
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 14,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-35-4",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (5,6)",
+      "center": {
+        "x": 5,
+        "y": 6
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 18,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-35-5",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (1,13)",
+      "center": {
+        "x": 1,
+        "y": 13
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 22,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-35-6",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (1,6)",
+      "center": {
+        "x": 1,
+        "y": 6
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 26,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-35-7",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (4,1)",
+      "center": {
+        "x": 4,
+        "y": 1
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 30,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-69-0",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (7,1)",
+      "center": {
+        "x": 7,
+        "y": 1
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 2,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-69-1",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (12,4)",
+      "center": {
+        "x": 12,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 6,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-69-2",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (15,1)",
+      "center": {
+        "x": 15,
+        "y": 1
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 10,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-69-3",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (15,7)",
+      "center": {
+        "x": 15,
+        "y": 7
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 14,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-69-4",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (15,10)",
+      "center": {
+        "x": 15,
+        "y": 10
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 18,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Kashyyyk-hub-69-5",
+      "kind": "hub",
+      "system": "Kashyyyk",
+      "title": "Hub (18,7)",
+      "center": {
+        "x": 18,
+        "y": 7
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Kashyyyk",
+        "hasColumn": 22,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Eberon-hub-1-0",
+      "kind": "hub",
+      "system": "Eberon",
+      "title": "Hub (5,10)",
+      "center": {
+        "x": 5,
+        "y": 10
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Eberon",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Eberon-oneoffs",
+      "kind": "oneoff-group",
+      "system": "Eberon",
+      "memberStationUids": [
+        "5:8355"
+      ],
+      "oneoffs": [
+        {
+          "row": 109,
+          "coordinate": "5,7",
+          "stationUid": "5:8355",
+          "ship": "Behemoth-class Star Dreadnaught"
+        }
+      ],
+      "target": {
+        "sheet": "Eberon",
+        "hasColumn": 2,
+        "materialStartRow": 134
+      }
+    },
+    {
+      "id": "Dalchon-hub-1-0",
+      "kind": "hub",
+      "system": "Dalchon",
+      "title": "Dalchon Ring Alpha (6,10)",
+      "center": {
+        "x": 6,
+        "y": 10
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Dalchon",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Dalchon-hub-1-1",
+      "kind": "hub",
+      "system": "Dalchon",
+      "title": "Dalchon Ring Beta (6,7)",
+      "center": {
+        "x": 6,
+        "y": 7
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Dalchon",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Dalchon-hub-1-2",
+      "kind": "hub",
+      "system": "Dalchon",
+      "title": "Drow Depot (3,12)",
+      "center": {
+        "x": 3,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Dalchon",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Dalchon-hub-1-3",
+      "kind": "hub",
+      "system": "Dalchon",
+      "title": "Nymph Ring (3,7)",
+      "center": {
+        "x": 3,
+        "y": 7
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Dalchon",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Dalchon-oneoffs",
+      "kind": "oneoff-group",
+      "system": "Dalchon",
+      "memberStationUids": [
+        "5:64729",
+        "5:64728",
+        "5:64727"
+      ],
+      "oneoffs": [
+        {
+          "row": 109,
+          "coordinate": "8,14",
+          "stationUid": "5:64729",
+          "ship": "Aurek-class Tactical Strikefighter"
+        },
+        {
+          "row": 110,
+          "coordinate": "9,14",
+          "stationUid": "5:64728",
+          "ship": "Aurek-class Tactical Strikefighter"
+        },
+        {
+          "row": 111,
+          "coordinate": "10,14",
+          "stationUid": "5:64727",
+          "ship": "Aurek-class Tactical Strikefighter"
+        }
+      ],
+      "target": {
+        "sheet": "Dalchon",
+        "hasColumn": 2,
+        "materialStartRow": 134
+      }
+    },
+    {
+      "id": "Randon-hub-1-0",
+      "kind": "hub",
+      "system": "Randon",
+      "title": "Randon Asteroid Belt VII Ring (13,12)",
+      "center": {
+        "x": 13,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Randon",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Randon-oneoffs",
+      "kind": "oneoff-group",
+      "system": "Randon",
+      "memberStationUids": [
+        "5:5957",
+        "5:5956",
+        "5:5954",
+        "5:5539",
+        "5:5461",
+        "5:5546",
+        "5:5540",
+        "5:5545"
+      ],
+      "oneoffs": [
+        {
+          "row": 109,
+          "coordinate": "(8,7)",
+          "stationUid": "5:5957",
+          "ship": "Behemoth-class Star Dreadnaught"
+        },
+        {
+          "row": 110,
+          "coordinate": "(13,6)",
+          "stationUid": "5:5956",
+          "ship": "Behemoth-class Star Dreadnaught"
+        },
+        {
+          "row": 111,
+          "coordinate": "(9,6)",
+          "stationUid": "5:5954",
+          "ship": "Behemoth-class Star Dreadnaught"
+        },
+        {
+          "row": 112,
+          "coordinate": "(5,8)",
+          "stationUid": "5:5539",
+          "ship": "Behemoth-class Star Dreadnaught"
+        },
+        {
+          "row": 113,
+          "coordinate": "(12,8)",
+          "stationUid": "5:5461",
+          "ship": "Behemoth-class Star Dreadnaught"
+        },
+        {
+          "row": 114,
+          "coordinate": "(6,15)",
+          "stationUid": "5:5546",
+          "ship": "Behemoth-class Star Dreadnaught"
+        },
+        {
+          "row": 115,
+          "coordinate": "(7,4)",
+          "stationUid": "5:5540",
+          "ship": "Behemoth-class Star Dreadnaught"
+        },
+        {
+          "row": 116,
+          "coordinate": "(15,14)",
+          "stationUid": "5:5545",
+          "ship": "Behemoth-class Star Dreadnaught"
+        }
+      ],
+      "target": {
+        "sheet": "Randon",
+        "hasColumn": 2,
+        "materialStartRow": 134
+      }
+    },
+    {
+      "id": "Oshora-hub-1-0",
+      "kind": "hub",
+      "system": "Oshora",
+      "title": "Oshora Hub (8,18) — Untagged",
+      "center": {
+        "x": 8,
+        "y": 18
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Oshora",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Clantaano-hub-1-0",
+      "kind": "hub",
+      "system": "Clantaano",
+      "title": "Clantaano Hub (7,8) — Untagged",
+      "center": {
+        "x": 7,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Clantaano",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Clantaano-hub-1-1",
+      "kind": "hub",
+      "system": "Clantaano",
+      "title": "Clantaano Hub (10,12) — Untagged",
+      "center": {
+        "x": 10,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Clantaano",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Tholatin-hub-1-0",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholation IV Ring (1/2) (9,12)",
+      "center": {
+        "x": 9,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Tholatin-hub-1-1",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholation IV Ring (2/2) (10,14)",
+      "center": {
+        "x": 10,
+        "y": 14
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Tholatin-hub-1-2",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholatin III Ring (6,11)",
+      "center": {
+        "x": 6,
+        "y": 11
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Tholatin-hub-1-3",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholation SW Ring (6,16)",
+      "center": {
+        "x": 6,
+        "y": 16
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Tholatin-hub-1-4",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholatin V Ring (15,10)",
+      "center": {
+        "x": 15,
+        "y": 10
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 18,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Tholatin-hub-1-5",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholatin IX Ring (14,18)",
+      "center": {
+        "x": 14,
+        "y": 18
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 22,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Tholatin-hub-1-6",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholatin VIII Ring (10,16)",
+      "center": {
+        "x": 10,
+        "y": 16
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 26,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Tholatin-hub-1-7",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Brownie Ring (13,7)",
+      "center": {
+        "x": 13,
+        "y": 7
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 30,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Tholatin-hub-35-0",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Drow Ring Tholatin (7,4)",
+      "center": {
+        "x": 7,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 2,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Tholatin-hub-35-1",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Titania Ring Tholatin Depot (18,4)",
+      "center": {
+        "x": 18,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 6,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Tholatin-hub-35-2",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Satyr Ring (13,13)",
+      "center": {
+        "x": 13,
+        "y": 13
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 10,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Tholatin-hub-35-3",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Nymph Ring Tholatin Depot (1,7)",
+      "center": {
+        "x": 1,
+        "y": 7
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 14,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Tholatin-hub-35-4",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Oberon Ring Tholatin (15,4)",
+      "center": {
+        "x": 15,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 18,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Tholatin-hub-35-5",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Echani Ring Tholatin (10,4)",
+      "center": {
+        "x": 10,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 22,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Tholatin-hub-35-6",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Dwarven Ring Tholatin (4,4)",
+      "center": {
+        "x": 4,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 26,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Tholatin-hub-35-7",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Selkie Ring Tholatin Depot (1,4)",
+      "center": {
+        "x": 1,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 30,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Tholatin-hub-69-0",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Spriggan Ring Tholatin (16,15)",
+      "center": {
+        "x": 16,
+        "y": 15
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 2,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Tholatin-hub-69-1",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholatin Dryad Ring (4,1)",
+      "center": {
+        "x": 4,
+        "y": 1
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 6,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Tholatin-hub-69-2",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholation I Ring (8,8)",
+      "center": {
+        "x": 8,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 10,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Tholatin-hub-69-3",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholatin Pixie Ring (3,13)",
+      "center": {
+        "x": 3,
+        "y": 13
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 14,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Tholatin-hub-69-4",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "K Assugn; TFF Tholatin Githyanki Ring (4,18)",
+      "center": {
+        "x": 4,
+        "y": 18
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 18,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Tholatin-hub-69-5",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholatin Narn Ring Depot (7,1)",
+      "center": {
+        "x": 7,
+        "y": 1
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 22,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Tholatin-hub-69-6",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholatin Daphnaie Ring (4,7)",
+      "center": {
+        "x": 4,
+        "y": 7
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 26,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Tholatin-hub-69-7",
+      "kind": "hub",
+      "system": "Tholatin",
+      "title": "TFF Tholatin Ring (10,10)",
+      "center": {
+        "x": 10,
+        "y": 10
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 30,
+        "materialStartRow": 81
+      }
+    },
+    {
+      "id": "Tholatin-oneoffs",
+      "kind": "oneoff-group",
+      "system": "Tholatin",
+      "memberStationUids": [
+        "5:19981",
+        "5:4757",
+        "5:19843"
+      ],
+      "oneoffs": [
+        {
+          "row": 109,
+          "coordinate": "13,3",
+          "stationUid": "5:19981",
+          "ship": "Alpha-class Xg-1 Star Wing"
+        },
+        {
+          "row": 110,
+          "coordinate": "10,10",
+          "stationUid": "5:4757",
+          "ship": "Alpha-class Xg-1 Star Wing"
+        },
+        {
+          "row": 111,
+          "coordinate": "2,15",
+          "stationUid": "5:19843",
+          "ship": "Alpha-class Xg-1 Star Wing"
+        }
+      ],
+      "target": {
+        "sheet": "Tholatin",
+        "hasColumn": 2,
+        "materialStartRow": 134
+      }
+    },
+    {
+      "id": "Messert-hub-1-0",
+      "kind": "hub",
+      "system": "Messert",
+      "title": "TFF Messert Ring (4,8)",
+      "center": {
+        "x": 4,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Messert",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Messert-hub-1-1",
+      "kind": "hub",
+      "system": "Messert",
+      "title": "TFF Hawk Ring (7,8)",
+      "center": {
+        "x": 7,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Messert",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Messert-hub-1-2",
+      "kind": "hub",
+      "system": "Messert",
+      "title": "TFF Messert V Ring (18,6)",
+      "center": {
+        "x": 18,
+        "y": 6
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Messert",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Messert-hub-1-3",
+      "kind": "hub",
+      "system": "Messert",
+      "title": "TFF Messert I Ring (12,12)",
+      "center": {
+        "x": 12,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Messert",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Messert-hub-1-4",
+      "kind": "hub",
+      "system": "Messert",
+      "title": "TFF Messert II Ring (15,15) — 2 DP-20C",
+      "center": {
+        "x": 15,
+        "y": 15
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Messert",
+        "hasColumn": 18,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Messert-hub-1-5",
+      "kind": "hub",
+      "system": "Messert",
+      "title": "TFF Messert III Ring (9,14)",
+      "center": {
+        "x": 9,
+        "y": 14
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Messert",
+        "hasColumn": 22,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Messert-oneoffs",
+      "kind": "oneoff-group",
+      "system": "Messert",
+      "memberStationUids": [
+        "5:9588",
+        "5:11222"
+      ],
+      "oneoffs": [
+        {
+          "row": 109,
+          "coordinate": "11,14",
+          "stationUid": "5:9588",
+          "ship": "TIE/in Interceptor"
+        },
+        {
+          "row": 110,
+          "coordinate": "11,15",
+          "stationUid": "5:11222",
+          "ship": "TIE/in Interceptor"
+        }
+      ],
+      "target": {
+        "sheet": "Messert",
+        "hasColumn": 2,
+        "materialStartRow": 134
+      }
+    },
+    {
+      "id": "Saki-hub-1-0",
+      "kind": "hub",
+      "system": "Saki",
+      "title": "Saki I Production Ring (10,8)",
+      "center": {
+        "x": 10,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Saki",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Saki-hub-1-1",
+      "kind": "hub",
+      "system": "Saki",
+      "title": "Saki II Production Ring (10,12)",
+      "center": {
+        "x": 10,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Saki",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Saki-hub-1-2",
+      "kind": "hub",
+      "system": "Saki",
+      "title": "Sakiya Production Ring (1,14)",
+      "center": {
+        "x": 1,
+        "y": 14
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Saki",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Saki-hub-1-3",
+      "kind": "hub",
+      "system": "Saki",
+      "title": "TFF Saki Elhhona Ring (13,12)",
+      "center": {
+        "x": 13,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Saki",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Saki-hub-1-4",
+      "kind": "hub",
+      "system": "Saki",
+      "title": "TFF Saki Applewink Ring (10,15)",
+      "center": {
+        "x": 10,
+        "y": 15
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Saki",
+        "hasColumn": 18,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Saki-hub-1-5",
+      "kind": "hub",
+      "system": "Saki",
+      "title": "TFF Saki Ring Silkcrest Ring (10,5)",
+      "center": {
+        "x": 10,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Saki",
+        "hasColumn": 22,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Saki-hub-1-6",
+      "kind": "hub",
+      "system": "Saki",
+      "title": "TFF Saki Ring Sylsalin Ring (13,8)",
+      "center": {
+        "x": 13,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Saki",
+        "hasColumn": 26,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Saki-hub-1-7",
+      "kind": "hub",
+      "system": "Saki",
+      "title": "TFF Saki Ring Nymserin Ring (7,8)",
+      "center": {
+        "x": 7,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Saki",
+        "hasColumn": 30,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Saki-hub-35-0",
+      "kind": "hub",
+      "system": "Saki",
+      "title": "TFF Saki Ring Shady Vale Ring (7,12)",
+      "center": {
+        "x": 7,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Saki",
+        "hasColumn": 2,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Saki-hub-35-1",
+      "kind": "hub",
+      "system": "Saki",
+      "title": "TFF Saki Spiderflame Ring (7,15)",
+      "center": {
+        "x": 7,
+        "y": 15
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Saki",
+        "hasColumn": 6,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Saki-hub-35-2",
+      "kind": "hub",
+      "system": "Saki",
+      "title": "TFF Saki Green Dragon Ring (13,15)",
+      "center": {
+        "x": 13,
+        "y": 15
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Saki",
+        "hasColumn": 10,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Mechis-hub-1-0",
+      "kind": "hub",
+      "system": "Mechis",
+      "title": "Mechis I Hub (13,16)",
+      "center": {
+        "x": 13,
+        "y": 16
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Mechis",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Mechis-hub-1-1",
+      "kind": "hub",
+      "system": "Mechis",
+      "title": "Mechis II Hub Alpha (3,3)",
+      "center": {
+        "x": 3,
+        "y": 3
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Mechis",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Mechis-hub-1-2",
+      "kind": "hub",
+      "system": "Mechis",
+      "title": "Mech II Hub Beta (6,3)",
+      "center": {
+        "x": 6,
+        "y": 3
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Mechis",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Mechis-hub-1-3",
+      "kind": "hub",
+      "system": "Mechis",
+      "title": "GoF Ring Mech III (8,9)",
+      "center": {
+        "x": 8,
+        "y": 9
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Mechis",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Mechis-hub-1-4",
+      "kind": "hub",
+      "system": "Mechis",
+      "title": "Mech III Hub Beta (8,12)",
+      "center": {
+        "x": 8,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Mechis",
+        "hasColumn": 18,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lexrul-hub-1-0",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "Lexrul Untagged Ring (5,8) (5,8)",
+      "center": {
+        "x": 5,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lexrul-hub-1-1",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "TFF Lexrul Goblin Ring (5,11) (5,11)",
+      "center": {
+        "x": 5,
+        "y": 11
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lexrul-hub-1-2",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "Lexrul Untagged Bomber Ring (5,15) (5,15)",
+      "center": {
+        "x": 5,
+        "y": 15
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lexrul-hub-1-3",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "TFF Lexrul Draken Ring (8,11) (8,11)",
+      "center": {
+        "x": 8,
+        "y": 11
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lexrul-hub-1-4",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "Lexrul Untagged Bomber Ring (8,15) (8,15)",
+      "center": {
+        "x": 8,
+        "y": 15
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 18,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lexrul-hub-1-5",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "Lexrul Untagged Partial Ring (11,15) (11,15)",
+      "center": {
+        "x": 11,
+        "y": 15
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 22,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lexrul-hub-1-6",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "TFF Lexrul Sprite Ring (12,9) (12,9)",
+      "center": {
+        "x": 12,
+        "y": 9
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 26,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lexrul-hub-1-7",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "TFF Lexrul Spriggan Ring (12,12) (12,12)",
+      "center": {
+        "x": 12,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 30,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lexrul-hub-35-0",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "Lexrul Untooled Ring (14,15) (14,15)",
+      "center": {
+        "x": 14,
+        "y": 15
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 2,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Lexrul-hub-35-1",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "Lexrul Untagged Ring (15,6) (15,6)",
+      "center": {
+        "x": 15,
+        "y": 6
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 6,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Lexrul-hub-35-2",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "TFF Lexrul Kami Ring (15,9) (15,9)",
+      "center": {
+        "x": 15,
+        "y": 9
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 10,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Lexrul-hub-35-3",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "TFF Lexrul Elven Ring (15,12) (15,12)",
+      "center": {
+        "x": 15,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 14,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Lexrul-hub-35-4",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "Lexrul Untagged Partial Shipyards (12,6)",
+      "center": {
+        "x": 12,
+        "y": 6
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 18,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Lexrul-hub-35-5",
+      "kind": "hub",
+      "system": "Lexrul",
+      "title": "Lexrul Untooled One-off Shipyards (4,17)",
+      "center": {
+        "x": 4,
+        "y": 17
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 22,
+        "materialStartRow": 47
+      }
+    },
+    {
+      "id": "Lexrul-oneoffs",
+      "kind": "oneoff-group",
+      "system": "Lexrul",
+      "memberStationUids": [
+        "5:20994",
+        "5:7888",
+        "5:6451"
+      ],
+      "oneoffs": [
+        {
+          "row": 109,
+          "coordinate": "16,14",
+          "stationUid": "5:20994",
+          "ship": "Alpha-class Xg-1 Star Wing"
+        },
+        {
+          "row": 110,
+          "coordinate": "8,8",
+          "stationUid": "5:7888",
+          "ship": "Alpha-class Xg-1 Star Wing"
+        },
+        {
+          "row": 111,
+          "coordinate": "10,6",
+          "stationUid": "5:6451",
+          "ship": "TIE/in Interceptor"
+        }
+      ],
+      "target": {
+        "sheet": "Lexrul",
+        "hasColumn": 2,
+        "materialStartRow": 134
+      }
+    },
+    {
+      "id": "Uogo`cor-hub-1-0",
+      "kind": "hub",
+      "system": "Uogo`cor",
+      "title": "Uogo`cor Untooled Ring (4,8) (4,8)",
+      "center": {
+        "x": 4,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Uogo`cor",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Uogo`cor-hub-1-1",
+      "kind": "hub",
+      "system": "Uogo`cor",
+      "title": "Uogo`cor Liggma Ring (5,5) (5,5)",
+      "center": {
+        "x": 5,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Uogo`cor",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Uogo`cor-hub-1-2",
+      "kind": "hub",
+      "system": "Uogo`cor",
+      "title": "Uogo`cor Echo Ring (8,5) (8,5)",
+      "center": {
+        "x": 8,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Uogo`cor",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Uogo`cor-hub-1-3",
+      "kind": "hub",
+      "system": "Uogo`cor",
+      "title": "Uogo`cor Sims Demise Ring (11,5) (11,5)",
+      "center": {
+        "x": 11,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Uogo`cor",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Uogo`cor-hub-1-4",
+      "kind": "hub",
+      "system": "Uogo`cor",
+      "title": "Uogo`cor Suggma Ring (14,5) (14,5)",
+      "center": {
+        "x": 14,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Uogo`cor",
+        "hasColumn": 18,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Uogo`cor-hub-1-5",
+      "kind": "hub",
+      "system": "Uogo`cor",
+      "title": "TFF Uogo`cor Production Ring Dryad (18,7) (18,7)",
+      "center": {
+        "x": 18,
+        "y": 7
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Uogo`cor",
+        "hasColumn": 22,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Uogo`cor-oneoffs",
+      "kind": "oneoff-group",
+      "system": "Uogo`cor",
+      "memberStationUids": [
+        "5:5991",
+        "5:19695",
+        "5:20942",
+        "5:19389",
+        "5:12423",
+        "5:7323",
+        "5:9205",
+        "5:9399",
+        "5:9203",
+        "5:9217",
+        "5:6790"
+      ],
+      "oneoffs": [
+        {
+          "row": 109,
+          "coordinate": "18,2",
+          "stationUid": "5:5991",
+          "ship": "Alpha-class Xg-1 Star Wing"
+        },
+        {
+          "row": 110,
+          "coordinate": "10,8",
+          "stationUid": "5:19695",
+          "ship": "TIE/in Interceptor"
+        },
+        {
+          "row": 111,
+          "coordinate": "12,12",
+          "stationUid": "5:20942",
+          "ship": "TIE/in Interceptor"
+        },
+        {
+          "row": 112,
+          "coordinate": "14,14",
+          "stationUid": "5:19389",
+          "ship": "Alpha-class Xg-1 Star Wing"
+        },
+        {
+          "row": 113,
+          "coordinate": "1,4",
+          "stationUid": "5:12423",
+          "ship": "TIE/in Interceptor"
+        },
+        {
+          "row": 114,
+          "coordinate": "18,5",
+          "stationUid": "5:7323",
+          "ship": "TIE/in Interceptor"
+        },
+        {
+          "row": 115,
+          "coordinate": "17,2",
+          "stationUid": "5:9205",
+          "ship": "TIE/in Interceptor"
+        },
+        {
+          "row": 116,
+          "coordinate": "15,2",
+          "stationUid": "5:9399",
+          "ship": "TIE/in Interceptor"
+        },
+        {
+          "row": 117,
+          "coordinate": "17,3",
+          "stationUid": "5:9203",
+          "ship": "TIE/in Interceptor"
+        },
+        {
+          "row": 118,
+          "coordinate": "2,4",
+          "stationUid": "5:9217",
+          "ship": "TIE/in Interceptor"
+        },
+        {
+          "row": 119,
+          "coordinate": "15,3",
+          "stationUid": "5:6790",
+          "ship": "TIE/in Interceptor"
+        }
+      ],
+      "target": {
+        "sheet": "Uogo`cor",
+        "hasColumn": 2,
+        "materialStartRow": 134
+      }
+    },
+    {
+      "id": "Daluuj-hub-1-0",
+      "kind": "hub",
+      "system": "Daluuj",
+      "title": "TFF Daluuj Depot (7,5)",
+      "center": {
+        "x": 7,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Daluuj",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Daluuj-hub-1-1",
+      "kind": "hub",
+      "system": "Daluuj",
+      "title": "TFF Daluuj Citrusbriar Ring (13,5)",
+      "center": {
+        "x": 13,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Daluuj",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Daluuj-hub-1-2",
+      "kind": "hub",
+      "system": "Daluuj",
+      "title": "TFF Daluuj Drow Ring Depot (4,5)",
+      "center": {
+        "x": 4,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Daluuj",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Daluuj-hub-1-3",
+      "kind": "hub",
+      "system": "Daluuj",
+      "title": "TFF Daluuj Islesbury Ring Depot (10,5)",
+      "center": {
+        "x": 10,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Daluuj",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Daluuj-hub-1-4",
+      "kind": "hub",
+      "system": "Daluuj",
+      "title": "TFF Daluuj Aphedron Depot (4,8)",
+      "center": {
+        "x": 4,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Daluuj",
+        "hasColumn": 18,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Daluuj-hub-1-5",
+      "kind": "hub",
+      "system": "Daluuj",
+      "title": "TFF Daluuj Neithedir Depot (7,8)",
+      "center": {
+        "x": 7,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Daluuj",
+        "hasColumn": 22,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Daluuj-hub-1-6",
+      "kind": "hub",
+      "system": "Daluuj",
+      "title": "TFF Daluuj Orc Ring (7,1)",
+      "center": {
+        "x": 7,
+        "y": 1
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Daluuj",
+        "hasColumn": 26,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Daluuj-hub-1-7",
+      "kind": "hub",
+      "system": "Daluuj",
+      "title": "TFF Daluuj Slime Ring (13,1)",
+      "center": {
+        "x": 13,
+        "y": 1
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Daluuj",
+        "hasColumn": 30,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Krmar-hub-1-0",
+      "kind": "hub",
+      "system": "Krmar",
+      "title": "Ring Ebony; TJO (8,2)",
+      "center": {
+        "x": 8,
+        "y": 2
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Krmar",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Krmar-hub-1-1",
+      "kind": "hub",
+      "system": "Krmar",
+      "title": "Ring Catalyst; TJO (11,3)",
+      "center": {
+        "x": 11,
+        "y": 3
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Krmar",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Krmar-hub-1-2",
+      "kind": "hub",
+      "system": "Krmar",
+      "title": "TFF Font Production (8,5)",
+      "center": {
+        "x": 8,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Krmar",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Krmar-hub-1-3",
+      "kind": "hub",
+      "system": "Krmar",
+      "title": "TFF Krmar II Alchemist Ring (11,6)",
+      "center": {
+        "x": 11,
+        "y": 6
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Krmar",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Krmar-hub-1-4",
+      "kind": "hub",
+      "system": "Krmar",
+      "title": "K Assugn; TFF Krmar Pixie Ring (5,7)",
+      "center": {
+        "x": 5,
+        "y": 7
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Krmar",
+        "hasColumn": 18,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Krmar-hub-1-5",
+      "kind": "hub",
+      "system": "Krmar",
+      "title": "TFF Sleih Beggey Depot (8,8)",
+      "center": {
+        "x": 8,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Krmar",
+        "hasColumn": 22,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Krmar-hub-1-6",
+      "kind": "hub",
+      "system": "Krmar",
+      "title": "TFF Krmar Dökkálfar Depot (11,10)",
+      "center": {
+        "x": 11,
+        "y": 10
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Krmar",
+        "hasColumn": 26,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lannik-hub-1-0",
+      "kind": "hub",
+      "system": "Lannik",
+      "title": "TFF Lannik Isen Ring (4,1)",
+      "center": {
+        "x": 4,
+        "y": 1
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lannik",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lannik-hub-1-1",
+      "kind": "hub",
+      "system": "Lannik",
+      "title": "TFF Lannik Heiter Ring (7,1)",
+      "center": {
+        "x": 7,
+        "y": 1
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lannik",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lannik-hub-1-2",
+      "kind": "hub",
+      "system": "Lannik",
+      "title": "TFF Lannik Himel Ring (2,4)",
+      "center": {
+        "x": 2,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lannik",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lannik-hub-1-3",
+      "kind": "hub",
+      "system": "Lannik",
+      "title": "TFF Ring Sultry Siren (5,4)",
+      "center": {
+        "x": 5,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lannik",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lannik-hub-1-4",
+      "kind": "hub",
+      "system": "Lannik",
+      "title": "TFF Lannik Agamemnon Ring (2,7)",
+      "center": {
+        "x": 2,
+        "y": 7
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lannik",
+        "hasColumn": 18,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lannik-hub-1-5",
+      "kind": "hub",
+      "system": "Lannik",
+      "title": "TFF Lannik Oneserin Depot (8,5)",
+      "center": {
+        "x": 8,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lannik",
+        "hasColumn": 22,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Lannik-hub-1-6",
+      "kind": "hub",
+      "system": "Lannik",
+      "title": "TFF Lannik Snickerdoodle Ring (5,8)",
+      "center": {
+        "x": 5,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Lannik",
+        "hasColumn": 26,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Chamble-hub-1-0",
+      "kind": "hub",
+      "system": "Chamble",
+      "title": "TFF Chamble VI (4,5)",
+      "center": {
+        "x": 4,
+        "y": 5
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Chamble",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Chamble-hub-1-1",
+      "kind": "hub",
+      "system": "Chamble",
+      "title": "TFF Chamble Druid Ring (4,8)",
+      "center": {
+        "x": 4,
+        "y": 8
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Chamble",
+        "hasColumn": 6,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Chamble-hub-1-2",
+      "kind": "hub",
+      "system": "Chamble",
+      "title": "TFF Chamble IV (7,7)",
+      "center": {
+        "x": 7,
+        "y": 7
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Chamble",
+        "hasColumn": 10,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Chamble-hub-1-3",
+      "kind": "hub",
+      "system": "Chamble",
+      "title": "TFF Chamble I (12,4)",
+      "center": {
+        "x": 12,
+        "y": 4
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Chamble",
+        "hasColumn": 14,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Chamble-hub-1-4",
+      "kind": "hub",
+      "system": "Chamble",
+      "title": "TFF Chamble V (9,13)",
+      "center": {
+        "x": 9,
+        "y": 13
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Chamble",
+        "hasColumn": 18,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Chamble-hub-1-5",
+      "kind": "hub",
+      "system": "Chamble",
+      "title": "Chamble Untagged Bomber Ring (4,13)",
+      "center": {
+        "x": 4,
+        "y": 13
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Chamble",
+        "hasColumn": 22,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Chamble-hub-1-6",
+      "kind": "hub",
+      "system": "Chamble",
+      "title": "TFF Chamble VII (0,12)",
+      "center": {
+        "x": 0,
+        "y": 12
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Chamble",
+        "hasColumn": 26,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Chamble-oneoffs",
+      "kind": "oneoff-group",
+      "system": "Chamble",
+      "memberStationUids": [
+        "5:17622",
+        "5:17625"
+      ],
+      "oneoffs": [
+        {
+          "row": 109,
+          "coordinate": "12,12",
+          "stationUid": "5:17622",
+          "ship": "TIE/in Interceptor"
+        },
+        {
+          "row": 110,
+          "coordinate": "14,18",
+          "stationUid": "5:17625",
+          "ship": "Executor-class Star Destroyer"
+        }
+      ],
+      "target": {
+        "sheet": "Chamble",
+        "hasColumn": 2,
+        "materialStartRow": 134
+      }
+    },
+    {
+      "id": "Harrin-hub-1-0",
+      "kind": "hub",
+      "system": "Harrin",
+      "title": "Harrin — Untagged shipyards (14,10)",
+      "center": {
+        "x": 14,
+        "y": 10
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Harrin",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Harrin-oneoffs",
+      "kind": "oneoff-group",
+      "system": "Harrin",
+      "memberStationUids": [
+        "5:17800"
+      ],
+      "oneoffs": [
+        {
+          "row": 109,
+          "coordinate": "10,14",
+          "stationUid": "5:17800",
+          "ship": "TIE/in Interceptor"
+        }
+      ],
+      "target": {
+        "sheet": "Harrin",
+        "hasColumn": 2,
+        "materialStartRow": 134
+      }
+    },
+    {
+      "id": "Ota-hub-1-0",
+      "kind": "hub",
+      "system": "Ota",
+      "title": "Ota — Untagged shipyards (13,10)",
+      "center": {
+        "x": 13,
+        "y": 10
+      },
+      "memberStationUids": [],
+      "target": {
+        "sheet": "Ota",
+        "hasColumn": 2,
+        "materialStartRow": 13
+      }
+    },
+    {
+      "id": "Rakhuuun-oneoffs",
+      "kind": "oneoff-group",
+      "system": "Rakhuuun",
+      "memberStationUids": [
+        "5:12320",
+        "5:8267"
+      ],
+      "oneoffs": [
+        {
+          "row": 109,
+          "coordinate": "6,8",
+          "stationUid": "5:12320",
+          "ship": "Modular Taskforce Cruiser"
+        },
+        {
+          "row": 110,
+          "coordinate": "0,2",
+          "stationUid": "5:8267",
+          "ship": "Ithorian Herdship"
+        }
+      ],
+      "target": {
+        "sheet": "Rakhuuun",
+        "hasColumn": 2,
+        "materialStartRow": 134
+      }
+    },
+    {
+      "id": "Teljkon-oneoffs",
+      "kind": "oneoff-group",
+      "system": "Teljkon",
+      "memberStationUids": [
+        "5:7725"
+      ],
+      "oneoffs": [
+        {
+          "row": 109,
+          "coordinate": "7,10",
+          "stationUid": "5:7725",
+          "ship": "BFF-1 Bulk Freighter"
+        }
+      ],
+      "target": {
+        "sheet": "Teljkon",
+        "hasColumn": 2,
+        "materialStartRow": 134
+      }
+    }
+  ]
+}
