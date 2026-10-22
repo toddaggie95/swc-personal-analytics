@@ -24,7 +24,7 @@ export function candidateMembership(layout,stations) {
   if(exactOneoffIds.has(s.uid))continue;
   const x=Number(s.sysX),y=Number(s.sysY);
   if(!Number.isInteger(x)||!Number.isInteger(y))continue;
-  const hits=byHub.filter(h=>h.system===s.system&&h.center&&Math.abs(h.center.x-x)<=1&&Math.abs(h.center.y-y)<=1);
+  const hits=byHub.filter(h=>h.system===s.system&&(!h.sector||h.sector===s.sector)&&h.center&&Math.abs(h.center.x-x)<=1&&Math.abs(h.center.y-y)<=1);
   if(!hits.length)continue;
   stationMatches.set(s.uid,hits.map(h=>h.id));
   for(const h of hits) {
@@ -33,6 +33,7 @@ export function candidateMembership(layout,stations) {
    if(hits.length>1)h.ambiguousStationUids.push(s.uid);
   }
  }
+ for(const h of byHub){h.candidateStationDetails=h.candidateStationUids.map(uid=>{const s=unique.get(uid);return {uid,name:s.name,type:s.type_name,coordinate:[Number(s.sysX),Number(s.sysY)],tags:s.tags||'',tooledTo:s['tooled-to']||'',productionStatus:s.productionStatus||'',candidateHubIds:stationMatches.get(uid)||[]}})}
  const unresolved=byHub.filter(h=>h.ambiguousStationUids.length||!h.candidateShipyardUids.length);
  return {schemaVersion:1,warning:'CANDIDATES ONLY. Require explicit UID membership review before HAS writes.',hubCandidates:byHub,oneoffs,conflictingStationUids:conflicts,statistics:{hubs:hubs.length,oneoffGroups:oneoffs.length,ambiguousHubs:unresolved.length,uniqueStations:unique.size}};
 }
