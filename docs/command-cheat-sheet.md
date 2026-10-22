@@ -88,6 +88,12 @@ command and location after any cooldown; saved details are resumed automatically
 the next invocation starts a fresh collection. Intermediate inventory and details stay in private
 `checkpoints`; only the finished combined export is placed in `normalized`.
 
+Station exports include top-level `tags`: the exact strings returned by SWC, without invented labels.
+`[]` means SWC explicitly returned no tags; `null` means unavailable or an unexpected tag format.
+Faction exports prefer detail-response tags, falling back to inventory-list tags when detail tags are
+unavailable. Personal station exports use inventory-list tags. Older exports are unchanged; rerun the
+standard sync to produce a new file. Resuming older checkpoints refreshes details that lack tag data.
+
 Each detail has its own observation time and raw-source reference. Resumed data can span multiple
 sessions; the combined export is not an instantaneous snapshot. Old basic exports are not rewritten.
 

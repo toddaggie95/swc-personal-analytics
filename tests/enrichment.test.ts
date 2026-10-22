@@ -53,7 +53,7 @@ test('standard station sync resumes automatically and refreshes after completion
       me: async () => ({ uid: '1:1', factions: [{ value: MATERIAL_FACTIONS.tjo, attributes: { uid: '20:102' } }] }),
       factionStations: async () => { lists++; return { entities: { attributes: { start: 1, total: 1 }, entity: [{ uid: '5:1' }] } }; },
       resolveLocation: async () => ({ kind: 'system' as const, name: 'Test', uid: '9:1' }),
-      stationDetail: async () => { details++; if (fail) throw new Error('interrupted'); return { uid: '5:1', owner: { attributes: { uid: '20:102' } }, actions: { action: [] } }; },
+      stationDetail: async () => { details++; if (fail) throw new Error('interrupted'); return { uid: '5:1', tags: { tag: ['SWC test tag'] }, owner: { attributes: { uid: '20:102' } }, actions: { action: [] } }; },
     };
     const run = new SnapshotRun(root);
     await assert.rejects(syncCompleteFactionStations(client, run, root, 'tjo', undefined, async () => {}, () => {}), /interrupted/);
@@ -63,6 +63,7 @@ test('standard station sync resumes automatically and refreshes after completion
     assert.equal(lists, 1); assert.equal(details, 2);
     const output = JSON.parse(await readFile(result.exportFile, 'utf8'));
     assert.deepEqual(output.stations[0].operations.productionActions, []);
+    assert.deepEqual(output.stations[0].tags, ['SWC test tag']);
     await syncCompleteFactionStations(client, new SnapshotRun(root), root, 'tjo', undefined, async () => {}, () => {});
     assert.equal(lists, 2); assert.equal(details, 3);
   } finally { await rm(root, { recursive: true, force: true }); }

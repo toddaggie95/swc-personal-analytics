@@ -367,3 +367,11 @@ test('export names describe scope and cannot introduce directories', () => {
   assert.equal(exportLabel('personal', 'ships'), 'personal__ships__all');
   assert.equal(exportLabel('tjo', 'facilities', { kind: 'planet', name: '../Some / Planet' }), 'tjo__facilities__planet-some-planet');
 });
+
+test('station tags preserve SWC text and distinguish empty from unavailable', () => {
+  const normalize = (tags: unknown) => normalizeStation({ uid: '5:1', tags }, '20:1', 'test').tags;
+  assert.deepEqual(normalize({ tag: ['TJO', 'Ring Alpha; Beta', 'Mixed CASE'] }), ['TJO', 'Ring Alpha; Beta', 'Mixed CASE']);
+  assert.deepEqual(normalize({ tag: [] }), []);
+  assert.equal(normalize(undefined), null);
+  assert.equal(normalize({ tag: ['TJO', 42] }), null);
+});

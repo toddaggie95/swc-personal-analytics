@@ -1,5 +1,6 @@
 import { readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { swcTags } from '../models/station.js';
 import { createHash } from 'node:crypto';
 import { MATERIAL_FACTIONS, syncFactionStations } from './sync.js';
 import { SafeError } from '../config/index.js';
@@ -15,6 +16,7 @@ export function stationOperations(detail: Record<string, unknown>) {
   const actionList = Array.isArray(actions) ? actions : null;
   const productionActions = actionList?.filter(a => record(record(a).attributes).type === 'EntityProductionAction') ?? null;
   return {
+    tags: swcTags(detail.tags),
     actions: actionList, productionActions,
     queueItems: Array.isArray(queue) ? queue : null,
     tooledTo: detail.tooledto ?? null, cargo: detail.cargo ?? null,
@@ -56,7 +58,7 @@ export async function enrichFactionStations(
   for (const station of stations) {
     const uid = String(station.uid);
     let saved = record(cached[uid]);
-    if (!saved.observedAt) {
+    if (!saved.observedAt || !('tags' in saved)) {
       await wait(6500);
       const detail = await client.stationDetail(uid);
       if (detail.uid !== uid || record(record(detail.owner).attributes).uid !== ownerUid
@@ -68,7 +70,7 @@ export async function enrichFactionStations(
       cached[uid] = saved;
       await atomicWrite(cacheFile, JSON.stringify(cached, null, 2));
     }
-    enriched.push({ ...station, operations: saved });
+    enriched.push({ ...station, tags: saved.tags ?? station.tags ?? null, operations: saved });
     progress(`Station details: ${enriched.length}/${stations.length}`);
   }
   const exportFile = join(root, 'normalized', `${exportLabel(faction, 'stations', filter)}__${run.id}.json`);

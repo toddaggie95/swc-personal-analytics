@@ -4,9 +4,14 @@ import { record } from '../swc/read-client.js';
 export interface InventoryEntity {
   uid: string; entityType: 'stations' | 'ships' | 'materials' | 'facilities'; name: string | null; typeUid: string | null; typeName: string | null;
   quantity?: number | null;
+  tags?: string[] | null;
   ownerUid: string; observedAt: string; sourceRun: string;
   location: Record<'container' | 'sector' | 'system' | 'planet' | 'city', { uid: string | null; name: string | null; type: string | null } | null>;
   coordinates: Record<'galaxy' | 'system' | 'surface' | 'ground', { x: number; y: number } | null>;
+}
+export function swcTags(value: unknown): string[] | null {
+  const tags = record(value).tag;
+  return Array.isArray(tags) && tags.every(tag => typeof tag === 'string') ? [...tags] : null;
 }
 function text(v: unknown): string | null { return typeof v === 'string' && v.trim() ? v : null; }
 function reference(value: unknown) {
@@ -32,6 +37,7 @@ export function normalizeEntity(value: unknown, ownerUid: string, run: string, e
   const uid = text(v.uid);
   if (!uid || !/^\d+:\d+$/.test(uid)) throw new SafeError('Entity UID missing or invalid; snapshot is incomplete.');
   return { uid, entityType, name: text(v.name), typeUid: text(record(type.attributes).uid), typeName: text(type.value),
+    ...(entityType === 'stations' ? { tags: swcTags(v.tags) } : {}),
     ...(entityType === 'materials' ? { quantity: materialQuantity(v.quantity) } : {}),
     ownerUid, observedAt: new Date().toISOString(), sourceRun: run,
     location: { container: reference(location.container), sector: reference(location.sector), system: reference(location.system), planet: reference(location.planet), city: reference(location.city) },
