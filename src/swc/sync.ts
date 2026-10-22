@@ -15,10 +15,17 @@ export const MATERIAL_FACTIONS = {
   tff: 'The Faerytail Family',
   tjo: 'The Faerytail Family: The Je`daii Order',
 } as const;
-export async function syncFactionMaterials(client: Pick<ReadClient, 'me' | 'factionMaterials'>,
-  run: SnapshotRun, root: string, faction: keyof typeof MATERIAL_FACTIONS) {
-  return syncInventory({ me: () => client.me(), list: (uid, start) => client.factionMaterials(uid, start) },
-    run, root, 'materials', MATERIAL_FACTIONS[faction]);
+export async function syncFactionMaterials(client: Pick<ReadClient, 'me' | 'factionMaterials'> & Partial<Pick<ReadClient, 'resolveLocation'>>,
+  run: SnapshotRun, root: string, faction: keyof typeof MATERIAL_FACTIONS, filter?: LocationFilter,
+  wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms))) {
+  if (filter) {
+    if (!client.resolveLocation) throw new SafeError('Location resolution is required for a filtered sync.');
+    filter = await client.resolveLocation(filter);
+  }
+  return syncInventory({ me: () => client.me(), list: async (uid, start) => {
+    if (filter && start > 1) await wait(6500);
+    return client.factionMaterials(uid, start, filter);
+  } }, run, root, 'materials', MATERIAL_FACTIONS[faction], filter);
 }
 
 export async function syncStations(client: Pick<ReadClient, 'me' | 'stations'>, run: SnapshotRun, root: string) {
@@ -78,7 +85,7 @@ async function syncInventory(client: { me: ReadClient['me']; list: ReadClient['s
     for (const row of rows) {
       const station = normalizeEntity(row, ownerUid, run.id, entityType);
       if (filter && station.location[filter.kind]?.uid !== filter.uid) {
-        throw new SafeError('SWC returned a facility outside the requested location or with an unknown location. Collection stopped; partial snapshot retained.');
+        throw new SafeError('SWC returned an entity outside the requested location or with an unknown location. Collection stopped; partial snapshot retained.');
       }
       if (seen.has(station.uid)) throw new SafeError('Repeated inventory entity; snapshot incomplete.');
       seen.add(station.uid); stations.push(station);

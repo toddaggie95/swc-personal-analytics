@@ -330,3 +330,33 @@ test('unresolved locations never start an inventory request', async () => fixtur
   assert.equal(calls, 1);
   assert.throws(() => client.factionFacilities('20:1', 1, { kind: 'planet', name: 'Kashyyyk' }), /Resolve location/);
 }));
+
+test('material location filter is sent on every page and saved in the summary', async () => fixture(async root => {
+  for (const kind of ['system', 'planet'] as const) {
+    const filter = facilityFilter([`--${kind}`, 'Kashyyyk']);
+    let calls = 0;
+    const run = new SnapshotRun(root);
+    const client = new ReadClient(auth, run, async input => {
+      const url = new URL(String(input));
+      if (calls++ === 0) {
+        assert.equal(url.pathname, `/ws/v2.0/galaxy/${kind === 'planet' ? 'planets' : 'systems'}/Kashyyyk/`);
+        return new Response(envelope({ uid: kind === 'planet' ? '8:896' : '9:104', name: 'Kashyyyk' }));
+      }
+      if (calls === 2) return new Response(envelope({ uid: '1:123', factions: [{ value: MATERIAL_FACTIONS.tjo, attributes: { uid: '20:102' } }] }));
+      assert.equal(url.pathname, '/ws/v2.0/inventory/20:102/materials/owner');
+      assert.equal(url.searchParams.get('filter_type[0]'), kind);
+      assert.equal(url.searchParams.get('filter_value[0]'), kind === 'planet' ? '8:896' : '9:104');
+      assert.equal(url.searchParams.get('filter_inclusion[0]'), 'includes');
+      const start = Number(url.searchParams.get('start_index'));
+      return new Response(envelope({ entities: { attributes: { total: 2, start }, entity: [
+        { uid: `4:${start}`, location: { [kind]: { value: 'Kashyyyk', attributes: { uid: kind === 'planet' ? '8:896' : '9:104' } } } }
+      ] } }));
+    });
+    const waits: number[] = [];
+    const summary = await syncFactionMaterials(client, run, root, 'tjo', filter, async ms => { waits.push(ms); });
+    assert.equal(summary.materialLots, 2); assert.deepEqual(summary.locationFilter, { ...filter, uid: kind === 'planet' ? '8:896' : '9:104' });
+    assert.deepEqual(waits, [6500]);
+    const saved = JSON.parse(await readFile(join(root, 'normalized', `${run.id}.json`), 'utf8'));
+    assert.equal(saved.materials.length, 2);
+  }
+}));

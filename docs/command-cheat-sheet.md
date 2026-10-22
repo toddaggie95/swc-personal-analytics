@@ -24,6 +24,24 @@ Faction visibility depends on your SWC permissions. Counts represent what the AP
 Personal inventory uses `sync:ships` and `sync:stations`; faction inventory uses the
 `sync:faction-` prefix. Personal material export is not implemented.
 
+## Materials: optional system or planet refresh
+
+```powershell
+npm run sync:faction-materials:tff -- --system "Kashyyyk"
+npm run sync:faction-materials:tjo -- --planet "Kashyyyk"
+npm run sync:faction-materials -- --system "Kashyyyk"
+```
+
+Omit the location option to collect the full faction inventory. Filtered collection resolves the name
+and sends the location UID to SWC on every page; it does not download the full faction and filter locally.
+Material filter support is covered by offline tests; a live filtered-material run still needs validation.
+
+Each run creates a new snapshot. It does not merge into earlier exports or update Google Sheets.
+A location snapshot is not a faction total. When replacing a system's sheet data, reconcile by pile UID
+and remove old entries absent from the newly completed scope. A pile absent from this system may have
+moved elsewhere; do not label it destroyed or delete it from a faction-wide inventory without verification.
+Do not update sheets from failed/partial runs. Export summary.locationFilter records the selected scope.
+
 ## Facilities: choose one planet or system
 
 Facility commands require exactly one location option. Replace Kashyyyk with the desired name.
@@ -40,7 +58,7 @@ Keep names in quotes, especially when they contain spaces. Keep the extra `--` a
 
 The app resolves the name to an SWC location ID, filters on the server, and checks returned location IDs.
 A system covers its planets; a planet filter covers only that planet. An unresolved name stops collection.
-Only facility commands currently accept these location options. There is no unfiltered facility command.
+Faction material commands also accept these location options; ship and station commands do not. There is no unfiltered facility command.
 
 Facilities are collected in pages of up to 200, with a 6.5-second pause between pages. Large collections
 can take several minutes. Run one sync at a time and let it finish. Smaller collections still share SWC's

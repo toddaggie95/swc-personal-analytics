@@ -89,3 +89,5 @@ For faction-owned facilities, grant the added facility read permission using `np
 and `npm run auth:finish`, then run `npm run sync:faction-facilities -- --system "Kashyyyk"` (both factions),
 `npm run sync:faction-facilities:tff -- --planet "Kashyyyk"`, or `npm run sync:faction-facilities:tjo -- --planet "Kashyyyk"`.
 Operational detail enrichment is planned in [the OAuth runbook](docs/oauth.md#operational-detail-enrichment-plan).
+
+Faction materials also accept optional `-- --system "Name"` or `-- --planet "Name"` for server-filtered location snapshots. See the [command cheat-sheet](docs/command-cheat-sheet.md#materials-optional-system-or-planet-refresh).
