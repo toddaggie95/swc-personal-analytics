@@ -1,5 +1,7 @@
 # SWC Personal Analytics
 
+**Everyday use:** [Command cheat-sheet](docs/command-cheat-sheet.md) � commands, examples, export locations and troubleshooting.
+
 Personal, read-only analytics foundation for Star Wars Combine Web Services.
 Initial proof: **OAuth → authenticated character → owned station inventory → preserved raw responses**.
 
