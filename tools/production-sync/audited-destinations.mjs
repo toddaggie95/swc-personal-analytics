@@ -42,8 +42,8 @@ export function reconcileDestinations(materials, stations, destinations) {
    if(s && d.kind!=='hub' && !/shipyard/i.test(s.type_name||''))errors.push({code:'oneoff-not-shipyard',id:d.id,uid});
    if(s && d.kind==='oneoff-group' && Array.isArray(d.oneoffs)){
     const item=d.oneoffs.find(o=>o.stationUid===uid);
-    const match=item?.coordinate?.match(/\\(?\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)?/);
-    if(!match || Number(s.sysX)!==Number(match[1]) || Number(s.sysY)!==Number(match[2]))
+    const match=String(item?.coordinate||'').replaceAll('(','').replaceAll(')','').split(',').map(v=>v.trim());
+    if(match.length!==2 || !match.every(v=>/^\d+$/.test(v)) || Number(s.sysX)!==Number(match[0]) || Number(s.sysY)!==Number(match[1]))
      errors.push({code:'oneoff-coordinate-mismatch',id:d.id,uid});
    }
    if(byStation.has(uid))errors.push({code:'station-double-assigned',uid,ids:[byStation.get(uid),d.id]});
