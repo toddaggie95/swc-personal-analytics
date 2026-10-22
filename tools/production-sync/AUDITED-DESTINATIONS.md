@@ -45,3 +45,26 @@ node tools/production-sync/destination-candidates.mjs \
 This report highlights overlapping 3x3 candidates and excludes one-off shipyards from hub candidates. **Candidate proximity is not an allocation rule**. Station memberships must be explicitly approved using names, tags, UIDs, and the audited HAS totals before generating a production-ready manifest. The script never writes to Google Sheets.
 
 Run the full tests with `node --test tools/production-sync/*.test.mjs`.
+
+## End-to-end audited dry run
+
+After reviewing the station candidate report and populating all hub `memberStationUids`, run:
+
+```sh
+node tools/production-sync/audited-run.mjs \
+  --config /path/approved-destinations.json \
+  --tff-materials /path/tff-materials.csv \
+  --tjo-materials /path/tjo-materials.csv \
+  --tff-stations /path/tff-stations.csv \
+  --tjo-stations /path/tjo-stations.csv \
+  --baseline /path/live-has-baseline.json \
+  --out /path/audited-dry-run.json
+```
+
+The baseline is a JSON object mapping `"sheet|zeroBasedRow|zeroBasedColumn"` to numeric HAS values, for **all 21 materials at every destination**. An absent baseline cell fails closed. This CLI writes **only the JSON report**, not Google Sheets. It exits nonzero on errors and includes pile provenance and unallocated inventory.
+
+Do not use `audited-workbook-layout.json` as an approved config: its hub membership arrays are intentionally empty. A separate, validated manifest must be created before production synchronization.
+
+## Corrected audit finding
+
+A direct check of all 37 one-off station UIDs against the deduplicated exports found Harrin (10,14) was mislabeled `5:17800` (a Saki shipyard). The correct UID is **`5:17856`**, confirmed as Harrin Shipyard IV at (10,14). The live workbook and layout snapshot were corrected. All 37 one-off UID/system/coordinate/type tuples now match the exports.
