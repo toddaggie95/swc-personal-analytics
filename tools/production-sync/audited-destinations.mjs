@@ -21,6 +21,11 @@ export function reconcileDestinations(materials, stations, destinations) {
   if(!['hub','oneoff','oneoff-group'].includes(d.kind))errors.push({code:'invalid-kind',id:d.id});
   const members=d.kind==='oneoff'?[d.stationUid]:d.memberStationUids;
   if(!Array.isArray(members)||!members.length||members.some(x=>!x))errors.push({code:'missing-members',id:d.id});
+  if(d.kind==='oneoff-group' && Array.isArray(d.oneoffs)){
+   const listed=d.oneoffs.map(o=>o.stationUid);
+   if(listed.length!==(members||[]).length || listed.some(uid=>!(members||[]).includes(uid)))
+    errors.push({code:'oneoff-membership-mismatch',id:d.id});
+  }
   const t=d.target;
   if(!t||typeof t.sheet!=='string'||!Number.isInteger(t.hasColumn)||!Number.isInteger(t.materialStartRow)||t.hasColumn<0||t.materialStartRow<0)
    errors.push({code:'invalid-target',id:d.id});
@@ -34,6 +39,13 @@ export function reconcileDestinations(materials, stations, destinations) {
    if(!s)errors.push({code:'missing-station',id:d.id,uid});
    else if(s.system!==d.system || (d.sector&&s.sector!==d.sector))
     errors.push({code:'station-location-mismatch',id:d.id,uid});
+   if(s && d.kind!=='hub' && !/shipyard/i.test(s.type_name||''))errors.push({code:'oneoff-not-shipyard',id:d.id,uid});
+   if(s && d.kind==='oneoff-group' && Array.isArray(d.oneoffs)){
+    const item=d.oneoffs.find(o=>o.stationUid===uid);
+    const match=item?.coordinate?.match(/\\(?\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)?/);
+    if(!match || Number(s.sysX)!==Number(match[1]) || Number(s.sysY)!==Number(match[2]))
+     errors.push({code:'oneoff-coordinate-mismatch',id:d.id,uid});
+   }
    if(byStation.has(uid))errors.push({code:'station-double-assigned',uid,ids:[byStation.get(uid),d.id]});
    else byStation.set(uid,d.id);
   }
