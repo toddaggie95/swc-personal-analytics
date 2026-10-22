@@ -93,3 +93,5 @@ Operational detail enrichment is planned in [the OAuth runbook](docs/oauth.md#op
 Faction materials also accept optional `-- --system "Name"` or `-- --planet "Name"` for server-filtered location snapshots. See the [command cheat-sheet](docs/command-cheat-sheet.md#materials-optional-system-or-planet-refresh).
 
 New inventory exports and raw run folders use `owner__inventory__scope__UTC-timestamp-UUID` names. Successful summaries print `exportFile` and `rawDirectory`. See the [naming guide](docs/command-cheat-sheet.md#export-naming-convention).
+
+Station production details: run `npm run enrich:faction-stations:tjo -- --system "Kashyyyk"` (or `:tff`) after a station inventory sync. This creates a separate resumable, individually timestamped `stations-production` export. See the [cheat-sheet](docs/command-cheat-sheet.md#station-production-details) for refresh and resume behavior.

@@ -41,6 +41,10 @@ export class ReadClient {
   constructor(private auth: AuthProvider, private snapshots: SnapshotRun,
     private fetcher: typeof fetch = fetch,
     private sleep: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms))) {}
+  stationDetail(uid: string): Promise<Record<string, unknown>> {
+    if (!/^5:\d+$/.test(uid)) throw new SafeError('Invalid station UID.');
+    return this.get(`inventory/stations/${uid}`, {});
+  }
   me(): Promise<Record<string, unknown>> { return this.get('character/', {}); }
   stations(uid: string, start: number): Promise<Record<string, unknown>> {
     if (!/^1:\d+$/.test(uid) || !Number.isSafeInteger(start) || start < 1) throw new SafeError('Invalid character UID or page index.');

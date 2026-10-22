@@ -64,6 +64,39 @@ Facilities are collected in pages of up to 200, with a 6.5-second pause between 
 can take several minutes. Run one sync at a time and let it finish. Smaller collections still share SWC's
 rate allowance. A cooldown can stop the batch before the second faction is attempted.
 
+## Station production details
+
+Basic `sync:faction-stations` exports remain inventory lists. To make an enriched file for another chat:
+
+```powershell
+npm run sync:faction-stations:tjo
+npm run enrich:faction-stations:tjo -- --system "Kashyyyk"
+```
+
+For TFF, use `sync:faction-stations:tff` then
+`npm run enrich:faction-stations:tff -- --system "Kashyyyk"`.
+Each enrichment command requires one `--system` or `--planet` and one faction.
+
+The command uses that faction's newest saved full station inventory, selects the location, and fetches
+one detail response per station with 6.5-second pauses. Allow roughly 22 minutes plus network time for
+195 stations. No added OAuth scope is requested. Live detail visibility still depends on SWC permissions.
+
+Completed details are saved in private `checkpoints`. If interrupted or rate-limited, rerun the SAME
+enrichment command after the cooldown to resume. Do not run a new inventory sync between resume attempts:
+that creates a new source inventory and starts a new enrichment. To refresh production later, run the
+inventory sync first, then enrich again. Repeating enrichment on the same source reuses saved details.
+
+Upload the new `tjo__stations-production__system-kashyyyk__...json` (or TFF equivalent).
+Every station has `operations` containing API production actions, queue items (including designs where
+supplied), tooling, cargo capacities, and construction flag. Action and queue structures retain worker,
+quantity, status and delay fields as supplied by SWC. No units or running state are guessed.
+`operations.observedAt` records when that station's details were read; inventory has a separate timestamp.
+
+Missing fields are null, not idle or zero. Tooling alone does not prove active production. Only explicit
+API action/queue statuses support active/paused claims. A completed detail fetch does not guarantee SWC
+exposed every requested field. A failed enrichment does not produce a completed enriched export.
+The implementation passes offline tests; live production detail mapping still requires verification.
+
 ## Authorize or add a newly requested permission
 
 1. Run `npm run auth:start`.
@@ -172,8 +205,8 @@ These are not needed for routine collection.
 ## Current limits
 
 Exports are JSON, not automatic CSV or Excel files. There is no command to update Google Sheets.
-Production queues, tooling, worker counts, capacities and timers are not yet included in the simplified
-inventory export; their detail-enrichment work is planned. There is no standalone character-profile
+Production queues, tooling, worker counts, capacities and timers are omitted from basic inventory exports.
+Use the station enrichment commands above to retain fields supplied by the individual-station API. There is no standalone character-profile
 export command, though syncs retrieve character information to establish ownership and faction access.
 
 For setup details, see [the OAuth runbook](oauth.md) and [README](../README.md).

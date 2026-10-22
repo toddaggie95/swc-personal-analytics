@@ -22,7 +22,9 @@
     "typecheck": "tsc -p tsconfig.check.json",
     "build": "tsc",
     "test": "tsx --test tests/*.test.ts",
-    "check": "npm run typecheck && npm test && npm run build"
+    "check": "npm run typecheck && npm test && npm run build",
+    "enrich:faction-stations:tff": "tsx src/cli/index.ts enrich:faction-stations:tff",
+    "enrich:faction-stations:tjo": "tsx src/cli/index.ts enrich:faction-stations:tjo"
   },
   "keywords": [],
   "author": "",
