@@ -1,3 +1,4 @@
+import {MATERIALS} from './production-sync.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {reconcileDestinations,planHasChanges} from './audited-destinations.mjs';
