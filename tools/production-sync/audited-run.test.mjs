@@ -13,7 +13,7 @@ test('audited CLI produces dry-run changes with no write path',()=>{
   const config=[{id:'K-5,10',kind:'hub',system:'Kashyyyk',sector:'Mytaranor',memberStationUids:['5:1'],target:{sheet:'Kashyyyk',hasColumn:2,materialStartRow:13}}];
   const baseline=Object.fromEntries(Array.from({length:21},(_,i)=>[['Kashyyyk',13+i,2].join('|'),0]));
   const out=path.join(dir,'report.json');
-  run(['--config',save('config.json',JSON.stringify(config)),'--tff-materials',save('m.csv',materials),'--tjo-materials',save('empty-m.csv',materials.split('\n')[0]+'\n'),'--tff-stations',save('s.csv',station),'--tjo-stations',save('empty-s.csv',station.split('\n')[0]+'\n'),'--baseline',save('baseline.json',JSON.stringify(baseline)),'--out',out]);
+  run(['--config',save('config.json',JSON.stringify({approval:'approved',destinations:config})),'--tff-materials',save('m.csv',materials),'--tjo-materials',save('empty-m.csv',materials.split('\n')[0]+'\n'),'--tff-stations',save('s.csv',station),'--tjo-stations',save('empty-s.csv',station.split('\n')[0]+'\n'),'--baseline',save('baseline.json',JSON.stringify(baseline)),'--out',out]);
   const report=JSON.parse(fs.readFileSync(out,'utf8'));
   assert.equal(report.errors.length,0);
   assert.equal(report.changes.length,1);
