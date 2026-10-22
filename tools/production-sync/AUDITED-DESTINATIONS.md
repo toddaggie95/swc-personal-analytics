@@ -30,7 +30,7 @@ Legacy `production-sync.mjs` and its 3x3 configuration remain unchanged for comp
 
 ## Live audited layout snapshot
 
-`audited-workbook-layout.json` was generated from the live production workbook's 20 system tabs. It currently contains **131 hub blocks** and **8 aggregated one-off groups**, representing **37 individual standalone shipyard rows**. It records exact HAS destination columns and starting rows and all available one-off station UIDs. Hub `memberStationUids` are intentionally empty until independently reviewed.
+`audited-workbook-layout.json` was generated from the live production workbook's 20 system tabs. It currently contains **128 hub blocks** and **11 aggregated one-off groups**, representing **37 individual standalone shipyard rows**. It records exact HAS destination columns and starting rows and all available one-off station UIDs. Hub `memberStationUids` are intentionally empty until independently reviewed.
 
 To generate a station membership candidate report:
 
