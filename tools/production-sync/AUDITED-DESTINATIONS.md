@@ -87,3 +87,24 @@ node tools/production-sync/propose-membership.mjs \
 ```
 
 This explicitly matches shipyard UIDs by system and audited production-order coordinates, excludes known one-off UIDs, and reports unlisted shipyards, ambiguous coordinates, and empty hubs. **Do not use the proposal as an approved inventory configuration**: other station types holding hub inventory (depots/factories) must still be reviewed and allocated, and every HAS total must pass a live per-material comparison. The existing dry-run remains fail-closed.
+
+## Full HAS baseline audit and depot reconciliation
+
+A read-only baseline snapshot of all **2,919 HAS cells** across 139 audited targets is in `audited-has-baseline.snapshot.json`. **2,898 are numeric; all 21 Teljkon one-off HAS cells are blank**, explicitly stored as JSON `null`. These are not zero and must not be silently overwritten. The dry-run CLI accepts the snapshot envelope, but fails closed on blank baseline cells. Refresh the baseline before any future write.
+
+`audited-run.mjs` now requires `approval:"approved"` in the reviewed manifest; the current `audited-workbook-layout.json` deliberately lacks that approval.
+
+The source exports contain **1,681 station-held material piles**, of which **62 piles (1,073,507 units)** reference station UIDs absent from the TFF/TJO station exports. These are unresolved source references, not zero inventory. The matched station-held piles are dominated by **Depot Station I** (1,116 piles, 27,399,953 units), with additional depot, R&D, trading, and shipyard stations. Blindly assigning all depot inventory by nearest hub would be unsafe.
+
+Run the explicit depot audit:
+
+```sh
+node tools/production-sync/audit-depot-inventory.mjs \
+  --tff-materials /path/tff-materials.csv \
+  --tjo-materials /path/tjo-materials.csv \
+  --tff-stations /path/tff-stations.csv \
+  --tjo-stations /path/tjo-stations.csv \
+  --out /path/depot-review.json
+```
+
+It groups non-shipyard station inventory by exact UID and separately reports piles whose station records are absent. This is a review report, not allocation authority.
