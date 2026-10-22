@@ -1,3 +1,4 @@
+import { exportLabel } from '../storage/names.js';
 import { join } from 'node:path';
 import { SafeError } from '../config/index.js';
 import { atomicWrite } from '../storage/files.js';
@@ -9,7 +10,7 @@ interface InventorySummary {
   schemaVersion: number; runId: string; completedAt: string; characterUid: string;
   entityType: InventoryEntity['entityType']; ownedShips?: number; ownedStations?: number; ownedFacilities?: number;
   materialLots?: number; ownerUid: string; ownerName?: string;
-  pages: number; consistency: string; locationFilter?: LocationFilter;
+  pages: number; consistency: string; exportFile: string; rawDirectory: string; locationFilter?: LocationFilter;
 }
 export const MATERIAL_FACTIONS = {
   tff: 'The Faerytail Family',
@@ -92,11 +93,13 @@ async function syncInventory(client: { me: ReadClient['me']; list: ReadClient['s
     }
     if (stations.length > total) throw new SafeError('Inventory count exceeds total; snapshot incomplete.');
     if (stations.length === total) {
-      const summary: InventorySummary = { schemaVersion: 1, runId: run.id, completedAt: new Date().toISOString(), characterUid: uid,
+      const ownerLabel = factionName ? Object.entries(MATERIAL_FACTIONS).find(([, name]) => name === factionName)![0] : 'personal';
+      const exportFile = join(root, 'normalized', `${exportLabel(ownerLabel, entityType, filter)}__${run.id}.json`);
+      const summary: InventorySummary = { schemaVersion: 1, runId: run.id, exportFile, rawDirectory: run.directory, completedAt: new Date().toISOString(), characterUid: uid,
         ownerUid, ...(filter ? { locationFilter: filter } : {}), ...(factionName ? { ownerName: factionName } : {}),
         entityType, ...(entityType === 'materials' ? { materialLots: stations.length } : entityType === 'ships' ? { ownedShips: stations.length } : entityType === 'facilities' ? { ownedFacilities: stations.length } : { ownedStations: stations.length }),
         pages, consistency: 'paginated observation, not a transactional snapshot' };
-      await atomicWrite(join(root, 'normalized', `${run.id}.json`), JSON.stringify({ summary, [entityType]: stations }, null, 2));
+      await atomicWrite(exportFile, JSON.stringify({ summary, [entityType]: stations }, null, 2));
       await run.complete(summary);
       return summary;
     }

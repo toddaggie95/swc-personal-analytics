@@ -96,18 +96,50 @@ The data folder is separate from the project folder; listing the project with `d
 
 | Folder/file | Purpose |
 | --- | --- |
-| `normalized\<runId>.json` | The analysis-ready JSON export. Each successful run creates a new file. |
-| `raw\<runId>\*.body` | Original SWC response bodies for verification. |
-| `raw\<runId>\*.meta.json` | Request details and response status. |
-| `raw\<runId>\complete.json` | Marks a successfully completed inventory run. |
+| `normalized\<descriptive-name>.json` | The analysis-ready JSON export. Each successful run creates a new file. |
+| `raw\<descriptive-name>\*.body` | Original SWC response bodies for verification. |
+| `raw\<descriptive-name>\*.meta.json` | Request details and response status. |
+| `raw\<descriptive-name>\complete.json` | Marks a successfully completed inventory run. |
 | `tokens.json` | Private credentials. Do not share or upload. |
 
-Use the printed `runId` to find the corresponding export. Both-faction commands create separate runs.
+Use the printed `exportFile` for the exact JSON path and `rawDirectory` for original responses. Both-faction commands create separate runs.
 JSON contains a `summary` plus a `ships`, `stations`, `materials`, or `facilities` list. Facility summaries
 include `locationFilter`; their count is for that location, not the entire faction.
 `materialLots` counts piles, not units or tonnage. Missing fields mean unknown, not zero.
 Failed runs may retain raw responses but do not create a completed normalized inventory export.
 These exports are private local files and are not pushed to GitHub.
+
+## Export naming convention
+
+New inventory exports use:
+
+```text
+<owner>__<inventory>__<scope>__<UTC timestamp>-<unique run ID>.json
+```
+
+| Part | Values/examples |
+| --- | --- |
+| Owner | `personal`, `tff`, `tjo` |
+| Inventory | `ships`, `stations`, `materials`, `facilities` |
+| Scope | `all`, `system-kashyyyk`, `planet-kashyyyk` |
+| Timestamp | Run start in UTC, e.g. `2026-10-22T03-42-11-970Z` |
+| Unique suffix | Full random UUID, keeping separate runs distinct |
+
+Examples below abbreviate the timestamp and unique suffix as `<run-id>`:
+
+```text
+personal__ships__all__<run-id>.json
+tjo__stations__all__<run-id>.json
+tff__materials__system-kashyyyk__<run-id>.json
+tjo__facilities__planet-kashyyyk__<run-id>.json
+```
+
+Names become lowercase with punctuation/spaces replaced by hyphens. The JSON summary retains the actual
+location name and UID. `all` means no location filter; it does not mean both factions.
+Raw inventory folders use the same descriptive pattern without `.json`. Inside them, numbered `.body`
+and `.meta.json` pairs preserve request order, and `complete.json` marks inventory completion.
+Standalone diagnostics may still use run-ID-only raw folders. Internal credential/configuration filenames
+are unchanged. Older exports are not renamed. The naming pattern applies to new inventory exports only.
 
 ## Troubleshooting
 

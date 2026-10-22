@@ -1,3 +1,4 @@
+import { exportLabel } from '../src/storage/names.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
@@ -55,7 +56,7 @@ test('both faction material routes use discovered faction UIDs and preserve lot 
     const summary = await syncFactionMaterials(new ReadClient(auth, run, fetcher), run, root, faction);
     assert.equal(summary.materialLots, 2); assert.equal(summary.ownerUid, ownerUid); assert.equal(summary.characterUid, '1:123');
     assert.equal(summary.ownedShips, undefined); assert.equal(summary.ownedStations, undefined);
-    const saved = JSON.parse(await readFile(join(root, 'normalized', `${run.id}.json`), 'utf8'));
+    const saved = JSON.parse(await readFile(summary.exportFile, 'utf8'));
     assert.equal(saved.materials[0].ownerUid, ownerUid); assert.equal(saved.materials[0].quantity, 125);
     assert.equal(saved.materials[1].quantity, null); assert.equal(calls, 3);
   }
@@ -151,7 +152,7 @@ test('owned ships use fixed GET endpoint, paginate and retain type and missing l
   const run = new SnapshotRun(root);
   const summary = await syncShips(new ReadClient(auth, run, fetcher), run, root);
   assert.equal(summary.ownedShips, 3); assert.equal(summary.ownedStations, undefined);
-  const saved = JSON.parse(await readFile(join(root, 'normalized', `${run.id}.json`), 'utf8'));
+  const saved = JSON.parse(await readFile(summary.exportFile, 'utf8'));
   assert.equal(saved.ships.length, 3); assert.equal(saved.stations, undefined);
   assert.equal(saved.ships[0].entityType, 'ships'); assert.equal(saved.ships[0].typeName, 'Fixture class');
   assert.equal(saved.ships[0].coordinates.galaxy, null);
@@ -294,7 +295,7 @@ test('facility location filter is sent on every page and saved in the summary', 
     const summary = await syncFactionFacilities(client, run, root, 'tjo', filter, async ms => { waits.push(ms); });
     assert.equal(summary.ownedFacilities, 2); assert.deepEqual(summary.locationFilter, { ...filter, uid: kind === 'planet' ? '8:896' : '9:104' });
     assert.deepEqual(waits, [6500]);
-    const saved = JSON.parse(await readFile(join(root, 'normalized', `${run.id}.json`), 'utf8'));
+    const saved = JSON.parse(await readFile(summary.exportFile, 'utf8'));
     assert.equal(saved.facilities.length, 2);
   }
 }));
@@ -356,7 +357,13 @@ test('material location filter is sent on every page and saved in the summary', 
     const summary = await syncFactionMaterials(client, run, root, 'tjo', filter, async ms => { waits.push(ms); });
     assert.equal(summary.materialLots, 2); assert.deepEqual(summary.locationFilter, { ...filter, uid: kind === 'planet' ? '8:896' : '9:104' });
     assert.deepEqual(waits, [6500]);
-    const saved = JSON.parse(await readFile(join(root, 'normalized', `${run.id}.json`), 'utf8'));
+    const saved = JSON.parse(await readFile(summary.exportFile, 'utf8'));
     assert.equal(saved.materials.length, 2);
   }
 }));
+
+test('export names describe scope and cannot introduce directories', () => {
+  assert.equal(exportLabel('tff', 'materials', { kind: 'system', name: 'Kashyyyk' }), 'tff__materials__system-kashyyyk');
+  assert.equal(exportLabel('personal', 'ships'), 'personal__ships__all');
+  assert.equal(exportLabel('tjo', 'facilities', { kind: 'planet', name: '../Some / Planet' }), 'tjo__facilities__planet-some-planet');
+});

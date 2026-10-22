@@ -1,4 +1,5 @@
 import { config as dotenv } from 'dotenv';
+import { exportLabel } from '../storage/names.js';
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { loadConfig, requireLive, SafeError } from '../config/index.js';
@@ -44,7 +45,8 @@ async function main(): Promise<void> {
       const auth = await loadAuth(config);
       const factions: Array<'tff' | 'tjo'> = command.endsWith(':tff') ? ['tff'] : command.endsWith(':tjo') ? ['tjo'] : ['tff', 'tjo'];
       for (const faction of factions) {
-        const run = new SnapshotRun(config.privateDir);
+        const kind = command.startsWith('sync:faction-materials') ? 'materials' : command.startsWith('sync:faction-facilities') ? 'facilities' : 'stations';
+        const run = new SnapshotRun(config.privateDir, exportLabel(faction, kind, filter));
         try {
           const client = new ReadClient(auth, run);
           const summary = command.startsWith('sync:faction-materials')
@@ -62,7 +64,7 @@ async function main(): Promise<void> {
         }
       }
     } else {
-      const auth = await loadAuth(config), run = new SnapshotRun(config.privateDir);
+      const auth = await loadAuth(config), run = new SnapshotRun(config.privateDir, exportLabel('personal', command === 'sync:ships' ? 'ships' : 'stations'));
       const sync = command === 'sync:ships' ? syncShips : syncStations;
       const summary = await sync(new ReadClient(auth, run), run, config.privateDir);
       console.log(JSON.stringify(summary, null, 2));
