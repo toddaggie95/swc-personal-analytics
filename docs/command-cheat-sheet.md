@@ -11,15 +11,22 @@ All inventory commands read SWC data; they do not change your in-game assets.
 | `npm run status` | Show configuration readiness, private storage location and token-file timestamp. Does not contact SWC or prove authorization works. |
 | `npm run sync:ships` | Export personally owned ships. |
 | `npm run sync:stations` | Export personally owned stations. |
-| `npm run sync:materials` | Export owned material piles for both TFF and TJO. |
-| `npm run sync:materials:tff` | Export TFF materials only. |
-| `npm run sync:materials:tjo` | Export TJO materials only. |
+| `npm run sync:faction-materials` | Export owned material piles for both TFF and TJO. |
+| `npm run sync:faction-materials:tff` | Export TFF materials only. |
+| `npm run sync:faction-materials:tjo` | Export TJO materials only. |
 | `npm run sync:faction-stations` | Export owned stations for both TFF and TJO. |
 | `npm run sync:faction-stations:tff` | Export TFF stations only. |
 | `npm run sync:faction-stations:tjo` | Export TJO stations only. |
 
 TFF = The Faerytail Family. TJO = The Faerytail Family: The Je`daii Order.
 Faction visibility depends on your SWC permissions. Counts represent what the API returns.
+
+Personal inventory uses `sync:ships` and `sync:stations`; faction inventory uses the
+`sync:faction-` prefix. Personal material export is not implemented.
+
+Older commands remain compatibility aliases: `npm run sync:materials`,
+`npm run sync:materials:tff`, and `npm run sync:materials:tjo`. They still export faction materials,
+not personal materials. Prefer the explicit faction names above for new workflows.
 
 ## Facilities: choose one planet or system
 

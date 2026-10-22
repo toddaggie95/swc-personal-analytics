@@ -78,7 +78,7 @@ and available coordinates.
 ## Faction-owned materials
 
 Faction materials use `faction_inv_materials_read`. Run the authorization steps again,
-then `npm run sync:materials` to collect both The Faerytail Family and
+then `npm run sync:faction-materials` to collect both The Faerytail Family and
 The Faerytail Family: The Je`daii Order. This requests owner-assigned materials only; no faction ship,
 credit, member, write or broad all scopes are requested. A grant does not create in-game privileges.
 Missing faction references, denied access and malformed/partial responses fail without a completion marker;

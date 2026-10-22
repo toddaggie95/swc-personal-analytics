@@ -41,8 +41,8 @@ For personally owned ships, run `npm run sync:ships` after reauthorization. It u
 pagination and private raw snapshots, with normalized records under `ships` and an `ownedShips` summary.
 The count always comes from SWC; an expected user count is a comparison, never a hardcoded result.
 
-For TFF and TJO owned materials, run `npm run sync:materials` after granting material read access.
-Use `npm run sync:materials:tff` or `npm run sync:materials:tjo` for just one faction. Each faction gets
+For TFF and TJO owned materials, run `npm run sync:faction-materials` after granting material read access.
+Use `npm run sync:faction-materials:tff` or `npm run sync:faction-materials:tjo` for just one faction. Each faction gets
 an independent snapshot and status. Faction UIDs are resolved from the live authenticated character's
 faction references, with exact name matching; game privileges still control what SWC permits you to see.
 `materialLots` counts inventory records, not material units or tonnage. Available quantities are retained
