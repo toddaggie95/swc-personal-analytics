@@ -27,3 +27,21 @@ These are **schema examples**, not a validated live destination file. Do not use
 Run tests: `node --test tools/production-sync/*.test.mjs` from the repository root.
 
 Legacy `production-sync.mjs` and its 3x3 configuration remain unchanged for comparison; do not use them for automatic live HAS writes.
+
+## Live audited layout snapshot
+
+`audited-workbook-layout.json` was generated from the live production workbook's 20 system tabs. It currently contains **131 hub blocks** and **8 aggregated one-off groups**, representing **37 individual standalone shipyard rows**. It records exact HAS destination columns and starting rows and all available one-off station UIDs. Hub `memberStationUids` are intentionally empty until independently reviewed.
+
+To generate a station membership candidate report:
+
+```sh
+node tools/production-sync/destination-candidates.mjs \
+  --layout tools/production-sync/audited-workbook-layout.json \
+  --tff-stations /path/tff-stations.csv \
+  --tjo-stations /path/tjo-stations.csv \
+  --out /path/destination-candidates.json
+```
+
+This report highlights overlapping 3x3 candidates and excludes one-off shipyards from hub candidates. **Candidate proximity is not an allocation rule**. Station memberships must be explicitly approved using names, tags, UIDs, and the audited HAS totals before generating a production-ready manifest. The script never writes to Google Sheets.
+
+Run the full tests with `node --test tools/production-sync/*.test.mjs`.
