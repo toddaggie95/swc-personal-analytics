@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {csv,calculate,MATERIALS} from './production-sync.mjs';
+const h={id:'A',sector:'Mytaranor',system:'Kashyyyk',x:5,y:10};
+const p=(id,x,y,q=10,kind='Stations')=>({uid:id,type_name:'meleenium',quantity:String(q),sector:'Mytaranor',system:'Kashyyyk',sysX:String(x),sysY:String(y),container_type_name:kind,container_uid:'5:1'});
+test('quoted CSV',()=>assert.equal(csv('a,b\n"x,y",z\n')[0].a,'x,y'));
+test('3x3 geometry including center',()=>{let p0=[];for(let x=4;x<=6;x++)for(let y=9;y<=11;y++)p0.push(p(String(p0.length),x,y));p0.push(p('outside',7,10));let r=calculate(p0,[],[h]);assert.equal(r.hubs[0].totals.meleenium,90);assert.equal(r.unassigned.length,1)});
+test('deduplication',()=>assert.equal(calculate([p('1',5,10),p('1',5,10)],[],[h]).hubs[0].totals.meleenium,10));
+test('conflicting duplicate rejected',()=>assert.throws(()=>calculate([p('1',5,10),p('1',5,10,20)],[],[h])));
+test('facilities excluded from ring',()=>assert.equal(calculate([p('1',5,10,10,'Facilities')],[],[h]).hubs[0].totals.meleenium,0));
+test('overlap flagged',()=>assert.equal(calculate([p('1',5,10)],[],[h,{...h,id:'B',x:6}]).overlaps.length,1));
+test('21 materials',()=>assert.equal(MATERIALS.length,21));
