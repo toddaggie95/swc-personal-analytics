@@ -68,3 +68,22 @@ Do not use `audited-workbook-layout.json` as an approved config: its hub members
 ## Corrected audit finding
 
 A direct check of all 37 one-off station UIDs against the deduplicated exports found Harrin (10,14) was mislabeled `5:17800` (a Saki shipyard). The correct UID is **`5:17856`**, confirmed as Harrin Shipyard IV at (10,14). The live workbook and layout snapshot were corrected. All 37 one-off UID/system/coordinate/type tuples now match the exports.
+
+## Explicit production-order membership (new)
+
+The live audited workbook now has a versioned snapshot of **945 explicit production orders**, spanning 18 systems with active hub blocks: `audited-production-orders.json`. Each row records the hub destination ID, system, exact station coordinate, ship, and spreadsheet row. **No coordinate is assigned to more than one hub block in the current snapshot.** Rakhuuun and Teljkon use one-off shipyard entries instead of hubs.
+
+All 11 previously ambiguous shipyards are uniquely identified by explicit order coordinates, including Tholatin IV's two split blocks and Lexrul's two untagged shipyards. The previously material-bearing Tholatin UID `5:19840` also has exact 21-material HAS parity.
+
+Generate a **review-only** shipyard membership proposal:
+
+```sh
+node tools/production-sync/propose-membership.mjs \
+  --layout tools/production-sync/audited-workbook-layout.json \
+  --orders tools/production-sync/audited-production-orders.json \
+  --tff-stations /path/tff-stations.csv \
+  --tjo-stations /path/tjo-stations.csv \
+  --out /path/membership-proposal.json
+```
+
+This explicitly matches shipyard UIDs by system and audited production-order coordinates, excludes known one-off UIDs, and reports unlisted shipyards, ambiguous coordinates, and empty hubs. **Do not use the proposal as an approved inventory configuration**: other station types holding hub inventory (depots/factories) must still be reviewed and allocated, and every HAS total must pass a live per-material comparison. The existing dry-run remains fail-closed.
