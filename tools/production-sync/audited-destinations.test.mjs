@@ -27,3 +27,15 @@ test('missing baseline and unknown station fail safely',()=>{
  assert.throws(()=>planHasChanges(r,{}),/Missing live baseline/);
  assert.ok(reconcileDestinations([],[station('5:1',5)],[hub]).errors.some(e=>e.code==='missing-station'));
 });
+
+test('one-off groups reject incorrect station type and coordinates',()=>{
+ const oneoff={id:'solo',kind:'oneoff-group',system:'Kashyyyk',memberStationUids:['5:3'],oneoffs:[{stationUid:'5:3',coordinate:'(7,10)'}],target:{sheet:'Kashyyyk',hasColumn:2,materialStartRow:134}};
+ const bad=reconcileDestinations([],[{...station('5:3',5),type_name:'X7 Factory Station',sysY:'10'}],[oneoff]);
+ assert.ok(bad.errors.some(e=>e.code==='oneoff-not-shipyard'));
+ assert.ok(bad.errors.some(e=>e.code==='oneoff-coordinate-mismatch'));
+});
+test('one-off group row UIDs must match membership UIDs',()=>{
+ const oneoff={id:'solo',kind:'oneoff-group',system:'Kashyyyk',memberStationUids:['5:3'],oneoffs:[{stationUid:'5:4',coordinate:'5,10'}],target:{sheet:'Kashyyyk',hasColumn:2,materialStartRow:134}};
+ const r=reconcileDestinations([],[{...station('5:3',5),type_name:'Shipyard IV'}],[oneoff]);
+ assert.ok(r.errors.some(e=>e.code==='oneoff-membership-mismatch'));
+});
