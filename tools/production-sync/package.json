@@ -1,0 +1,12 @@
+{
+  "name": "swc-production-sync",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "production:sync": "node production-sync.mjs",
+    "production:test": "node --test production-sync.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

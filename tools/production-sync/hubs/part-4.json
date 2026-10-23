@@ -1,0 +1,167 @@
+[
+  {
+    "id": "Chamble-4,5-2-1",
+    "sector": "Mytaranor",
+    "system": "Chamble",
+    "x": 4,
+    "y": 5,
+    "sheet": "Chamble",
+    "hasColumn": 2,
+    "materialStartRow": 13,
+    "title": "TFF Chamble VI (4,5)"
+  },
+  {
+    "id": "Chamble-4,8-2-5",
+    "sector": "Mytaranor",
+    "system": "Chamble",
+    "x": 4,
+    "y": 8,
+    "sheet": "Chamble",
+    "hasColumn": 6,
+    "materialStartRow": 13,
+    "title": "TFF Chamble Druid Ring (4,8)"
+  },
+  {
+    "id": "Chamble-7,7-2-9",
+    "sector": "Mytaranor",
+    "system": "Chamble",
+    "x": 7,
+    "y": 7,
+    "sheet": "Chamble",
+    "hasColumn": 10,
+    "materialStartRow": 13,
+    "title": "TFF Chamble IV (7,7)"
+  },
+  {
+    "id": "Chamble-12,4-2-13",
+    "sector": "Mytaranor",
+    "system": "Chamble",
+    "x": 12,
+    "y": 4,
+    "sheet": "Chamble",
+    "hasColumn": 14,
+    "materialStartRow": 13,
+    "title": "TFF Chamble I (12,4)"
+  },
+  {
+    "id": "Chamble-9,13-2-17",
+    "sector": "Mytaranor",
+    "system": "Chamble",
+    "x": 9,
+    "y": 13,
+    "sheet": "Chamble",
+    "hasColumn": 18,
+    "materialStartRow": 13,
+    "title": "TFF Chamble V (9,13)"
+  },
+  {
+    "id": "Chamble-4,13-2-21",
+    "sector": "Mytaranor",
+    "system": "Chamble",
+    "x": 4,
+    "y": 13,
+    "sheet": "Chamble",
+    "hasColumn": 22,
+    "materialStartRow": 13,
+    "title": "Chamble Untagged Bomber Ring (4,13)"
+  },
+  {
+    "id": "Chamble-0,12-2-25",
+    "sector": "Mytaranor",
+    "system": "Chamble",
+    "x": 0,
+    "y": 12,
+    "sheet": "Chamble",
+    "hasColumn": 26,
+    "materialStartRow": 13,
+    "title": "TFF Chamble VII (0,12)"
+  },
+  {
+    "id": "Chamble-12,12-2-29",
+    "sector": "Mytaranor",
+    "system": "Chamble",
+    "x": 12,
+    "y": 12,
+    "sheet": "Chamble",
+    "hasColumn": 30,
+    "materialStartRow": 13,
+    "title": "TFF Chamble Depot (12,12)"
+  },
+  {
+    "id": "Chamble-14,18-36-1",
+    "sector": "Mytaranor",
+    "system": "Chamble",
+    "x": 14,
+    "y": 18,
+    "sheet": "Chamble",
+    "hasColumn": 2,
+    "materialStartRow": 47,
+    "title": "TFF Chamble VIII Depot (14,18)"
+  },
+  {
+    "id": "Harrin-14,10-2-1",
+    "sector": "Harrin",
+    "system": "Harrin",
+    "x": 14,
+    "y": 10,
+    "sheet": "Harrin",
+    "hasColumn": 2,
+    "materialStartRow": 13,
+    "title": "Harrin — Untagged shipyards (14,10)"
+  },
+  {
+    "id": "Harrin-10,14-2-5",
+    "sector": "Harrin",
+    "system": "Harrin",
+    "x": 10,
+    "y": 14,
+    "sheet": "Harrin",
+    "hasColumn": 6,
+    "materialStartRow": 13,
+    "title": "Harrin — Standalone SY4 (10,14)"
+  },
+  {
+    "id": "Ota-13,10-2-1",
+    "sector": "Mytaranor",
+    "system": "Ota",
+    "x": 13,
+    "y": 10,
+    "sheet": "Ota",
+    "hasColumn": 2,
+    "materialStartRow": 13,
+    "title": "Ota — Untagged shipyards (13,10)"
+  },
+  {
+    "id": "Rakhuuun-6,8-2-1",
+    "sector": "Mytaranor",
+    "system": "Rakhuuun",
+    "x": 6,
+    "y": 8,
+    "sheet": "Rakhuuun",
+    "hasColumn": 2,
+    "materialStartRow": 13,
+    "title": "Rakhuuun — SY4 Depot (6,8)"
+  },
+  {
+    "id": "Rakhuuun-0,2-2-5",
+    "sector": "Mytaranor",
+    "system": "Rakhuuun",
+    "x": 0,
+    "y": 2,
+    "sheet": "Rakhuuun",
+    "hasColumn": 6,
+    "materialStartRow": 13,
+    "title": "Rakhuuun — SY4 II Depot (0,2)"
+  },
+  {
+    "id": "Teljkon-7,10-2-1",
+    "sector": "Harron",
+    "system": "Teljkon",
+    "x": 7,
+    "y": 10,
+    "sheet": "Teljkon",
+    "hasColumn": 2,
+    "materialStartRow": 13,
+    "title": "Teljkon Shipyard I (7,10)"
+  }
+]
