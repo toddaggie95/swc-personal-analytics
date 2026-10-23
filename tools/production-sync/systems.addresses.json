@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "source": "Deduplicated TFF/TJO station exports, 2026-10-22; unanimous sector/galactic coordinate tuple per system",
+  "systems": [
+    {
+      "system": "Kashyyyk",
+      "sector": "Mytaranor",
+      "galX": 210,
+      "galY": 90
+    },
+    {
+      "system": "Eberon",
+      "sector": "Mytaranor",
+      "galX": 224,
+      "galY": 93
+    },
+    {
+      "system": "Dalchon",
+      "sector": "Dalchon",
+      "galX": 307,
+      "galY": -275
+    },
+    {
+      "system": "Randon",
+      "sector": "Mytaranor",
+      "galX": 235,
+      "galY": 62
+    },
+    {
+      "system": "Oshora",
+      "sector": "Tolonda",
+      "galX": 265,
+      "galY": -310
+    },
+    {
+      "system": "Clantaano",
+      "sector": "Albanin",
+      "galX": 418,
+      "galY": -74
+    },
+    {
+      "system": "Tholatin",
+      "sector": "Mytaranor",
+      "galX": 238,
+      "galY": 88
+    },
+    {
+      "system": "Messert",
+      "sector": "Mytaranor",
+      "galX": 245,
+      "galY": 75
+    },
+    {
+      "system": "Saki",
+      "sector": "Hutt Space",
+      "galX": 351,
+      "galY": -14
+    },
+    {
+      "system": "Mechis",
+      "sector": "Renillis",
+      "galX": 29,
+      "galY": -147
+    },
+    {
+      "system": "Lexrul",
+      "sector": "Trax",
+      "galX": 238,
+      "galY": 40
+    },
+    {
+      "system": "Uogo`cor",
+      "sector": "Trax",
+      "galX": 241,
+      "galY": 30
+    },
+    {
+      "system": "Daluuj",
+      "sector": "Albanin",
+      "galX": 433,
+      "galY": -64
+    },
+    {
+      "system": "Krmar",
+      "sector": "Tolonda",
+      "galX": 280,
+      "galY": -335
+    },
+    {
+      "system": "Lannik",
+      "sector": "Eclorar",
+      "galX": 275,
+      "galY": -77
+    },
+    {
+      "system": "Chamble",
+      "sector": "Mytaranor",
+      "galX": 212,
+      "galY": 103
+    },
+    {
+      "system": "Harrin",
+      "sector": "Harrin",
+      "galX": 6,
+      "galY": -167
+    },
+    {
+      "system": "Ota",
+      "sector": "Mytaranor",
+      "galX": 230,
+      "galY": 63
+    },
+    {
+      "system": "Rakhuuun",
+      "sector": "Mytaranor",
+      "galX": 220,
+      "galY": 78
+    },
+    {
+      "system": "Teljkon",
+      "sector": "Harron",
+      "galX": 150,
+      "galY": 0
+    }
+  ]
+}
