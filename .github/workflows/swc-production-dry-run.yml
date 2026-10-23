@@ -65,6 +65,19 @@ jobs:
             "${{ runner.temp }}/audited-ledger.json" \
             "${{ runner.temp }}/spreadsheet-comparison.json"
 
+      - name: Trace differences to material pile IDs and classify unassigned stations
+        if: success()
+        working-directory: tools/production-sync
+        run: |
+          node pile-trace.mjs \
+            "${{ runner.temp }}/spreadsheet-comparison.json" \
+            audited-workbook-layout.json \
+            "${{ runner.temp }}/swc-exports/tff-stations.csv" \
+            "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
+            "${{ runner.temp }}/swc-exports/tff-materials.csv" \
+            "${{ runner.temp }}/swc-exports/tjo-materials.csv" \
+            "${{ runner.temp }}/pile-trace.json"
+
       - name: Upload dry-run ledger or diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -73,5 +86,6 @@ jobs:
           path: |
             ${{ runner.temp }}/audited-ledger.json
             ${{ runner.temp }}/spreadsheet-comparison.json
+            ${{ runner.temp }}/pile-trace.json
           retention-days: 7
           if-no-files-found: warn
