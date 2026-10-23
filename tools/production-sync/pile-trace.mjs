@@ -37,10 +37,12 @@ const traces=comparison.differences.map(diff=>{
 });
 const assigned=new Set(manifest.destinations.flatMap(d=>d.memberStationUids));
 const unassigned=[];
-for(const [uid,s] of stations)if(!assigned.has(uid)){
- const ps=stationPiles.get(uid)||[];
- if(ps.length)unassigned.push({stationUid:uid,stationName:s.row.name??s.row.Name??'',system:s.row.system,sysX:s.row.sysX,sysY:s.row.sysY,tag:s.row.tags??s.row.tag??'',exportOwner:s.owner,pileCount:ps.length,totalQuantity:ps.reduce((n,p)=>n+p.quantity,0),piles:ps});
+for(const [uid,ps] of stationPiles)if(!assigned.has(uid)&&ps.length){
+ const s=stations.get(uid);
+ unassigned.push({stationUid:uid,stationInExports:Boolean(s),stationName:s?.row.name??s?.row.Name??ps[0].containerName??'',system:s?.row.system??ps[0].system,sysX:s?.row.sysX??ps[0].sysX,sysY:s?.row.sysY??ps[0].sysY,tag:s?.row.tags??s?.row.tag??'',exportOwner:s?.owner??null,pileCount:ps.length,totalQuantity:ps.reduce((n,p)=>n+p.quantity,0),piles:ps});
 }
+const tracedUnassigned=unassigned.reduce((n,s)=>n+s.pileCount,0);
+if(tracedUnassigned!==comparison.statistics.unassignedStationPiles)throw Error('Unassigned trace mismatch '+tracedUnassigned+' vs '+comparison.statistics.unassignedStationPiles);
 const report={schemaVersion:1,statistics:{differences:traces.length,unassignedStationContainers:unassigned.length,unassignedStationPiles:unassigned.reduce((n,s)=>n+s.pileCount,0)},traces,unassignedStations:unassigned};
 fs.writeFileSync(out,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report.statistics));
