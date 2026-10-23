@@ -11,16 +11,18 @@ export function buildLedger(manifest,stations,materials){
   if(prior && (prior.system!==s.system||prior.sysX!==s.sysX||prior.sysY!==s.sysY))throw Error('Conflicting station '+s.uid);
   stationById.set(s.uid,s);
  }
+ const missingStations=[];
  for(const d of destinations){
   if(!d.id||!d.system||!d.target||!Number.isInteger(d.target.hasColumn)||!Number.isInteger(d.target.materialStartRow)||!d.memberStationUids?.length)throw Error('Incomplete destination '+d.id);
   for(const uid of d.memberStationUids){
    if(owners.has(uid))throw Error('Station assigned twice: '+uid);
    const s=stationById.get(uid);
-   if(!s)throw Error('Station missing from exports: '+uid);
+   if(!s){missingStations.push({uid,system:d.system,destination:d.id,title:d.title??null});continue;}
    if(s.system!==d.system)throw Error('Station system mismatch: '+uid+' expected '+d.system+' got '+s.system);
    owners.set(uid,d.id);
   }
  }
+ if(missingStations.length){const error=Error('Stations missing from exports: '+missingStations.length+' (first: '+missingStations[0].uid+')');error.diagnostics={status:'blocked',reason:'missing_stations',missingStations};throw error;}
  const byId=new Map(destinations.map(d=>[d.id,{id:d.id,system:d.system,target:d.target,totals:Object.fromEntries(MATERIALS.map(m=>[m,0])),pileCount:0}]));
  const unassigned=[];
  for(const p of materials){
@@ -58,4 +60,4 @@ function main(args){
  fs.writeFileSync(opt.out,JSON.stringify(result,null,2)+'\n');
  console.log(JSON.stringify(result.statistics));
 }
-if(process.argv[1]?.endsWith('audited-inventory.mjs'))try{main(process.argv.slice(2))}catch(e){console.error(e.message);process.exitCode=1}
+if(process.argv[1]?.endsWith('audited-inventory.mjs'))try{main(process.argv.slice(2))}catch(e){console.error(e.message);if(e.diagnostics){console.error(JSON.stringify(e.diagnostics,null,2));const args=process.argv.slice(2),i=args.indexOf('--out');if(i>=0&&args[i+1])fs.writeFileSync(args[i+1],JSON.stringify(e.diagnostics,null,2)+'\n');}process.exitCode=1}
