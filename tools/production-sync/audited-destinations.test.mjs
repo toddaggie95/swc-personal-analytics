@@ -9,7 +9,7 @@ const one={id:'solo',kind:'oneoff',system:'Kashyyyk',sector:'Mytaranor',stationU
 test('hub and standalone allocated by exact station UID, not geometry',()=>{
  const r=reconcileDestinations([pile('p1','5:1'),pile('p2','5:3',11),pile('p3','5:9',13)], [station('5:1',5),station('5:2',6),station('5:3',5)], [hub,one]);
  assert.equal(r.errors.length,0);assert.equal(r.destinations[0].totals.meleenium,7);
- assert.equal(r.destinations[1].totals.meleenium,11);assert.equal(r.unallocated.length,1);
+ assert.equal(r.destinations[1].totals.meleenium,11);assert.equal(r.unallocated.length,0);assert.equal(r.inaccessible.length,1);
 });
 test('deduplicates pile IDs',()=>{const r=reconcileDestinations([pile('p1','5:1'),pile('p1','5:1')],[station('5:1',5),station('5:2',6)],[hub]);assert.equal(r.statistics.allocatedUnits,7)});
 test('conflicting piles and overlapping membership fail closed',()=>{
@@ -47,4 +47,18 @@ test('blank HAS baseline must never be silently treated as zero',()=>{
  const existing=Object.fromEntries(MATERIALS.map((m,i)=>[['Kashyyyk',13+i,2].join('|'),0]));
  existing['Kashyyyk|13|2']=null;
  assert.throws(()=>planHasChanges(r,existing),/Invalid baseline/);
+});
+
+test('missing owned container is excluded even if destination names its UID',()=>{
+ const d={...hub,memberStationUids:['5:1','5:2','5:9']};
+ const r=reconcileDestinations([pile('p1','5:1',7),pile('p2','5:9',100)],[station('5:1',5),station('5:2',6)],[d]);
+ assert.equal(r.destinations[0].totals.meleenium,7);
+ assert.equal(r.inaccessible[0].quantity,100);
+ assert.equal(r.statistics.inaccessibleUnits,100);
+ assert.ok(r.errors.some(e=>e.code==='missing-station'));
+});
+test('owned container outside destination is unallocated, not inaccessible',()=>{
+ const r=reconcileDestinations([pile('p1','5:8',12)],[station('5:1',5),station('5:2',6),station('5:8',8)],[hub]);
+ assert.equal(r.inaccessible.length,0);
+ assert.equal(r.unallocated.length,1);
 });
