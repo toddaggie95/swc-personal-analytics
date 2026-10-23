@@ -20,6 +20,7 @@ for(const [owner,rows] of [['TFF',load(tffMaterials)],['TJO',load(tjoMaterials)]
 const byDestination=new Map(manifest.destinations.map(d=>[d.id,d]));
 const stationPiles=new Map();
 for(const [uid,{row,owners}] of piles){
+ if(row.container_type_name!=='Stations')continue;
  if(!stationPiles.has(row.container_uid))stationPiles.set(row.container_uid,[]);
  stationPiles.get(row.container_uid).push({pileUid:uid,material:String(row.type_name).toLowerCase(),quantity:Number(row.quantity),exportOwners:[...owners],containerUid:row.container_uid,containerName:row.container_name??'',system:row.system,sysX:row.sysX,sysY:row.sysY});
 }
