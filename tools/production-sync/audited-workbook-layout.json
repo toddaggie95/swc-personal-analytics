@@ -366,7 +366,17 @@
         "x": 5,
         "y": 10
       },
-      "memberStationUids": [],
+      "memberStationUids": [
+        "5:47028",
+        "5:47034",
+        "5:47038",
+        "5:47029",
+        "5:45989",
+        "5:47035",
+        "5:47030",
+        "5:47032",
+        "5:47033"
+      ],
       "target": {
         "sheet": "Eberon",
         "hasColumn": 2,
@@ -378,7 +388,8 @@
       "kind": "oneoff-group",
       "system": "Eberon",
       "memberStationUids": [
-        "5:8355"
+        "5:8355",
+        "5:38213"
       ],
       "oneoffs": [
         {
