@@ -28,7 +28,7 @@ jobs:
         id: google
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: 'projects/512519/locations/global/workloadIdentityPools/github-actions/providers/github'
+          workload_identity_provider: 'projects/772242617730/locations/global/workloadIdentityPools/github-actions/providers/github'
           service_account: 'swc-production-sync@swc-analytics-512519.iam.gserviceaccount.com'
           token_format: access_token
           access_token_scopes: https://www.googleapis.com/auth/drive.readonly
