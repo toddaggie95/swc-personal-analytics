@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "system": "Tholatin",
+  "reviewedFrom": "TFF/TJO station and material exports supplied 2026-10-22",
+  "confirmedHubs": [
+    {
+      "destinationId": "Tholatin-hub-1-0",
+      "name": "Tholatin IV Ring",
+      "center": {
+        "x": 9,
+        "y": 13
+      },
+      "memberStationCount": 9,
+      "materialHoldingStationUid": "5:19840"
+    },
+    {
+      "destinationId": "Tholatin-hub-1-6",
+      "name": "Tholatin VIII Ring",
+      "center": {
+        "x": 10,
+        "y": 16
+      },
+      "memberStationCount": 9
+    }
+  ],
+  "unassignedStations": [
+    {
+      "uid": "5:3579",
+      "name": "TFF Tholation IV Ring (8,10)",
+      "x": 8,
+      "y": 10,
+      "type": "Shipyard I",
+      "tag": "TFF Tholation IV Ring",
+      "materialPiles": 0,
+      "reason": "Outside IV Ring natural 3x3; do not assign to another hub by proximity alone"
+    },
+    {
+      "uid": "5:3114",
+      "name": "TFF Tholation IV Ring (8,11)",
+      "x": 8,
+      "y": 11,
+      "type": "Shipyard I",
+      "tag": "TFF Tholation IV Ring",
+      "materialPiles": 0,
+      "reason": "Outside IV Ring natural 3x3; do not assign to another hub by proximity alone"
+    }
+  ],
+  "notes": [
+    "Hub title and center corrected from (9,12) to (9,13) while preserving workbook destination ID and HAS target.",
+    "Both unassigned shipyards remain candidates for a separate incomplete hub or one-off designation; neither currently has material piles.",
+    "The audited-workbook-layout is a destination map, not an exhaustive station census."
+  ]
+}
