@@ -1498,17 +1498,17 @@
           "row": null,
           "coordinate": "8,10",
           "stationUid": "5:3579",
-          "ship": null,
+          "ship": "TIE Interceptor",
           "classification": "confirmed-oneoff",
-          "notes": "User confirmed 2026-10-22; not yet represented in workbook production order rows."
+          "notes": "Confirmed current tooling: TIE Interceptor. Tooling supersedes station info-field text referring to Toscan. No workbook production-order row mapped yet."
         },
         {
           "row": null,
           "coordinate": "8,11",
           "stationUid": "5:3114",
-          "ship": null,
+          "ship": "TIE Interceptor",
           "classification": "confirmed-oneoff",
-          "notes": "User confirmed 2026-10-22; not yet represented in workbook production order rows."
+          "notes": "Confirmed current tooling: TIE Interceptor. Tooling supersedes station info-field text referring to Toscan. No workbook production-order row mapped yet."
         }
       ],
       "target": {
