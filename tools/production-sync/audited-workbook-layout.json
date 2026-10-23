@@ -1471,7 +1471,9 @@
       "memberStationUids": [
         "5:19981",
         "5:4757",
-        "5:19843"
+        "5:19843",
+        "5:3579",
+        "5:3114"
       ],
       "oneoffs": [
         {
@@ -1491,6 +1493,22 @@
           "coordinate": "2,15",
           "stationUid": "5:19843",
           "ship": "Alpha-class Xg-1 Star Wing"
+        },
+        {
+          "row": null,
+          "coordinate": "8,10",
+          "stationUid": "5:3579",
+          "ship": null,
+          "classification": "confirmed-oneoff",
+          "notes": "User confirmed 2026-10-22; not yet represented in workbook production order rows."
+        },
+        {
+          "row": null,
+          "coordinate": "8,11",
+          "stationUid": "5:3114",
+          "ship": null,
+          "classification": "confirmed-oneoff",
+          "notes": "User confirmed 2026-10-22; not yet represented in workbook production order rows."
         }
       ],
       "target": {
