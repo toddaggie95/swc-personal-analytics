@@ -3492,7 +3492,11 @@
         "x": 14,
         "y": 10
       },
-      "memberStationUids": [],
+      "memberStationUids": [
+        "5:17698",
+        "5:17624",
+        "5:17701"
+      ],
       "target": {
         "sheet": "Harrin",
         "hasColumn": 2,
@@ -3529,7 +3533,11 @@
         "x": 13,
         "y": 10
       },
-      "memberStationUids": [],
+      "memberStationUids": [
+        "5:1290",
+        "5:3062",
+        "5:14186"
+      ],
       "target": {
         "sheet": "Ota",
         "hasColumn": 2,
