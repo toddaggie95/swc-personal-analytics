@@ -1456,7 +1456,8 @@
         "5:20332",
         "5:20331",
         "5:20333",
-        "5:3115"
+        "5:3115",
+        "5:4757"
       ],
       "target": {
         "sheet": "Tholatin",
@@ -1470,22 +1471,15 @@
       "system": "Tholatin",
       "memberStationUids": [
         "5:19981",
-        "5:4757",
         "5:19843",
         "5:3579",
         "5:3114"
       ],
       "oneoffs": [
         {
-          "row": 109,
+          "row": 110,
           "coordinate": "13,3",
           "stationUid": "5:19981",
-          "ship": "Alpha-class Xg-1 Star Wing"
-        },
-        {
-          "row": 110,
-          "coordinate": "10,10",
-          "stationUid": "5:4757",
           "ship": "Alpha-class Xg-1 Star Wing"
         },
         {
@@ -1495,18 +1489,18 @@
           "ship": "Alpha-class Xg-1 Star Wing"
         },
         {
-          "row": null,
+          "row": 112,
           "coordinate": "8,10",
           "stationUid": "5:3579",
-          "ship": "TIE Interceptor",
+          "ship": "TIE/in Interceptor",
           "classification": "confirmed-oneoff",
           "notes": "Confirmed current tooling: TIE Interceptor. Tooling supersedes station info-field text referring to Toscan. No workbook production-order row mapped yet."
         },
         {
-          "row": null,
+          "row": 113,
           "coordinate": "8,11",
           "stationUid": "5:3114",
-          "ship": "TIE Interceptor",
+          "ship": "TIE/in Interceptor",
           "classification": "confirmed-oneoff",
           "notes": "Confirmed current tooling: TIE Interceptor. Tooling supersedes station info-field text referring to Toscan. No workbook production-order row mapped yet."
         }
