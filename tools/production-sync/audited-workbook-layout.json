@@ -883,22 +883,6 @@
       }
     },
     {
-      "id": "Tholatin-hub-1-1",
-      "kind": "hub",
-      "system": "Tholatin",
-      "title": "TFF Tholation IV Ring (2/2) (10,14)",
-      "center": {
-        "x": 10,
-        "y": 14
-      },
-      "memberStationUids": [],
-      "target": {
-        "sheet": "Tholatin",
-        "hasColumn": 6,
-        "materialStartRow": 13
-      }
-    },
-    {
       "id": "Tholatin-hub-1-2",
       "kind": "hub",
       "system": "Tholatin",
@@ -1494,7 +1478,7 @@
           "stationUid": "5:3579",
           "ship": "TIE/in Interceptor",
           "classification": "confirmed-oneoff",
-          "notes": "Confirmed current tooling: TIE Interceptor. Tooling supersedes station info-field text referring to Toscan. No workbook production-order row mapped yet."
+          "notes": "Current tooling is TIE/in Interceptor; supersedes stale Toscan info-field text. Worksheet row mapped and verified."
         },
         {
           "row": 113,
@@ -1502,7 +1486,7 @@
           "stationUid": "5:3114",
           "ship": "TIE/in Interceptor",
           "classification": "confirmed-oneoff",
-          "notes": "Confirmed current tooling: TIE Interceptor. Tooling supersedes station info-field text referring to Toscan. No workbook production-order row mapped yet."
+          "notes": "Current tooling is TIE/in Interceptor; supersedes stale Toscan info-field text. Worksheet row mapped and verified."
         }
       ],
       "target": {
