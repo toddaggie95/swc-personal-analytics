@@ -51,7 +51,7 @@ export function reconcileDestinations(materials, stations, destinations) {
   }
   allocations.set(d.id,{id:d.id,kind:d.kind,system:d.system,target:t,totals:Object.fromEntries(MATERIALS.map(m=>[m,0])),pileIds:[]});
  }
- const unallocated=[],nonStation=[],unknown=[];
+ const unallocated=[],nonStation=[],unknown=[],inaccessible=[];
  for(const p of materials) {
   const uid=p.uid,signature=[p.type_name,p.quantity,p.sector,p.system,p.sysX,p.sysY,p.container_type_name,p.container_uid].join('|');
   if(!uid){errors.push({code:'material-missing-uid'});continue}
@@ -61,6 +61,12 @@ export function reconcileDestinations(materials, stations, destinations) {
   if(!Number.isSafeInteger(quantity)||quantity<0){errors.push({code:'invalid-quantity',uid});continue}
   if(!MATERIALS.includes(material)){unknown.push({uid,material});errors.push({code:'unknown-material',uid,material});continue}
   if(p.container_type_name!=='Stations'){nonStation.push({uid,quantity,material,containerType:p.container_type_name});continue}
+  // Ownership exports are the conservative accessibility authority. A material pile
+  // can be owned by us while its container is not; never allocate such a pile.
+  if(!stationById.has(p.container_uid)){
+   inaccessible.push({uid,quantity,material,system:p.system,stationUid:p.container_uid,stationName:p.container_name||'',reason:'container-absent-from-owned-station-exports'});
+   continue;
+  }
   const id=byStation.get(p.container_uid);
   if(!id){unallocated.push({uid,quantity,material,system:p.system,stationUid:p.container_uid,stationName:p.container_name});continue}
   const a=allocations.get(id);
@@ -69,7 +75,7 @@ export function reconcileDestinations(materials, stations, destinations) {
  }
  const entries=[...allocations.values()];
  const total=entries.reduce((n,a)=>n+Object.values(a.totals).reduce((x,y)=>x+y,0),0);
- return {schemaVersion:2,materials:MATERIALS,destinations:entries,unallocated,nonStation,unknown,errors,statistics:{destinations:entries.length,uniquePiles:seen.size,allocatedUnits:total,unallocatedPiles:unallocated.length,errorCount:errors.length}};
+ return {schemaVersion:2,materials:MATERIALS,destinations:entries,unallocated,inaccessible,nonStation,unknown,errors,statistics:{destinations:entries.length,uniquePiles:seen.size,allocatedUnits:total,unallocatedPiles:unallocated.length,inaccessiblePiles:inaccessible.length,inaccessibleUnits:inaccessible.reduce((n,p)=>n+p.quantity,0),errorCount:errors.length}};
 }
 /** Only HAS cells are eligible; no changes are emitted when any validation fails. */
 export function planHasChanges(report,existing) {
