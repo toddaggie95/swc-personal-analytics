@@ -62,3 +62,13 @@ test('owned container outside destination is unallocated, not inaccessible',()=>
  assert.equal(r.inaccessible.length,0);
  assert.equal(r.unallocated.length,1);
 });
+
+test('facility piles affect provisional system totals but never station HAS',()=>{
+ const facility={...pile('f1','4:1',50),container_type_name:'Facilities'};
+ const r=reconcileDestinations([pile('s1','5:1',7),facility,pile('x1','5:99',20)], [station('5:1',5),station('5:2',6)], [hub]);
+ assert.equal(r.destinations[0].totals.meleenium,7);
+ assert.equal(r.systemTotals.Kashyyyk.meleenium,57);
+ assert.equal(r.systemTotalsProvisional,true);
+ assert.equal(r.inaccessible.length,1);
+ assert.equal(r.nonStation.length,1);
+});
