@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       enable_has_writes:
-        description: 'Write validated HAS changes to Google Sheets (default: false)'
+        description: 'Write validated HAS changes to Google Sheets (default: true)'
         type: boolean
         required: true
-        default: false
+        default: true
       trash_superseded_exports:
         description: 'Mark older exports trash_ and rename accepted files (default: true)'
         type: boolean
