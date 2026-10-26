@@ -14,8 +14,18 @@ test('system HAS counts assigned plus reserve, excludes ships and deduplicates p
 test('inaccessible orbital station is excluded',()=>{
  const x=systemInventory([s('A')],[p('1','other',20)],manifest);
  assert.equal(x.systemTotals.Dalchon.meleenium,0);
- assert.equal(x.excluded.inaccessible,1);
+ assert.equal(x.excluded.inaccessibleStations,1);
 });
 test('conflicting duplicate piles are rejected',()=>{
  assert.throws(()=>systemInventory([s('A')],[p('1','A',7),p('1','A',8)],manifest),/Conflicting pile/);
+});
+
+test('TFF/TJO ground facility piles contribute to system HAS but not production HAS',()=>{
+ const x=systemInventory([s('A')],[p('facility-1','facility-id',23,'Facilities'),p('ship-1','ship-id',99,'Ships')],manifest);
+ assert.equal(x.systemTotals.Dalchon.meleenium,23);
+ assert.equal(x.productionTotals.Dalchon.meleenium,0);
+ assert.equal(x.unassigned.Dalchon.totals.meleenium,23);
+ assert.equal(x.facilities.Dalchon.totals.meleenium,23);
+ assert.equal(x.excluded.shipsAndOtherContainers,1);
+ assert.equal(x.statistics.invariantFailures,0);
 });
