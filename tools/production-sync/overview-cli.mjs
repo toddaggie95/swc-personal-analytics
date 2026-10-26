@@ -24,4 +24,4 @@ export function runSnapshotFiles(o){
 if(process.argv[1]?.endsWith('overview-cli.mjs'))try{
  const r=runSnapshotFiles(parseArgs(process.argv.slice(2)));
  console.log(JSON.stringify({mode:r.mode,statistics:r.statistics,systems:r.systems},null,2));
-}catch(e){console.error('Readiness snapshot failed: '+e.message);process.exitCode=1;}
+}catch(e){console.error('Readiness snapshot failed: '+e.message);if(e.coverage)console.error(JSON.stringify({coverage:e.coverage},null,2));process.exitCode=1;}
