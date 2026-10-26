@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Persist accepted export IDs only after verified HAS synchronization."""
-import json,os,sys,urllib.request,urllib.parse,datetime
+import json,os,sys,urllib.request,urllib.parse,urllib.error,datetime
 STATE_NAME="swc-accepted-batch.json"
 def call(url,token,method="GET",data=None,content_type=None):
  headers={"Authorization":"Bearer "+token}
  if content_type:headers["Content-Type"]=content_type
  req=urllib.request.Request(url,data=data,headers=headers,method=method)
- with urllib.request.urlopen(req,timeout=90) as r:return r.read()
+ try:
+  with urllib.request.urlopen(req,timeout=90) as r:return r.read()
+ except urllib.error.HTTPError as err:
+  detail=err.read().decode('utf-8','replace')[:1200]
+  raise RuntimeError('Drive API request failed: HTTP '+str(err.code)+'; '+detail) from err
 def main():
  if len(sys.argv)!=4:raise ValueError("expected export manifest, write report, output report")
  with open(sys.argv[1]) as f:manifest=json.load(f)
