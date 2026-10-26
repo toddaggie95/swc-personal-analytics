@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "acceptedAt": "2026-10-26T21:08:29.063878+00:00",
+  "workflowRunId": "40401757689",
+  "verification": "verified",
+  "files": [
+    {
+      "owner": "TFF",
+      "kind": "Stations",
+      "id": "1pLu2VHSb3-1kMn0U4sbQSY8Arws2NXsG",
+      "sha256": "b372e427e0a911e026312eb5c3b1c9733389fe0cb65f76c8c6c5c2877862fda3",
+      "rowCount": 1346,
+      "modifiedTime": "2026-10-26T18:59:26.184Z"
+    },
+    {
+      "owner": "TFF",
+      "kind": "Materials",
+      "id": "1rlpUNL-dX-bXxBFj_LmWFbzy9leH6dWH",
+      "sha256": "9a84c169a72e85846afac3ac54a9305e032be45c16401e26bdf3d7cea8098722",
+      "rowCount": 1802,
+      "modifiedTime": "2026-10-26T18:59:26.833Z"
+    },
+    {
+      "owner": "TJO",
+      "kind": "Stations",
+      "id": "1V7xHbwZGhW7YEOApq9o0_FAHD9arKjzM",
+      "sha256": "3a4547e4873b0f60e895b5b2f9f6cad28debadb13bdda23d41908bdb55b5ad61",
+      "rowCount": 1029,
+      "modifiedTime": "2026-10-26T18:59:25.214Z"
+    },
+    {
+      "owner": "TJO",
+      "kind": "Materials",
+      "id": "1jU3EnLWKgkMThKl9ldfckqRBLEd-M8Lj",
+      "sha256": "b0f5b79fa61c8a6f5598b3ebde3218e58bf56a3aeac3745523f7b49e4d17c481",
+      "rowCount": 2694,
+      "modifiedTime": "2026-10-26T18:59:26.391Z"
+    }
+  ]
+}
