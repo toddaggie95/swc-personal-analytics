@@ -40,6 +40,14 @@ jobs:
           SWC_EXPORT_OUTPUT: ${{ runner.temp }}/swc-exports
         run: python3 tools/production-sync/download-drive-exports.py
 
+      - name: Audit tooling and infotext (advisory only)
+        working-directory: tools/production-sync
+        run: |
+          node tooling-infotext-audit.mjs \
+            "${{ runner.temp }}/swc-exports/tff-stations.csv" \
+            "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
+            "${{ runner.temp }}/tooling-infotext-report.json"
+
       - name: Run inventory unit tests
         working-directory: tools/production-sync
         run: node --test production-sync.test.mjs audited-inventory.test.mjs station-registry-audit.test.mjs system-has-audit.test.mjs
@@ -117,6 +125,8 @@ jobs:
         with:
           name: swc-audited-ledger
           path: |
+            ${{ runner.temp }}/swc-exports/export-manifest.json
+            ${{ runner.temp }}/tooling-infotext-report.json
             ${{ runner.temp }}/audited-ledger.json
             ${{ runner.temp }}/spreadsheet-comparison.json
             ${{ runner.temp }}/pile-trace.json
