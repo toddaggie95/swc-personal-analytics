@@ -141,6 +141,9 @@ def main():
             url = ("https://www.googleapis.com/drive/v3/files/" +
                    urllib.parse.quote(item["id"], safe="") + "?alt=media")
             candidates.append((item, get(url, token)))
+    if state:
+        candidates = [(item, content) for item, content in candidates
+                      if item["id"] not in ACCEPTED_BASELINE or item["id"] in accepted_ids]
     found = discover(candidates, accepted_ids)
     for key, target in TARGETS.items():
         (dest / target).write_bytes(found[key]["content"])
