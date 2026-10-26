@@ -27,8 +27,8 @@ export function auditRegistry(stations,manifest,baseline=null){
  const unassigned=records.filter(s=>!assigned.has(s.uid));
  const tjoShipyards=records.filter(s=>s.exportOwner==='TJO'&&/shipyard/i.test(s.type));
  const untrackedTjoShipyards=tjoShipyards.filter(s=>!assigned.has(s.uid));
- const outsideTrackedSystems=untrackedTjoShipyards.filter(s=>/^Deep Space\\b|^Asteroid Field\\b/i.test(s.system));
- const inTrackedSystems=untrackedTjoShipyards.filter(s=>!/^Deep Space\\b|^Asteroid Field\\b/i.test(s.system));
+ const outsideTrackedSystems=untrackedTjoShipyards.filter(s=>/^(?:Deep Space|Asteroid Field)/i.test(s.system));
+ const inTrackedSystems=untrackedTjoShipyards.filter(s=>!/^(?:Deep Space|Asteroid Field)/i.test(s.system));
  const assignedMissing=[...assigned].filter(([uid])=>!current.has(uid)).map(([uid,destination])=>({uid,destination}));
  return {schemaVersion:1,baselineStatus:baseline?'compared':'bootstrap_required',statistics:{exportedStations:records.length,assignedStations:assigned.size,unassignedStations:unassigned.length,tjoShipyards:tjoShipyards.length,untrackedTjoShipyards:untrackedTjoShipyards.length,untrackedTjoShipyardsInSystems:inTrackedSystems.length,untrackedTjoShipyardsExcludedSpace:outsideTrackedSystems.length,newStations:newStations.length,missingStations:missingStations.length,changedStations:changedStations.length,assignedMissing:assignedMissing.length,conflicts:conflicts.length},newStations,missingStations,changedStations,untrackedTjoShipyards,untrackedTjoShipyardsInSystems:inTrackedSystems,untrackedTjoShipyardsExcludedSpace:outsideTrackedSystems,assignedMissing,conflicts,unassignedStations:unassigned,bootstrapRegistry:{schemaVersion:1,source:'Approved TFF/TJO station export baseline; update only after review',stations:records}};
 }
