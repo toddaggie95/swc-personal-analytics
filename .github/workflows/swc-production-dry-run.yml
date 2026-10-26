@@ -157,5 +157,5 @@ jobs:
             ${{ runner.temp }}/system-has-audit.json
             ${{ runner.temp }}/system-has-comparison.json
             ${{ runner.temp }}/has-write-report.json
-          retention-days: 7
+          retention-days: 90
           if-no-files-found: warn
