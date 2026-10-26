@@ -23,7 +23,8 @@ def plan(accepted, previous_ids, baseline_ids):
     keep={f["id"] for f in accepted["files"]}
     if len(keep)!=4 or {(f["owner"],f["kind"]) for f in accepted["files"]}!=set(module.TARGETS):
         raise ValueError("Invalid accepted batch")
-    candidates=(set(previous_ids)|set(baseline_ids))-keep
+    prior=set(previous_ids)-keep
+    candidates=prior if prior else (set(baseline_ids)-keep)
     if len(candidates)>4:
         raise ValueError("Refusing cleanup of more than one superseded batch")
     return keep, candidates
@@ -69,7 +70,7 @@ def main():
         with urllib.request.urlopen(req,timeout=90) as response:content=response.read()
         key,_=module.classify(content)
         pending.append((file_id,key))
-    if pending and (len(pending)!=4 or {key for _,key in pending}!=set(module.TARGETS)):
+    if pending and (len(pending)+len(result["alreadyAbsent"])!=4 or len({key for _,key in pending})!=len(pending)):
         raise ValueError("Require exactly four distinct superseded CSVs before trashing; partial previous cleanup should be reviewed")
     for file_id,_ in pending:
         request(f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id,safe='')}?fields=id,trashed",
