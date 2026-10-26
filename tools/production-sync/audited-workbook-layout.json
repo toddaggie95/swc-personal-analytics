@@ -728,38 +728,27 @@
       }
     },
     {
-      "id": "Dalchon-oneoffs",
-      "kind": "oneoff-group",
+      "id": "Dalchon-hub-1-4",
+      "kind": "hub",
       "system": "Dalchon",
+      "title": "Neriad Ring (9,15)",
+      "center": {
+        "x": 9,
+        "y": 15
+      },
       "memberStationUids": [
         "5:64729",
         "5:64728",
-        "5:64727"
-      ],
-      "oneoffs": [
-        {
-          "row": 109,
-          "coordinate": "8,14",
-          "stationUid": "5:64729",
-          "ship": "Aurek-class Tactical Strikefighter"
-        },
-        {
-          "row": 110,
-          "coordinate": "9,14",
-          "stationUid": "5:64728",
-          "ship": "Aurek-class Tactical Strikefighter"
-        },
-        {
-          "row": 111,
-          "coordinate": "10,14",
-          "stationUid": "5:64727",
-          "ship": "Aurek-class Tactical Strikefighter"
-        }
+        "5:64727",
+        "5:64726",
+        "5:65789",
+        "5:65788",
+        "5:65787"
       ],
       "target": {
         "sheet": "Dalchon",
-        "hasColumn": 2,
-        "materialStartRow": 134
+        "hasColumn": 18,
+        "materialStartRow": 13
       }
     },
     {
