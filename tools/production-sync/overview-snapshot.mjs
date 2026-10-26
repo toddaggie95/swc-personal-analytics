@@ -3,8 +3,14 @@
 import {buildReadinessPools} from './readiness-pools.mjs';
 import {shipBillsFromRows} from './ship-bills.mjs';
 import {mapProductionOrders} from './readiness-orders.mjs';
+import {auditOrderCoverage} from './order-coverage.mjs';
 import {allocateReadiness} from './production-readiness.mjs';
 export function calculateOverviewSnapshot({manifest,stations,materials,auditedOrders,rowsBySystem,shipRows}) {
+ const coverage=auditOrderCoverage({manifest,auditedOrders,rowsBySystem});
+ if(coverage.status!=='complete'){
+  const e=Error('Production order coverage incomplete: '+coverage.missing.length+' missing hub orders, '+coverage.unmappedOneoffs.length+' one-offs, '+coverage.orphaned.length+' orphaned orders');
+  e.coverage=coverage;throw e;
+ }
  const {pools,statistics}=buildReadinessPools(manifest,stations,materials);
  const bills=shipBillsFromRows(shipRows);
  const orders=mapProductionOrders({auditedOrders,manifest,stations,rowsBySystem,shipBills:bills});
