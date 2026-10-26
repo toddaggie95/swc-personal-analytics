@@ -16,5 +16,5 @@ class CaptureTests(unittest.TestCase):
   self.assertIn("valueRenderOption=FORMATTED_VALUE",getter.call_args.args[0])
  def test_incomplete_api_result_fails(self):
   with patch.object(module,"get",return_value={"valueRanges":[]}):
-   with self.assertRaisesRegex(ValueError,"Incomplete"):module.capture("token","sheet",{},{"orders":[{"system":"Eberon"}]})
+   with self.assertRaisesRegex(ValueError,"Incomplete"):module.capture("token","sheet",{"destinations":[]},{"orders":[{"system":"Eberon"}]})
 if __name__=="__main__":unittest.main()
