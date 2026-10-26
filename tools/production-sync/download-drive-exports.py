@@ -31,10 +31,12 @@ def main():
         raise RuntimeError("Folder contains too many files; pagination not implemented")
     names = {}
     for item in listing["files"]:
-        if item["name"] in FILES:
-            if item["name"] in names:
-                raise RuntimeError("Duplicate file name: " + item["name"])
-            names[item["name"]] = item
+        # SWC web exports use spaces around the hyphen; accept either convention.
+        normalized = item["name"].replace(" - ", "-")
+        if normalized in FILES:
+            if normalized in names:
+                raise RuntimeError("Duplicate export type: " + normalized)
+            names[normalized] = item
     if set(names) != set(FILES):
         raise RuntimeError("Missing expected exports: " + str(sorted(set(FILES) - set(names))))
     for name, target in FILES.items():
