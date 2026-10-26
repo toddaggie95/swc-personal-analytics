@@ -49,7 +49,7 @@ class ClassificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate"):
             exports.discover([file, file])
     def test_missing_rejected(self):
-        with self.assertRaisesRegex(ValueError, "missing exports"):
+        with self.assertRaisesRegex(ValueError, "missing accepted baseline exports"):
             exports.discover([])
     def test_mixed_ownership_rejected(self):
         body = STATION.format(owner=OWNERS["TFF"]) + STATION.format(owner=OWNERS["TJO"]).split("\n",1)[1]
