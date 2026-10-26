@@ -42,7 +42,7 @@ jobs:
 
       - name: Run inventory unit tests
         working-directory: tools/production-sync
-        run: node --test production-sync.test.mjs audited-inventory.test.mjs station-registry-audit.test.mjs
+        run: node --test production-sync.test.mjs audited-inventory.test.mjs station-registry-audit.test.mjs system-has-audit.test.mjs
 
       - name: Calculate audited inventory (no spreadsheet writes)
         working-directory: tools/production-sync
@@ -67,6 +67,26 @@ jobs:
             "$BASELINE" \
             "${{ runner.temp }}/station-registry-audit.json" \
             "${{ runner.temp }}/station-registry-bootstrap.json"
+
+      - name: Calculate complete system orbital HAS (read only)
+        working-directory: tools/production-sync
+        run: |
+          node system-has-audit.mjs \
+            "${{ runner.temp }}/swc-exports/tff-stations.csv" \
+            "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
+            "${{ runner.temp }}/swc-exports/tff-materials.csv" \
+            "${{ runner.temp }}/swc-exports/tjo-materials.csv" \
+            audited-workbook-layout.json \
+            "${{ runner.temp }}/system-has-audit.json"
+
+      - name: Compare system HAS against live workbook (read only)
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
+        run: |
+          python3 tools/production-sync/compare-system-has.py \
+            "${{ runner.temp }}/system-has-audit.json" \
+            "${{ runner.temp }}/system-has-comparison.json"
 
       - name: Compare calculated HAS values with live workbook (read only)
         if: success()
@@ -102,5 +122,7 @@ jobs:
             ${{ runner.temp }}/pile-trace.json
             ${{ runner.temp }}/station-registry-audit.json
             ${{ runner.temp }}/station-registry-bootstrap.json
+            ${{ runner.temp }}/system-has-audit.json
+            ${{ runner.temp }}/system-has-comparison.json
           retention-days: 7
           if-no-files-found: warn
