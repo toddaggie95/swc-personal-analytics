@@ -118,16 +118,11 @@ def main():
         page_token = listing.get("nextPageToken")
         if not page_token:
             break
-    state_files = [item for item in items if item["name"] == "swc-accepted-batch.json"]
-    if len(state_files) > 1:
-        raise ValueError("duplicate accepted-batch state files")
+    state_path = Path(__file__).with_name("accepted-batch.json")
     accepted_ids = ACCEPTED_BASELINE
     state = None
-    if state_files:
-        state_item = state_files[0]
-        raw = get("https://www.googleapis.com/drive/v3/files/" +
-                  urllib.parse.quote(state_item["id"], safe="") + "?alt=media", token)
-        state = json.loads(raw)
+    if state_path.exists():
+        state = json.loads(state_path.read_text())
         if state.get("schemaVersion") != 1 or len(state.get("files", [])) != 4:
             raise ValueError("invalid accepted-batch manifest")
         keys = {(v["owner"], v["kind"]) for v in state["files"]}
