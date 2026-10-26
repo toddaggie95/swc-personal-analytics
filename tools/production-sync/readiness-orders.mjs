@@ -45,7 +45,7 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
   const coord=String(row[oneoff?0:col]??'').replace(/[()]/g,'').trim();
   if(coord!==entry.x+','+entry.y)throw Error('Order coordinate mismatch '+entry.system+':'+entry.row);
   const ship=String(row[col+1]??'').trim(),qtyRaw=row[col+2],started=String(row[col+3]??'').trim().toLowerCase();
-  if(ship!==entry.ship)throw Error('Audited ship assignment drift '+entry.system+':'+entry.row);
+  if(!oneoff && ship!==entry.ship)throw Error('Audited ship assignment drift '+entry.system+':'+entry.row);
   if(!['','yes','no'].includes(started))throw Error('Invalid Started value '+entry.system+':'+entry.row);
   const possible=byLocation.get([entry.system,entry.x,entry.y].join('|'))??[];
   const matched=possible.filter(x=>d.memberStationUids.includes(x.uid) && (!oneoff || x.uid===String(row[4]??'').trim()));
