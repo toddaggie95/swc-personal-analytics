@@ -7,13 +7,24 @@ export function systemInventory(stations,materials,manifest){
  const systems=[...new Set(manifest.destinations.map(d=>d.system))].sort();
  for(const sys of systems){systemTotals[sys]=zeros();productionTotals[sys]=zeros()}
  for(const s of stations){if(!s.uid)throw Error('Station without UID');const prev=owned.get(s.uid);if(prev&&(prev.system!==s.system||prev.sysX!==s.sysX||prev.sysY!==s.sysY))throw Error('Station conflict '+s.uid);owned.set(s.uid,s)}
- const unassigned={},excluded={nonStation:0,inaccessible:0,outsideTrackedSystems:0};
+ const unassigned={},excluded={shipsAndOtherContainers:0,inaccessibleStations:0,outsideTrackedSystems:0},facilities={};
  for(const p of materials){
   if(!p.uid)throw Error('Pile missing UID');
   const sig=[p.type_name,p.quantity,p.system,p.container_type_name,p.container_uid].join('|');
   if(piles.has(p.uid)){if(piles.get(p.uid)!==sig)throw Error('Conflicting pile '+p.uid);continue}piles.set(p.uid,sig);
-  if(p.container_type_name!=='Stations'){excluded.nonStation++;continue}
-  const station=owned.get(p.container_uid);if(!station){excluded.inaccessible++;continue}
+  if(p.container_type_name==='Facilities'){
+   // Facility exports are ownership-scoped TFF/TJO material piles. A facility
+   // need not appear in the station registry; its material row identifies its system.
+   if(!Object.hasOwn(systemTotals,p.system)){excluded.outsideTrackedSystems++;continue}
+   const mat=p.type_name?.toLowerCase(),qty=Number(p.quantity);
+   if(!MATERIALS.includes(mat)||!Number.isSafeInteger(qty)||qty<0){errors.push({pile:p.uid,reason:'invalid-facility-material-or-quantity'});continue}
+   systemTotals[p.system][mat]+=qty;
+   const item=unassigned[p.system]??={totals:zeros(),stations:{}};item.totals[mat]+=qty;
+   const f=facilities[p.system]??={totals:zeros(),pileCount:0};f.totals[mat]+=qty;f.pileCount++;
+   continue;
+  }
+  if(p.container_type_name!=='Stations'){excluded.shipsAndOtherContainers++;continue}
+  const station=owned.get(p.container_uid);if(!station){excluded.inaccessibleStations++;continue}
   if(!Object.hasOwn(systemTotals,station.system)){excluded.outsideTrackedSystems++;continue}
   if(p.system&&p.system!==station.system){errors.push({pile:p.uid,reason:'pile-station-system-mismatch',pileSystem:p.system,stationSystem:station.system});continue}
   const mat=p.type_name?.toLowerCase();const qty=Number(p.quantity);
@@ -24,7 +35,7 @@ export function systemInventory(stations,materials,manifest){
  }
  const discrepancies=[];
  for(const sys of systems)for(const m of MATERIALS){const total=systemTotals[sys][m],prod=productionTotals[sys][m],reserve=unassigned[sys]?.totals[m]||0;if(total!==prod+reserve)discrepancies.push({sys,m,total,prod,reserve})}
- return {schemaVersion:1,systems,materials:MATERIALS,systemTotals,productionTotals,unassigned,excluded,errors,discrepancies,statistics:{systems:systems.length,systemHasCells:systems.length*MATERIALS.length,uniquePiles:piles.size,errors:errors.length,invariantFailures:discrepancies.length}};
+ return {schemaVersion:1,systems,materials:MATERIALS,systemTotals,productionTotals,unassigned,facilities,excluded,errors,discrepancies,statistics:{systems:systems.length,systemHasCells:systems.length*MATERIALS.length,uniquePiles:piles.size,errors:errors.length,invariantFailures:discrepancies.length}};
 }
 function main(){
  const [tffS,tjoS,tffM,tjoM,manifestPath,out]=process.argv.slice(2);
