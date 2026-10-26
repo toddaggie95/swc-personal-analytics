@@ -90,9 +90,10 @@ def discover(files, accepted_ids=None):
                 f"{owner} {kind}" for owner, kind in sorted(missing)))
     return selected
 
-def cleanup_plan(files, selected):
+def cleanup_plan(files, selected, accepted_ids=None):
+    accepted_ids = ACCEPTED_BASELINE if accepted_ids is None else set(accepted_ids)
     chosen = {item["id"] for item in selected.values()}
-    previous = [item for item, _ in files if item["id"] in ACCEPTED_BASELINE and item["id"] not in chosen]
+    previous = [item for item, _ in files if item["id"] in accepted_ids and item["id"] not in chosen]
     return {"mode": "simulation_only", "requiresSuccessfulValidation": True,
             "previousFilesToTrashAfterAcceptance": previous,
             "filesToKeep": [v["id"] for v in selected.values()],
@@ -117,13 +118,30 @@ def main():
         page_token = listing.get("nextPageToken")
         if not page_token:
             break
+    state_files = [item for item in items if item["name"] == "swc-accepted-batch.json"]
+    if len(state_files) > 1:
+        raise ValueError("duplicate accepted-batch state files")
+    accepted_ids = ACCEPTED_BASELINE
+    state = None
+    if state_files:
+        state_item = state_files[0]
+        raw = get("https://www.googleapis.com/drive/v3/files/" +
+                  urllib.parse.quote(state_item["id"], safe="") + "?alt=media", token)
+        state = json.loads(raw)
+        if state.get("schemaVersion") != 1 or len(state.get("files", [])) != 4:
+            raise ValueError("invalid accepted-batch manifest")
+        keys = {(v["owner"], v["kind"]) for v in state["files"]}
+        ids = [v["id"] for v in state["files"]]
+        if keys != set(TARGETS) or len(set(ids)) != 4:
+            raise ValueError("accepted-batch manifest has duplicate or missing identities")
+        accepted_ids = set(ids)
     candidates = []
     for item in items:
         if item["name"].lower().endswith(".csv") or item.get("mimeType") == "text/csv":
             url = ("https://www.googleapis.com/drive/v3/files/" +
                    urllib.parse.quote(item["id"], safe="") + "?alt=media")
             candidates.append((item, get(url, token)))
-    found = discover(candidates)
+    found = discover(candidates, accepted_ids)
     for key, target in TARGETS.items():
         (dest / target).write_bytes(found[key]["content"])
     manifest = {"schemaVersion": 1, "files": [
@@ -131,7 +149,13 @@ def main():
          **{k: v for k, v in found[(owner, kind)].items() if k != "content"}}
         for owner, kind in TARGETS]}
     (dest / "export-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    plan = cleanup_plan(candidates, found)
+    if state:
+        previous_by_id = {v["id"]: v for v in state["files"]}
+        for entry in manifest["files"]:
+            prior = previous_by_id.get(entry["id"])
+            if prior and prior["sha256"] != entry["sha256"]:
+                raise ValueError("accepted export content changed: " + entry["id"])
+    plan = cleanup_plan(candidates, found, accepted_ids)
     (dest / "cleanup-plan.json").write_text(json.dumps(plan, indent=2) + "\\n")
     print(json.dumps(manifest, indent=2))
     print("Cleanup simulation:", json.dumps(plan, indent=2))
