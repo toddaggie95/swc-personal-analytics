@@ -78,6 +78,20 @@ def main():
         check=request(f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id,safe='')}?fields=id,trashed",token)
         if not check.get("trashed"):raise RuntimeError("Trash verification failed: "+file_id)
         result["trashed"].append(file_id)
+    result["renamed"]=[]
+    for entry in accepted["files"]:
+        file_id=entry["id"]
+        name=f'{entry["owner"]}-{entry["kind"]}.csv'
+        url=f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id,safe='')}?fields=id,name,parents,trashed"
+        before=request(url,token)
+        if before.get("trashed") or folder not in before.get("parents",[]):
+            raise ValueError("Accepted export missing from active folder: "+file_id)
+        if before["name"]!=name:
+            request(url,token,"PATCH",json.dumps({"name":name}).encode())
+        after=request(url,token)
+        if after.get("name")!=name or after.get("trashed") or folder not in after.get("parents",[]):
+            raise RuntimeError("Accepted export rename verification failed: "+file_id)
+        result["renamed"].append({"id":file_id,"name":name})
     with open(sys.argv[3],"w") as f:json.dump(result,f,indent=2)
     print(json.dumps(result))
 if __name__=="__main__":main()
