@@ -40,6 +40,9 @@ jobs:
           SWC_EXPORT_OUTPUT: ${{ runner.temp }}/swc-exports
         run: python3 tools/production-sync/download-drive-exports.py
 
+      - name: Test export auto-discovery
+        run: python3 -m unittest discover -s tools/production-sync -p 'test_download_drive_exports.py' -v
+
       - name: Audit tooling and infotext (advisory only)
         working-directory: tools/production-sync
         run: |
