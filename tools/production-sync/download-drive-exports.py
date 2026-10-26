@@ -51,23 +51,49 @@ def classify(content):
     except (UnicodeError, csv.Error) as exc:
         raise ValueError("invalid CSV: " + str(exc)) from exc
 
-def discover(files):
-    result = {}
+# Seeded from the four exports that passed the 420/420 and 2898/2898 audit.
+# These IDs are immutable Drive identities, not filename guesses.
+ACCEPTED_BASELINE = {
+    "1qlxHQAZCkaGyFEnO92bnX7f45oVyMgfW",  # TJO stations
+    "1Gx8HsOak_3bkcsuBm4TiW0eltOUFCq1z",  # TJO materials
+    "18_G8GdC2OO2_2ycXdZe-TkVMH2tzDau6", # TFF stations
+    "1YNp0kUhGWmUV3aSLz6VCLzdBF1cgxCHi", # TFF materials
+}
+
+def discover(files, accepted_ids=None):
+    accepted_ids = ACCEPTED_BASELINE if accepted_ids is None else set(accepted_ids)
+    previous, fresh = {}, {}
     for item, content in files:
         key, count = classify(content)
-        if key in result:
+        target = previous if item["id"] in accepted_ids else fresh
+        if key in target:
             raise ValueError(f"ambiguous duplicate {key[0]} {key[1]} exports: "
-                             f"{result[key]['name']!r} and {item['name']!r}; "
-                             "keep exactly one snapshot of each type in the folder")
-        result[key] = {"id": item["id"], "name": item["name"],
+                             f"{target[key]['name']!r} and {item['name']!r}")
+        target[key] = {"id": item["id"], "name": item["name"],
                        "modifiedTime": item.get("modifiedTime", ""),
                        "sha256": hashlib.sha256(content).hexdigest(),
                        "rowCount": count, "content": content}
-    missing = set(TARGETS) - set(result)
-    if missing:
-        raise ValueError("missing exports: " + ", ".join(
-            f"{owner} {kind}" for owner, kind in sorted(missing)))
-    return result
+    if fresh:
+        missing = set(TARGETS) - set(fresh)
+        if missing:
+            raise ValueError("incomplete new export batch; missing: " + ", ".join(
+                f"{owner} {kind}" for owner, kind in sorted(missing)))
+        selected = fresh
+    else:
+        selected = previous
+        missing = set(TARGETS) - set(previous)
+        if missing:
+            raise ValueError("missing accepted baseline exports: " + ", ".join(
+                f"{owner} {kind}" for owner, kind in sorted(missing)))
+    return selected
+
+def cleanup_plan(files, selected):
+    chosen = {item["id"] for item in selected.values()}
+    previous = [item for item, _ in files if item["id"] in ACCEPTED_BASELINE and item["id"] not in chosen]
+    return {"mode": "simulation_only", "requiresSuccessfulValidation": True,
+            "previousFilesToTrashAfterAcceptance": previous,
+            "filesToKeep": [v["id"] for v in selected.values()],
+            "driveChangesPerformed": False}
 
 def main():
     token = os.environ["GOOGLE_ACCESS_TOKEN"]
@@ -102,7 +128,10 @@ def main():
          **{k: v for k, v in found[(owner, kind)].items() if k != "content"}}
         for owner, kind in TARGETS]}
     (dest / "export-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    plan = cleanup_plan(candidates, found)
+    (dest / "cleanup-plan.json").write_text(json.dumps(plan, indent=2) + "\\n")
     print(json.dumps(manifest, indent=2))
+    print("Cleanup simulation:", json.dumps(plan, indent=2))
     print("Four exports validated and downloaded. No Drive files modified.")
 
 if __name__ == "__main__":
