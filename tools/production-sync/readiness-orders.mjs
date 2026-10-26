@@ -15,7 +15,17 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
   }
  }
  const output=[],used=new Set();
- for(const entry of auditedOrders){
+ const completeOrders=[...auditedOrders];
+ for(const d of manifest.destinations.filter(x=>x.kind==='oneoff-group'))for(const one of d.oneoffs??[]){
+  const row=one.row+1,values=rowsBySystem[d.system]?.[row];
+  if(!values)throw Error('Missing one-off row '+d.system+':'+row);
+  const coord=String(values[0]??'').replace(/[()]/g,'').trim();
+  if(coord!==String(one.coordinate).replace(/[()]/g,'').trim())throw Error('One-off coordinate drift '+d.system+':'+row);
+  if(String(values[4]??'').trim()!==one.stationUid)throw Error('One-off UID drift '+d.system+':'+row);
+  const [x,y]=coord.split(',').map(Number);
+  completeOrders.push({destinationId:d.id,system:d.system,x,y,ship:String(values[1]??'').trim(),row});
+ }
+ for(const entry of completeOrders){
   const rows=rowsBySystem[entry.system];
   if(!rows)throw Error('Missing live system tab '+entry.system);
   const row=rows[entry.row];
@@ -38,7 +48,7 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
   if(ship!==entry.ship)throw Error('Audited ship assignment drift '+entry.system+':'+entry.row);
   if(!['','yes','no'].includes(started))throw Error('Invalid Started value '+entry.system+':'+entry.row);
   const possible=byLocation.get([entry.system,entry.x,entry.y].join('|'))??[];
-  const matched=possible.filter(x=>x.destinationId=== (oneoff?x.destinationId:d.id) && d.memberStationUids.includes(x.uid));
+  const matched=possible.filter(x=>d.memberStationUids.includes(x.uid) && (!oneoff || x.uid===String(row[4]??'').trim()));
   if(matched.length!==1)throw Error('Ambiguous station at '+entry.system+':'+entry.x+','+entry.y);
   const station=matched[0];
   if(oneoff && String(row[4]??'').trim()!==station.uid)throw Error('One-off UID mismatch '+station.uid);
