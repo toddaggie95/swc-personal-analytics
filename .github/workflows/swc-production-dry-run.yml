@@ -129,6 +129,7 @@ jobs:
           name: swc-audited-ledger
           path: |
             ${{ runner.temp }}/swc-exports/export-manifest.json
+            ${{ runner.temp }}/swc-exports/cleanup-plan.json
             ${{ runner.temp }}/tooling-infotext-report.json
             ${{ runner.temp }}/audited-ledger.json
             ${{ runner.temp }}/spreadsheet-comparison.json
