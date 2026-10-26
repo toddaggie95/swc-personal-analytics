@@ -19,6 +19,31 @@ class ClassificationTests(unittest.TestCase):
                               template.format(owner=name).encode()))
         found = exports.discover(files)
         self.assertEqual(set(found), set(exports.TARGETS))
+    def test_new_batch_wins_over_previous_four(self):
+        files = []
+        for (owner, kind), old_id in zip(exports.TARGETS, sorted(exports.ACCEPTED_BASELINE)):
+            template = STATION if kind == "Stations" else MATERIAL
+            data = template.format(owner=OWNERS[owner]).encode()
+            files.extend([({"id": old_id, "name": "old-"+owner+kind+".csv"}, data),
+                          ({"id": "new-"+owner+kind, "name": "new-"+owner+kind+".csv"}, data)])
+        selected = exports.discover(files)
+        self.assertTrue(all(v["id"].startswith("new-") for v in selected.values()))
+        plan = exports.cleanup_plan(files, selected)
+        self.assertEqual(len(plan["previousFilesToTrashAfterAcceptance"]), 4)
+        self.assertFalse(plan["driveChangesPerformed"])
+    def test_partial_new_batch_fails(self):
+        files = []
+        for owner, kind in exports.TARGETS:
+            template = STATION if kind == "Stations" else MATERIAL
+            data = template.format(owner=OWNERS[owner]).encode()
+            files.append(({"id": "old-"+owner+kind, "name": "old.csv"}, data))
+        # Explicitly pin the old identities for this test.
+        ids = iter(sorted(exports.ACCEPTED_BASELINE))
+        for item, _ in files:
+            item["id"] = next(ids)
+        files.append(({"id": "new-one", "name": "new.csv"}, STATION.format(owner=OWNERS["TJO"]).encode()))
+        with self.assertRaisesRegex(ValueError, "incomplete new export batch"):
+            exports.discover(files)
     def test_duplicate_rejected(self):
         file = ({"id": "1", "name": "a.csv"}, STATION.format(owner=OWNERS["TFF"]).encode())
         with self.assertRaisesRegex(ValueError, "duplicate"):
