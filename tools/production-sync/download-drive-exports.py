@@ -64,7 +64,10 @@ def discover(files, accepted_ids=None):
     accepted_ids = ACCEPTED_BASELINE if accepted_ids is None else set(accepted_ids)
     previous, fresh = {}, {}
     for item, content in files:
-        key, count = classify(content)
+        try:
+            key, count = classify(content)
+        except ValueError as exc:
+            raise ValueError(f"{item['name']!r} (Drive ID {item['id']}): {exc}") from exc
         target = previous if item["id"] in accepted_ids else fresh
         if key in target:
             raise ValueError(f"ambiguous duplicate {key[0]} {key[1]} exports: "
