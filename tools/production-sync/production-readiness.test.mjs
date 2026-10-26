@@ -21,3 +21,21 @@ test('started and unassigned orders consume no materials',()=>{
 });
 test('duplicate inventory pools fail closed',()=>assert.throws(()=>allocateReadiness({pools:[p('a','hub',{}),p('a','hub',{})],orders:[]}),/Duplicate/));
 test('incomplete material bills fail closed',()=>assert.throws(()=>allocateReadiness({pools:[p('a','hub',{})],orders:[o('a','hub',{})]}),/bill/));
+
+test('high-priority transfer is reserved before lower-priority local start', () => {
+ const r=allocateReadiness({
+  pools:[p('capital','capitalHub',{}),p('fighter','fighterHub',{mel:20})],
+  orders:[o('capital','capitalHub',{mel:20}),o('fighter','fighterHub',{mel:20})],
+  priority:x=>x.id==='capital'?0:1
+ });
+ assert.deepEqual(r.orders.map(x=>x.status),['transfer','blocked']);
+});
+test('conservation across multiple materials and destinations', () => {
+ const r=allocateReadiness({
+  pools:[p('a','A',{mel:5,qua:10}),p('b','B',{mel:20,qua:10})],
+  orders:[o('a','A',{mel:15,qua:10}),o('b','B',{mel:10,qua:10})]
+ });
+ for(const [material,limit] of [['mel',25],['qua',20]]) {
+  assert.ok(r.reservations.filter(x=>x.material===material).reduce((sum,x)=>sum+x.quantity,0)<=limit);
+ }
+});
