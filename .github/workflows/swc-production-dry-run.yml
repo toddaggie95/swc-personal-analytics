@@ -42,7 +42,7 @@ jobs:
 
       - name: Run inventory unit tests
         working-directory: tools/production-sync
-        run: node --test production-sync.test.mjs audited-inventory.test.mjs
+        run: node --test production-sync.test.mjs audited-inventory.test.mjs station-registry-audit.test.mjs
 
       - name: Calculate audited inventory (no spreadsheet writes)
         working-directory: tools/production-sync
