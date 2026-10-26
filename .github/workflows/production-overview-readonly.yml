@@ -1,6 +1,14 @@
 name: SWC production overview readiness (read only)
 on:
   workflow_dispatch:
+    inputs:
+      source_branch:
+        description: 'Readiness implementation branch (read-only execution)'
+        required: true
+        type: choice
+        options:
+          - feature/production-overview-readiness
+        default: feature/production-overview-readiness
 
 permissions:
   contents: read
@@ -15,16 +23,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout selected branch
+      - name: Checkout approved development branch
         uses: actions/checkout@v4
         with:
+          ref: feature/production-overview-readiness
           persist-credentials: false
       - name: Guard development-only execution
         shell: bash
+        env:
+          REQUESTED_BRANCH: ${{ inputs.source_branch }}
         run: |
-          test "$GITHUB_REF_NAME" = "feature/production-overview-readiness" || {
-            echo "::error::Run only on feature/production-overview-readiness"; exit 1;
-          }
+          test "$REQUESTED_BRANCH" = "feature/production-overview-readiness" || exit 1
           test -f tools/production-sync/overview-cli.mjs || exit 1
       - name: Set up Node.js
         uses: actions/setup-node@v4
