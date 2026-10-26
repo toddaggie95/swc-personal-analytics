@@ -10,7 +10,7 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 concurrency:
@@ -143,8 +143,8 @@ jobs:
       - name: Accept verified export batch (no cleanup)
         if: success() && inputs.enable_has_writes == true
         env:
-          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
-          SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           python3 tools/production-sync/accept-export-batch.py \
             "${{ runner.temp }}/swc-exports/export-manifest.json" \
