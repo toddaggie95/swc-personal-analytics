@@ -8,8 +8,6 @@ export function systemInventory(stations,materials,manifest){
  for(const sys of systems){systemTotals[sys]=zeros();productionTotals[sys]=zeros()}
  for(const s of stations){if(!s.uid)throw Error('Station without UID');const prev=owned.get(s.uid);if(prev&&(prev.system!==s.system||prev.sysX!==s.sysX||prev.sysY!==s.sysY))throw Error('Station conflict '+s.uid);owned.set(s.uid,s)}
  const unassigned={},excluded={shipsAndOtherContainers:0,inaccessibleStations:0,outsideTrackedSystems:0,unresolvedFacilityLocation:0},facilities={};
- const facilitySystems=new Map(),facilityConflicts=new Set();
- for(const p of materials)if(p.container_type_name==='Facilities'&&p.container_uid&&p.system){const prev=facilitySystems.get(p.container_uid);if(prev&&prev!==p.system)facilityConflicts.add(p.container_uid);else facilitySystems.set(p.container_uid,p.system)}
  const unresolvedFacilities=[];
  for(const p of materials){
   if(!p.uid)throw Error('Pile missing UID');
@@ -18,8 +16,8 @@ export function systemInventory(stations,materials,manifest){
   if(p.container_type_name==='Facilities'){
    // Facility exports are ownership-scoped TFF/TJO material piles. A facility
    // need not appear in the station registry; its material row identifies its system.
-   const facilitySystem=p.system||(!facilityConflicts.has(p.container_uid)?facilitySystems.get(p.container_uid):undefined);
-   if(!facilitySystem||!p.container_uid||facilityConflicts.has(p.container_uid)){excluded.unresolvedFacilityLocation++;unresolvedFacilities.push({pile:p.uid,facility:p.container_uid||null,facilityName:p.container_name,material:p.type_name,quantity:p.quantity,reason:facilityConflicts.has(p.container_uid)?'conflicting-system':'missing-system-or-uid'});continue}
+   const facilitySystem=p.system;
+   if(!facilitySystem||!p.container_uid||p.sysX===''||p.sysY===''){excluded.unresolvedFacilityLocation++;unresolvedFacilities.push({pile:p.uid,facility:p.container_uid||null,facilityName:p.container_name,material:p.type_name,quantity:p.quantity,reason:'missing-system-or-coordinates-or-uid'});continue}
    if(!Object.hasOwn(systemTotals,facilitySystem)){excluded.outsideTrackedSystems++;continue}
    const mat=p.type_name?.toLowerCase(),qty=Number(p.quantity);
    if(!MATERIALS.includes(mat)||!Number.isSafeInteger(qty)||qty<0){errors.push({pile:p.uid,reason:'invalid-facility-material-or-quantity'});continue}
