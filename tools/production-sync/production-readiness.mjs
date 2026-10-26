@@ -28,7 +28,6 @@ export function allocateReadiness({pools,orders,priority = () => 1}) {
     if (!home || home.system!==o.system || home.destinationId!==o.destinationId) throw Error('Order station mapping mismatch '+o.id);
     return true;
   }).sort((a,b)=>priority(a)-priority(b)||a.id.localeCompare(b.id));
-  const pending=[];
   // Priority is strict across tiers: a lower-priority local order must not
   // consume material that would enable a higher-priority transfer order.
   const tiers=[...new Set(candidates.map(priority))].sort((a,b)=>a-b);
@@ -45,20 +44,6 @@ export function allocateReadiness({pools,orders,priority = () => 1}) {
     if(canCover(totals,o.bill))reserve(o,available,'transfer');else result.push({...o,status:'blocked',shortfall:Object.fromEntries(Object.entries(o.bill).map(([m,q])=>[m,Math.max(0,q-(totals[m]??0))]).filter(([,q])=>q>0))});
    }
   }
-  /* Original two-phase greedy allocation follows, retained only in git history. */
-  /*
-  for(const o of candidates) {
-    const local=[...poolById.values()].filter(p=>p.system===o.system && p.destinationId===o.destinationId);
-    const totals={};for(const p of local)for(const [m,q] of Object.entries(p.materials))totals[m]=(totals[m]??0)+q;
-    if(canCover(totals,o.bill)){reserve(o,local,'ready_now');}else pending.push(o);
-  }
-  // Phase 2: reserve remaining orbital materials system-wide; never reuse phase 1 allocations.
-  for(const o of pending){
-    const available=[...poolById.values()].filter(p=>p.system===o.system);
-    const totals={};for(const p of available)for(const [m,q] of Object.entries(p.materials))totals[m]=(totals[m]??0)+q;
-    if(canCover(totals,o.bill))reserve(o,available,'transfer');else result.push({...o,status:'blocked',shortfall:Object.fromEntries(Object.entries(o.bill).map(([m,q])=>[m,Math.max(0,q-(totals[m]??0))]).filter(([,q])=>q>0))});
-  }
-  */
   function reserve(o, sources, status) {
     for(const [material,required] of Object.entries(o.bill)){
       let remaining=required;
