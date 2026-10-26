@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Trash only verified superseded SWC exports; never permanently delete."""
+"""Rename verified superseded SWC exports; preserve files in place."""
 import json, os, sys, urllib.request, urllib.error, urllib.parse, hashlib
 from pathlib import Path
 import importlib.util
@@ -55,29 +55,37 @@ def main():
     except (ValueError,KeyError) as err:raise ValueError("Cannot verify authoritative accepted state") from err
     if state.get("verification")!="verified" or {f["id"]:f["sha256"] for f in state["files"]}!={f["id"]:f["sha256"] for f in accepted["files"]}:
         raise ValueError("Repository accepted state does not match verified batch")
-    result={"mode":"trash","acceptedFiles":sorted(keep),"candidateIds":sorted(candidates),"trashed":[],"alreadyAbsent":[]}
-    # Validate ALL extant candidates before changing any.
+    result={"mode":"rename_only","acceptedFiles":sorted(keep),"candidateIds":sorted(candidates),
+            "supersededRenamed":[],"alreadyMarked":[]}
+    # Validate each previous export, then mark it with an unambiguous prefix.
+    # A rerun must not change the name again, and prior marked files are ignored by discovery.
     pending=[]
     for file_id in sorted(candidates):
-        meta=request(f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id,safe='')}?fields=id,name,parents,trashed,mimeType",token)
+        url=f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id,safe='')}?fields=id,name,parents,trashed,mimeType"
+        meta=request(url,token)
         if meta.get("trashed") or folder not in meta.get("parents",[]):
-            result["alreadyAbsent"].append(file_id)
+            result["alreadyMarked"].append(file_id)
+            continue
+        if meta["name"].lower().startswith("trash_"):
+            result["alreadyMarked"].append(file_id)
             continue
         if not meta.get("name","").lower().endswith(".csv") and meta.get("mimeType")!="text/csv":
-            raise ValueError("Candidate is not CSV: "+file_id)
-        url=f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id,safe='')}?alt=media"
-        req=urllib.request.Request(url,headers={"Authorization":"Bearer "+token})
+            raise ValueError("Superseded candidate is not CSV: "+file_id)
+        media=f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id,safe='')}?alt=media"
+        req=urllib.request.Request(media,headers={"Authorization":"Bearer "+token})
         with urllib.request.urlopen(req,timeout=90) as response:content=response.read()
         key,_=module.classify(content)
-        pending.append((file_id,key))
-    if pending and (len(pending)+len(result["alreadyAbsent"])!=4 or len({key for _,key in pending})!=len(pending)):
-        raise ValueError("Require exactly four distinct superseded CSVs before trashing; partial previous cleanup should be reviewed")
-    for file_id,_ in pending:
-        request(f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id,safe='')}?fields=id,trashed",
-                token,"PATCH",b'{"trashed":true}')
-        check=request(f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id,safe='')}?fields=id,trashed",token)
-        if not check.get("trashed"):raise RuntimeError("Trash verification failed: "+file_id)
-        result["trashed"].append(file_id)
+        pending.append((file_id,key,meta["name"]))
+    if len({key for _,key,_ in pending})!=len(pending):
+        raise ValueError("Duplicate identities in previous export batch")
+    for file_id,key,old_name in pending:
+        name="trash_"+file_id+"_"+key[0]+"-"+key[1]+".csv"
+        url=f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id,safe='')}?fields=id,name,parents,trashed"
+        request(url,token,"PATCH",json.dumps({"name":name}).encode())
+        after=request(url,token)
+        if after.get("name")!=name or after.get("trashed") or folder not in after.get("parents",[]):
+            raise RuntimeError("Superseded rename verification failed: "+file_id)
+        result["supersededRenamed"].append({"id":file_id,"name":name})
     result["renamed"]=[]
     for entry in accepted["files"]:
         file_id=entry["id"]
