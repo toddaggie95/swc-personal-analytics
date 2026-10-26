@@ -55,6 +55,19 @@ jobs:
             --manifest audited-workbook-layout.json \
             --out "${{ runner.temp }}/audited-ledger.json"
 
+      - name: Audit complete station registry and untracked TJO shipyards (read only)
+        working-directory: tools/production-sync
+        run: |
+          BASELINE="station-registry-baseline.json"
+          if [ ! -f "$BASELINE" ]; then BASELINE="-"; fi
+          node station-registry-audit.mjs \
+            "${{ runner.temp }}/swc-exports/tff-stations.csv" \
+            "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
+            audited-workbook-layout.json \
+            "$BASELINE" \
+            "${{ runner.temp }}/station-registry-audit.json" \
+            "${{ runner.temp }}/station-registry-bootstrap.json"
+
       - name: Compare calculated HAS values with live workbook (read only)
         if: success()
         env:
@@ -87,5 +100,7 @@ jobs:
             ${{ runner.temp }}/audited-ledger.json
             ${{ runner.temp }}/spreadsheet-comparison.json
             ${{ runner.temp }}/pile-trace.json
+            ${{ runner.temp }}/station-registry-audit.json
+            ${{ runner.temp }}/station-registry-bootstrap.json
           retention-days: 7
           if-no-files-found: warn
