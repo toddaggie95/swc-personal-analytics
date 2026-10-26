@@ -130,8 +130,12 @@ def main():
         if keys != set(TARGETS) or len(set(ids)) != 4:
             raise ValueError("accepted-batch manifest has duplicate or missing identities")
         accepted_ids = set(ids)
+    # Superseded exports are retained in-place with an explicit trash_ prefix.
+    # Never classify them as a new batch, regardless of how many accumulate.
     candidates = []
     for item in items:
+        if item["name"].lower().startswith("trash_"):
+            continue
         if item["name"].lower().endswith(".csv") or item.get("mimeType") == "text/csv":
             url = ("https://www.googleapis.com/drive/v3/files/" +
                    urllib.parse.quote(item["id"], safe="") + "?alt=media")
@@ -154,7 +158,7 @@ def main():
             if prior and prior["sha256"] != entry["sha256"]:
                 raise ValueError("accepted export content changed: " + entry["id"])
     plan = cleanup_plan(candidates, found, accepted_ids)
-    (dest / "cleanup-plan.json").write_text(json.dumps(plan, indent=2) + "\\n")
+    (dest / "cleanup-plan.json").write_text(json.dumps(plan, indent=2) + "\n")
     print(json.dumps(manifest, indent=2))
     print("Cleanup simulation:", json.dumps(plan, indent=2))
     print("Four exports validated and downloaded. No Drive files modified.")
