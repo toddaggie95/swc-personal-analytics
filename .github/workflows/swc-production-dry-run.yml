@@ -9,7 +9,7 @@ on:
         required: true
         default: false
       trash_superseded_exports:
-        description: 'Trash previous exports after verified HAS write and accepted manifest (default: false)'
+        description: 'Mark older exports trash_ and rename accepted files (default: false)'
         type: boolean
         required: true
         default: false
@@ -156,7 +156,7 @@ jobs:
             "${{ runner.temp }}/has-write-report.json" \
             "${{ runner.temp }}/batch-acceptance-report.json"
 
-      - name: Trash superseded exports (opt-in, after verified acceptance)
+      - name: Rename superseded and accepted exports (opt-in, after verification)
         if: success() && inputs.enable_has_writes == true && inputs.trash_superseded_exports == true
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
