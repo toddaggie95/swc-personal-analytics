@@ -10,7 +10,8 @@ export function auditOrderCoverage({manifest,auditedOrders,rowsBySystem}) {
    for(const one of d.oneoffs??[]){
     const row=one.row+1,values=rows[row]??[];
     const ship=String(values[1]??'').trim();
-    if(ship && ship!=='None')unmappedOneoffs.push({system:d.system,destinationId:d.id,row,uid:one.stationUid,ship});
+    const uid=String(values[4]??'').trim();
+    if(uid!==one.stationUid)unmappedOneoffs.push({system:d.system,destinationId:d.id,row,uid,expectedUid:one.stationUid,ship});
    }
    continue;
   }
