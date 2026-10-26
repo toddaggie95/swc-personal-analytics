@@ -26,13 +26,11 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
   const oneoff=d.kind==='oneoff-group';
   let col=0;
   if(!oneoff){
-   const first=String(rows[1]?.[0]??'');
    // Find exact hub heading in row 2, not just a coordinate match.
-   const heads=rows[1]??[];
-   const matches=[];
-   for(let i=0;i<heads.length;i++)if(String(heads[i]).trim()===String(d.title??''))matches.push(i);
-   if(matches.length!==1)throw Error('Ambiguous hub heading '+entry.destinationId);
-   col=matches[0];
+   const headerRow=d.target.materialStartRow-11;
+   const heads=rows[headerRow]??[];
+   col=d.target.hasColumn-2;
+   if(col<0 || String(heads[col]??'').trim()!==String(d.title??''))throw Error('Hub heading mismatch '+entry.destinationId);
   }
   const coord=String(row[oneoff?0:col]??'').replace(/[()]/g,'').trim();
   if(coord!==entry.x+','+entry.y)throw Error('Order coordinate mismatch '+entry.system+':'+entry.row);
