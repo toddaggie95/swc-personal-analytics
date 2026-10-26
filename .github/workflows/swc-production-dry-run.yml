@@ -9,10 +9,10 @@ on:
         required: true
         default: false
       trash_superseded_exports:
-        description: 'Mark older exports trash_ and rename accepted files (default: false)'
+        description: 'Mark older exports trash_ and rename accepted files (default: true)'
         type: boolean
         required: true
-        default: false
+        default: true
 
 permissions:
   contents: write
