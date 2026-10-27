@@ -14,7 +14,7 @@ const stations=[...load('tff-stations'),...load('tjo-stations')];
 const materials=[...load('tff-materials'),...load('tjo-materials')];
 const ledger=buildLedger(snapshot.manifest,stations,materials);
 const differences=[],errors=[];
-const number=v=>{if(typeof v==='number')return Number.isSafeInteger(v)?v:null;const s=String(v??'').trim().replaceAll(',','');return /^\d+$/.test(s)?Number(s):null};
+const number=v=>{if(v===null||v===undefined||String(v).trim()==='')return 0;if(typeof v==='number')return Number.isSafeInteger(v)?v:null;const s=String(v??'').trim().replaceAll(',','');return /^\d+$/.test(s)?Number(s):null};
 let hasCompared=0;
 for(const cell of ledger.cells){
  const row=snapshot.rowsBySystem[cell.sheet]?.[cell.rowIndex+1];
