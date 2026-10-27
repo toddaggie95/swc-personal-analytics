@@ -41,7 +41,13 @@ export function liveProductionOrders({manifest,stations,rowsBySystem}) {
     const [x,y]=xy.split(',').map(Number);
     result.push({destinationId:d.id,system:d.system,x,y,row,ship:String(values[col+1]??'').trim()});
    }
-   if(found.size!==expected.size)throw Error('Hub station coverage incomplete '+d.id+': '+found.size+'/'+expected.size);
+   // A non-producing depot/storage member need not occupy a production-order row.
+   // Every omitted member must be a non-shipyard; never silently lose a shipyard.
+   for(const [xy,uid] of expected)if(!found.has(uid)){
+    const station=byUid.get(uid);
+    if(/shipyard/i.test(String(station?.type_name??'')))
+     throw Error('Hub production shipyard coverage incomplete '+d.id+': '+xy+' ('+uid+')');
+   }
   }else if(d.kind==='oneoff-group'){
    for(const one of d.oneoffs??[]){
     const uid=one.stationUid,s=byUid.get(uid);
