@@ -13,4 +13,8 @@ test('full snapshot connects sheet order to hub inventory without writes',()=>{
  assert.equal(result.reservations[0].sourcePoolId,'s2');
  assert.equal(result.statistics.liveOrders,2);
  assert.equal(result.systems.Eberon.unassigned,1);
+ assert.equal(result.summary.totals.total,2);
+ assert.equal(result.summary.totals.ready_now,1);
+ assert.equal(result.summary.totals.unassigned,1);
+ assert.equal(result.summary.rows.find(r=>r.system==='Eberon').total,2);
 });
