@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {liveProductionOrders} from './live-orders.mjs';
+const manifest={destinations:[{id:'hub',kind:'hub',system:'Eberon',center:{x:5,y:10},target:{hasColumn:2,materialStartRow:12},memberStationUids:['s1']}]};
+const stations=[{uid:'s1',system:'Eberon',sysX:'4',sysY:'9'}];
+test('live spreadsheet ship change does not require JSON registry edit',()=>{
+ const rowsBySystem={Eberon:[[],['Hub (5,10)'],['4,9','Endurance-Class Fleet Carrier','1','']]};
+ assert.equal(liveProductionOrders({manifest,stations,rowsBySystem})[0].ship,'Endurance-Class Fleet Carrier');
+});
+test('rejects wrong live coordinates instead of guessing station',()=>{
+ const rowsBySystem={Eberon:[[],['Hub (5,10)'],['5,9','TIE/in Interceptor','1','']]};
+ assert.throws(()=>liveProductionOrders({manifest,stations,rowsBySystem}),/Unknown station coordinate/);
+});
+test('rejects missing station rows rather than silently excluding production',()=>{
+ const rowsBySystem={Eberon:[[],['Hub (5,10)'],[]]};
+ assert.throws(()=>liveProductionOrders({manifest,stations,rowsBySystem}),/coverage incomplete/);
+});
