@@ -29,3 +29,13 @@ test('depot can be missing from production rows while its shipyard neighbors rem
  const rowsBySystem={Eberon:[[],['Hub (5,10)'],['4,9','TIE/in Interceptor','1','']]};
  assert.equal(liveProductionOrders({manifest:m,stations:st,rowsBySystem}).length,1);
 });
+
+
+test('edge hub tolerates unassigned negative coordinate placeholders',()=>{
+ const m={destinations:[{id:'edge',kind:'hub',system:'Chamble',center:{x:0,y:12},target:{hasColumn:2,materialStartRow:12},memberStationUids:['s1']}]};
+ const st=[{uid:'s1',system:'Chamble',sysX:'0',sysY:'12',type:'Shipyard IV'}];
+ const rowsBySystem={Chamble:[[],['Hub (0,12)'],['-1,11','None','',''],['0,12','Behemoth-class Star Dreadnaught','1','']]};
+ assert.equal(liveProductionOrders({manifest:m,stations:st,rowsBySystem}).length,1);
+ rowsBySystem.Chamble[2][1]='TIE/in Interceptor';
+ assert.throws(()=>liveProductionOrders({manifest:m,stations:st,rowsBySystem}),/Unknown station coordinate/);
+});
