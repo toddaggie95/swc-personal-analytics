@@ -6,8 +6,8 @@ def get(url,token):
  with urllib.request.urlopen(req,timeout=60) as response:return json.load(response)
 def capture(token,sid,manifest,orders):
  systems=sorted({o["system"] for o in orders["orders"]} | {d["system"] for d in manifest["destinations"]})
- # Keep each system read bounded; includes all eight hub blocks and one-offs.
- ranges=["'Ships'!A1:AF400"]+[f"'{s.replace(chr(39),chr(39)*2)}'!A1:AZ120" for s in systems]
+ # Keep each system read bounded; includes all audited HAS blocks (some extend through row 155) and one-offs.
+ ranges=["'Ships'!A1:AF400"]+[f"'{s.replace(chr(39),chr(39)*2)}'!A1:AZ200" for s in systems]
  url=f"https://sheets.googleapis.com/v4/spreadsheets/{sid}/values:batchGet?"+urllib.parse.urlencode([("ranges",r) for r in ranges]+[("valueRenderOption","FORMATTED_VALUE")])
  response=get(url,token);items=response.get("valueRanges",[])
  if len(items)!=len(ranges):raise ValueError("Incomplete workbook snapshot")
