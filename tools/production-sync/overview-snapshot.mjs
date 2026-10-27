@@ -18,7 +18,7 @@ export function calculateOverviewSnapshot({manifest,stations,materials,auditedOr
  const priority=o=>/behemoth|endurance/i.test(o.ship)?0:1;
  const allocation=allocateReadiness({pools,orders,priority});
  const summary=summarizeReadiness(allocation.orders);
- const coverageAudit=auditOverviewCoverage({manifest,orders:allocation.orders});
+ const coverageAudit=auditOverviewCoverage({manifest,orders:allocation.orders,stations});
  const bySystem={};
  for(const o of allocation.orders){
   const totals=bySystem[o.system]??={building:0,unassigned:0,ready_now:0,transfer:0,blocked:0};
