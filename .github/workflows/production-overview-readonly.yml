@@ -57,6 +57,16 @@ jobs:
             --tff-materials "${{ runner.temp }}/swc-exports/tff-materials.csv" \
             --tjo-materials "${{ runner.temp }}/swc-exports/tjo-materials.csv" \
             --out "${{ runner.temp }}/overview-readiness.json"
+      - name: Shadow audit against live HAS and production orders (read only)
+        run: |
+          node tools/production-sync/overview-shadow-audit.mjs \
+            --snapshot "${{ runner.temp }}/overview-input.json" \
+            --overview "${{ runner.temp }}/overview-readiness.json" \
+            --tff-stations "${{ runner.temp }}/swc-exports/tff-stations.csv" \
+            --tjo-stations "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
+            --tff-materials "${{ runner.temp }}/swc-exports/tff-materials.csv" \
+            --tjo-materials "${{ runner.temp }}/swc-exports/tjo-materials.csv" \
+            --out "${{ runner.temp }}/overview-shadow-audit.json"
       - name: Upload read-only readiness report
         if: always()
         uses: actions/upload-artifact@v4
@@ -64,6 +74,7 @@ jobs:
           name: swc-production-overview-readonly
           path: |
             ${{ runner.temp }}/overview-readiness.json
+            ${{ runner.temp }}/overview-shadow-audit.json
             ${{ runner.temp }}/swc-exports/export-manifest.json
           if-no-files-found: warn
           retention-days: 30
