@@ -10,8 +10,8 @@ SHEET_ID=1565113984
 SPREADSHEET_ID="1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8"
 RANGE="'Production Overview'!A5:G26"
 
-def station_link(ids):
-    params=[('entityType','5'),('InvType','2'),('InvID','1838'),('Mode','3'),
+def station_link(ids, faction_id='1838'):
+    params=[('entityType','5'),('InvType','2'),('InvID',str(faction_id)),('Mode','3'),
             ('option[0][group]','0'),('option[0][type]','1')]
     for i,uid in enumerate(ids):
         if not str(uid).isdecimal():raise ValueError('Non-numeric station ID')
@@ -32,6 +32,9 @@ def publish(preview,token):
     groups=preview.get("stationIdsBySystemStatus")
     if not isinstance(groups,list) or len(groups)!=20:
         raise ValueError("Missing station ID groups")
+    # Legacy 7-column publisher is intentionally disabled: its hard-coded single-faction
+    # links silently omit stations belonging to the other faction.
+    raise ValueError("Legacy publisher disabled: use faction-aware publisher v2")
     formulas=[row.copy() for row in values]
     for i,(row,group) in enumerate(zip(values[1:-1],groups),start=1):
         if not isinstance(group,list) or len(group)!=5:raise ValueError("Invalid station groups")
