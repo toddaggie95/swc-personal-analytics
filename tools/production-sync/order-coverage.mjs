@@ -17,7 +17,7 @@ export function auditOrderCoverage({manifest,auditedOrders,rowsBySystem}) {
   }
   if(d.kind!=='hub')throw Error('Unknown destination kind '+d.kind);
   const headerRow=d.target.materialStartRow-11,col=d.target.hasColumn-2;
-  if(String(rows[headerRow]?.[col]??'').trim()!==String(d.title??''))throw Error('Hub header drift '+d.id);
+  if(!String(rows[headerRow]?.[col]??'').includes('('+d.center.x+','+d.center.y+')'))throw Error('Hub center heading drift '+d.id);
   for(let row=headerRow+1;row<=headerRow+9;row++){
    const values=rows[row]??[],ship=String(values[col+1]??'').trim();
    if(!ship||ship==='None')continue;
