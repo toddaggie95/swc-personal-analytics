@@ -5,7 +5,7 @@ module=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 class PreviewTests(unittest.TestCase):
  def sample(self):
-  snap={"schemaVersion":1,"mode":"read_only","statistics":{"liveOrders":1},"orders":[{"id":"one","system":"Eberon","status":"building"}],
+  snap={"schemaVersion":1,"mode":"read_only","statistics":{"liveOrders":1},"orders":[{"id":"12345","system":"Eberon","status":"building"}],
    "coverageAudit":{"systems":[{"system":"Eberon"}],"totals":{"classifiedOrders":1,"uncoveredExportShipyardsInTrackedSystems":0,"exportedShipyardsInTrackedSystems":1}},
    "summary":{"rows":[{"system":"Eberon","building":1,"ready_now":0,"transfer":0,"blocked":0,"unassigned":0,"total":1}],"totals":{"total":1}}}
   audit={"status":"matched","statistics":{"differences":0,"validationErrors":0,"overviewOrders":1}}
