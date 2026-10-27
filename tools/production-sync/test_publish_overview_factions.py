@@ -25,7 +25,7 @@ class FactionPublisherTests(unittest.TestCase):
   self.assertIn("InvID=1838",rows[1][9]["userEnteredValue"]["formulaValue"])
   self.assertIn("60202",rows[1][9]["userEnteredValue"]["formulaValue"])
   self.assertIn("InvID=1174",rows[2][9]["userEnteredValue"]["formulaValue"])
-  self.assertIn("17607",rows[2][9]["userEnteredValue"]["formulaValue"])
+  self.assertIn("17607",rows[2][9]["userEnteredValue"]["formulaValue"])\n  self.assertIn(\'"2"\',rows[1][9]["userEnteredValue"]["formulaValue"])\n  self.assertNotIn("TJO 2",rows[1][9]["userEnteredValue"]["formulaValue"])\n  self.assertNotIn("TFF 2",rows[2][9]["userEnteredValue"]["formulaValue"])
   self.assertEqual(rows[1][10]["userEnteredValue"]["numberValue"],4)
  def test_faction_count_mismatch_fails(self):
   p=self.sample();p["stationIdsBySystemStatusFaction"][0][4]["TFF"].pop()
