@@ -20,10 +20,10 @@ def link(ids,owner):
         p.extend([(f"option[0][values][{i}][0]","1"),(f"option[0][values][{i}][1]",str(uid))])
     return BASE+"?"+urllib.parse.urlencode(p)
 
-def cell(value=None,bg="#FFFFFF",bold=False,size=10,align="CENTER"):
+def cell(value=None,bg="#FFFFFF",bold=False,size=10,align="CENTER",fg="#25384B"):
     obj={"userEnteredFormat":{"backgroundColor":color(bg),"horizontalAlignment":align,
          "verticalAlignment":"MIDDLE","textFormat":{"fontSize":size,"bold":bold,
-         "foregroundColor":color("#25384B")}}}
+         "foregroundColor":color(fg)}}}
     if value is not None:
         if isinstance(value,str) and value.startswith("="):
             obj["userEnteredValue"]={"formulaValue":value}
@@ -73,9 +73,9 @@ def build(preview):
             all_ids+=tjo+tff
             col=1+2*j
             for offset,(faction,ids) in enumerate((("TJO",tjo),("TFF",tff))):
-                label=faction+" "+str(len(ids)) if ids else faction+" —"
+                label=str(len(ids)) if ids else "—"
                 value=('=HYPERLINK("'+link(ids,faction)+'","'+label+'")') if ids else label
-                rows[r+offset][col]=cell(value,bg=PALETTE[j],size=9)
+                rows[r+offset][col]=cell(value,bg=PALETTE[j],size=9,fg="#7B8794")
             rows[r][col+1]=cell(v[j+1],bg=PALETTE[j],bold=True,size=13)
             merge(5+2*i,7+2*i,col+1,col+2)
         if len(all_ids)!=v[6] or len(set(all_ids))!=v[6]:raise ValueError("System station total mismatch")
@@ -87,7 +87,7 @@ def build(preview):
     rows[41][11]=cell(grand[-1],bg="#DCE7F2",bold=True,size=13)
     for j in range(5):
         col=1+2*j
-        rows[41][col]=cell("TJO "+str(sum(len(g[j]["TJO"]) for g in groups)),bg=PALETTE[j],bold=True,size=9)
+        rows[41][col]=cell(str(sum(len(g[j]["TJO"]) for g in groups)),bg=PALETTE[j],size=9,fg="#7B8794")
         rows[41][col+1]=cell(grand[j+1],bg=PALETTE[j],bold=True,size=13)
     # Existing top summary row 4 must follow the new grand total cells.
     top=[cell() for _ in range(12)]
