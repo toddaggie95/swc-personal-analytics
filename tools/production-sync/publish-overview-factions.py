@@ -124,6 +124,22 @@ def publish(preview,token):
         "startIndex":11,"endIndex":12},"properties":{"pixelSize":68},"fields":"pixelSize"}})
     actions.append({"updateDimensionProperties":{"range":{"sheetId":SHEET,"dimension":"ROWS",
         "startIndex":5,"endIndex":45},"properties":{"pixelSize":19},"fields":"pixelSize"}})
+    # Top summary occupies paired faction/total columns, just like status headers.
+    # Rewrite row 3 to prevent the old B:G headings from drifting left.
+    top_headers=[cell() for _ in range(12)]
+    for j,status in enumerate(STATUSES):
+        top_headers[1+2*j]=cell(status,bg=PALETTE[j],bold=True)
+    top_headers[11]=cell("Total",bg="#E8EFF6",bold=True)
+    actions.append({"updateCells":{"start":{"sheetId":SHEET,"rowIndex":2,"columnIndex":0},
+                    "rows":[{"values":top_headers}],"fields":"userEnteredValue,userEnteredFormat"}})
+    for row in (2,3):
+        for j in range(5):
+            col=1+2*j
+            actions.append({"unmergeCells":{"range":{"sheetId":SHEET,"startRowIndex":row,
+                "endRowIndex":row+1,"startColumnIndex":col,"endColumnIndex":col+2}}})
+            actions.append({"mergeCells":{"range":{"sheetId":SHEET,"startRowIndex":row,
+                "endRowIndex":row+1,"startColumnIndex":col,"endColumnIndex":col+2},
+                "mergeType":"MERGE_ALL"}})
     actions+=merges
     request(token,":batchUpdate",{"requests":actions})
     # Read back every populated cell and verify formulas, not just displayed totals.
