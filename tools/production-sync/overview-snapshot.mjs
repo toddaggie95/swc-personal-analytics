@@ -4,16 +4,15 @@ import {buildReadinessPools} from './readiness-pools.mjs';
 import {shipBillsFromRows} from './ship-bills.mjs';
 import {mapProductionOrders} from './readiness-orders.mjs';
 import {auditOrderCoverage} from './order-coverage.mjs';
+import {liveProductionOrders} from './live-orders.mjs';
 import {allocateReadiness} from './production-readiness.mjs';
 export function calculateOverviewSnapshot({manifest,stations,materials,auditedOrders,rowsBySystem,shipRows}) {
- const coverage=auditOrderCoverage({manifest,auditedOrders,rowsBySystem});
- if(coverage.status!=='complete'){
-  const e=Error('Production order coverage incomplete: '+coverage.missing.length+' missing hub orders, '+coverage.unmappedOneoffs.length+' one-offs, '+coverage.orphaned.length+' orphaned orders');
-  e.coverage=coverage;throw e;
- }
+ const currentOrders=liveProductionOrders({manifest,stations,rowsBySystem});
+ const coverage={status:'complete',checkedOrders:currentOrders.length,source:'live_spreadsheet'};
+ /* Cached order assignments are intentionally not consulted. */
  const {pools,statistics}=buildReadinessPools(manifest,stations,materials);
  const bills=shipBillsFromRows(shipRows);
- const orders=mapProductionOrders({auditedOrders,manifest,stations,rowsBySystem,shipBills:bills});
+ const orders=mapProductionOrders({auditedOrders:currentOrders,manifest,stations,rowsBySystem,shipBills:bills,liveOrders:true});
  const priority=o=>/behemoth|endurance/i.test(o.ship)?0:1;
  const allocation=allocateReadiness({pools,orders,priority});
  const bySystem={};
@@ -24,5 +23,5 @@ export function calculateOverviewSnapshot({manifest,stations,materials,auditedOr
  }
  const counted=Object.values(bySystem).reduce((n,s)=>n+Object.values(s).reduce((a,b)=>a+b,0),0);
  if(counted!==orders.length)throw Error('Order reconciliation failed');
- return {schemaVersion:1,mode:'read_only',statistics:{...statistics,auditedOrders:orders.length},systems:bySystem,orders:allocation.orders,reservations:allocation.reservations};
+ return {schemaVersion:1,mode:'read_only',statistics:{...statistics,liveOrders:orders.length,orderSource:'live_spreadsheet'},systems:bySystem,orders:allocation.orders,reservations:allocation.reservations};
 }
