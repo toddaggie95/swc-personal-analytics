@@ -9,7 +9,7 @@ test('hub inventory retains physical station pools',()=>{
  assert.equal(r.pools.length,2);assert.equal(r.pools[1].materials.meleenium,12);assert.equal(r.pools[0].destinationId,'hub');
 });
 test('one-offs are independent local readiness destinations',()=>{
- const m={destinations:[{id:'oneoffs',system:'Eberon',kind:'oneoff-group',target:{sheet:'Eberon',hasColumn:2,materialStartRow:12},memberStationUids:['s1','s2']}]};
+ const m={destinations:[{id:'oneoffs',system:'Eberon',kind:'oneoff-group',target:{sheet:'Eberon',hasColumn:2,materialStartRow:12},memberStationUids:['s1','s2'],oneoffs:[{stationUid:'s1',coordinate:'5,7'},{stationUid:'s2',coordinate:'5,7'}]}]};
  const r=buildReadinessPools(m,[station('s1'),station('s2')],[pile('p1','s2')]);
  assert.notEqual(r.pools[0].destinationId,r.pools[1].destinationId);
 });
