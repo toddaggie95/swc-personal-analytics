@@ -48,8 +48,6 @@ export function buildReadinessPools(manifest, stations, materials) {
   target.materials[m]=(target.materials[m]??0)+q;
  }
  // Inventory conservation: shared HAS reconciliation is the authority for assigned totals.
- const aggregate=(entries)=>{const totals=new Map();for(const e of entries)for(const [m,q] of Object.entries(e.materials??e.totals??{}))totals.set(e.id+'|'+m,q);return totals;};
- const actual=aggregate([...pools.values()].filter(p=>!p.destinationId.startsWith('external:')).map(p=>({...p,id:p.destinationId}))) ;
  for(const d of shared.destinations){
   for(const [m,q] of Object.entries(d.totals)){
    const computed=[...pools.values()].filter(p=>p.destinationId===d.id || p.destinationId.startsWith(d.id+':')).reduce((n,p)=>n+(p.materials[m]??0),0);
