@@ -2705,9 +2705,7 @@
         "5:9399",
         "5:9203",
         "5:9217",
-        "5:6790",
-        "5:60609",
-        "5:60742"
+        "5:6790"
       ],
       "oneoffs": [
         {
@@ -2775,18 +2773,6 @@
           "coordinate": "15,3",
           "stationUid": "5:6790",
           "ship": "TIE/in Interceptor"
-        },
-        {
-          "row": 119,
-          "coordinate": "8,7",
-          "stationUid": "5:60609",
-          "ship": "None"
-        },
-        {
-          "row": 120,
-          "coordinate": "7,7",
-          "stationUid": "5:60742",
-          "ship": "None"
         }
       ],
       "target": {
