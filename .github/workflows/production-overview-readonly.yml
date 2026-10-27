@@ -1,6 +1,12 @@
 name: SWC production overview readiness (read only)
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/production-overview-readiness
+    paths:
+      - 'tools/production-sync/**'
+      - '.github/workflows/production-overview-readonly.yml'
 
 permissions:
   contents: read
