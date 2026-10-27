@@ -23,5 +23,5 @@ export function runSnapshotFiles(o){
 }
 if(process.argv[1]?.endsWith('overview-cli.mjs'))try{
  const r=runSnapshotFiles(parseArgs(process.argv.slice(2)));
- console.log(JSON.stringify({mode:r.mode,statistics:r.statistics,systems:r.systems,summary:r.summary},null,2));
+ console.log(JSON.stringify({mode:r.mode,statistics:r.statistics,systems:r.systems,summary:r.summary,coverageAudit:r.coverageAudit},null,2));
 }catch(e){console.error('Readiness snapshot failed: '+e.message);if(e.coverage){console.error(JSON.stringify({coverage:e.coverage},null,2));const i=process.argv.indexOf('--out');if(i>=0 && process.argv[i+1])fs.writeFileSync(process.argv[i+1],JSON.stringify({mode:'read_only',status:'blocked',reason:e.message,coverage:e.coverage},null,2)+'\n');}process.exitCode=1;}
