@@ -10,6 +10,6 @@ test('rejects unverified and malformed bills',()=>{
  assert.throws(()=>parseMaterialBill('Imaginary: 5'),/Unknown/);
 });
 test('rejects duplicate ship definitions',()=>{
- const rows=[['Ship type',...Array(29).fill(''),'Raw materials'],['Test',...Array(29).fill(''),'Quantum: 1'],['Test',...Array(29).fill(''),'Quantum: 2']];
+ const rows=[['Ship type',...Array(30).fill(''),'Raw materials'],['Test',...Array(30).fill(''),'Quantum: 1'],['Test',...Array(30).fill(''),'Quantum: 2']];
  assert.throws(()=>shipBillsFromRows(rows),/Duplicate/);
 });
