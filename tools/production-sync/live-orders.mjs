@@ -25,7 +25,7 @@ export function liveProductionOrders({manifest,stations,rowsBySystem}) {
      if(String(values[col+1]??'').trim()&&String(values[col+1]).trim()!=='None')throw Error('Assigned ship without coordinate '+d.id+':'+row);
      continue;
     }
-    if(!/^\d+,\d+$/.test(xy))throw Error('Malformed hub coordinate '+d.id+':'+row);
+    if(!/^-?\d+,-?\d+$/.test(xy))throw Error('Malformed hub coordinate '+d.id+':'+row);
     const uid=expected.get(xy);
     if(!uid){
      // The audited layout can display a vacant orbital slot without a station UID.
