@@ -44,7 +44,7 @@ jobs:
       - name: Validate readiness implementation
         run: |
           node --test tools/production-sync/*.test.mjs
-          python3 -m unittest discover -s tools/production-sync -p 'test_capture_overview_snapshot.py' -v
+          python3 -m unittest discover -s tools/production-sync -p 'test_*.py' -v
       - name: Capture live production assignments and ship bills (read only)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
@@ -73,6 +73,12 @@ jobs:
             --tff-materials "${{ runner.temp }}/swc-exports/tff-materials.csv" \
             --tjo-materials "${{ runner.temp }}/swc-exports/tjo-materials.csv" \
             --out "${{ runner.temp }}/overview-shadow-audit.json"
+      - name: Prepare guarded dashboard publication preview (no writes)
+        run: |
+          python3 tools/production-sync/overview-publish-preview.py \
+            "${{ runner.temp }}/overview-readiness.json" \
+            "${{ runner.temp }}/overview-shadow-audit.json" \
+            "${{ runner.temp }}/overview-publish-preview.json"
       - name: Upload read-only readiness report
         if: always()
         uses: actions/upload-artifact@v4
@@ -81,6 +87,7 @@ jobs:
           path: |
             ${{ runner.temp }}/overview-readiness.json
             ${{ runner.temp }}/overview-shadow-audit.json
+            ${{ runner.temp }}/overview-publish-preview.json
             ${{ runner.temp }}/swc-exports/export-manifest.json
           if-no-files-found: warn
           retention-days: 30
