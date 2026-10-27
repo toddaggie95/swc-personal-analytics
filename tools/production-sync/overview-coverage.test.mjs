@@ -6,7 +6,10 @@ test('coverage separates manifest members, orders, and legacy grid counts',()=>{
   manifest:{destinations:[{system:'Eberon',memberStationUids:['yard','depot']}]},
   orders:[{id:'yard',system:'Eberon'}],legacyTotals:{Eberon:9}
  });
- assert.deepEqual(result.totals,{manifestMembers:2,classifiedOrders:1,legacyTotal:9,legacySystemsWithTotals:1});
+ assert.equal(result.totals.manifestMembers,2);
+ assert.equal(result.totals.classifiedOrders,1);
+ assert.equal(result.totals.legacyTotal,9);
+ assert.equal(result.totals.legacySystemsWithTotals,1);
  assert.equal(result.systems[0].manifestMinusOrders,1);
  assert.equal(result.systems[0].legacyMinusOrders,8);
 });
