@@ -50,7 +50,14 @@ def publish(preview,token):
     if result.get("updatedCells")!=154:raise ValueError("Unexpected number of updated cells")
     req=urllib.request.Request(url+"?valueRenderOption=UNFORMATTED_VALUE",headers={"Authorization":"Bearer "+token})
     with urllib.request.urlopen(req,timeout=60) as resp:readback=json.load(resp)
-    if readback.get("values")!=values:raise ValueError("Published dashboard counts failed readback")
+    actual=readback.get("values",[])
+    if len(actual)!=len(values):raise ValueError("Published dashboard row count mismatch")
+    for i,(expected,observed) in enumerate(zip(values,actual)):
+        if len(expected)!=len(observed):raise ValueError("Published dashboard column count mismatch")
+        for j,(want,got) in enumerate(zip(expected,observed)):
+            if 1<=i<len(values)-1 and 1<=j<=5 and want>0:
+                if str(got)!=str(want):raise ValueError("Published linked count mismatch")
+            elif got!=want:raise ValueError("Published dashboard value mismatch")
     req=urllib.request.Request(url+"?valueRenderOption=FORMULA",headers={"Authorization":"Bearer "+token})
     with urllib.request.urlopen(req,timeout=60) as resp:formula_readback=json.load(resp)
     if formula_readback.get("values")!=formulas:raise ValueError("Published hyperlinks failed readback")
