@@ -32,7 +32,7 @@ export function liveProductionOrders({manifest,stations,rowsBySystem}) {
      // Such a row is valid only when explicitly unassigned and has no start flag.
      const ship=String(values[col+1]??'').trim(),qty=String(values[col+2]??'').trim(),started=String(values[col+3]??'').trim();
      const [x,y]=xy.split(',').map(Number);
-     if(Math.abs(x-d.center.x)>1||Math.abs(y-d.center.y)>1||!['','None'].includes(ship)||qty||started)
+     if(Math.abs(x-d.center.x)>1||Math.abs(y-d.center.y)>1||!['','None'].includes(ship)||(qty&&qty!=='0')||started)
       throw Error('Unknown station coordinate '+d.id+':'+xy);
      continue;
     }
