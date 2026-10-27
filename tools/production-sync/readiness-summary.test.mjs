@@ -14,3 +14,5 @@ test('rejects duplicate orders and invalid statuses',()=>{
  assert.throws(()=>summarizeReadiness([{id:'a',system:'X',status:'blocked'},{id:'a',system:'X',status:'blocked'}]),/Duplicate/);
  assert.throws(()=>summarizeReadiness([{id:'a',system:'X',status:'unknown'}]),/Invalid/);
 });
+
+test('empty system totals remain zero',()=>{const s=summarizeReadiness([],['Eberon']);assert.equal(s.rows[0].total,0);});
