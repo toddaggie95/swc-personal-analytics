@@ -162,6 +162,13 @@ def publish(preview,token):
         "startColumnIndex":12,"endColumnIndex":16},"cell":{},
         "fields":"userEnteredValue,userEnteredFormat,note,dataValidation"}}
     ])
+    # Replace the legacy A5:N25 filter (its green outline and ghost filter icons)
+    # with the actual dashboard A5:L46 range.
+    actions.extend([
+      {"clearBasicFilter":{"sheetId":SHEET}},
+      {"setBasicFilter":{"filter":{"range":{"sheetId":SHEET,
+        "startRowIndex":4,"endRowIndex":46,"startColumnIndex":0,"endColumnIndex":12}}}}
+    ])
     actions+=merges
     request(token,":batchUpdate",{"requests":actions})
     # Read back every populated cell and verify formulas, not just displayed totals.
