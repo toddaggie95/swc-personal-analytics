@@ -606,8 +606,7 @@
       "kind": "oneoff-group",
       "system": "Eberon",
       "memberStationUids": [
-        "5:8355",
-        "5:38213"
+        "5:8355"
       ],
       "oneoffs": [
         {
