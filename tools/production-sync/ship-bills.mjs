@@ -13,10 +13,12 @@ export function parseMaterialBill(text) {
  }
  return bill;
 }
-export function shipBillsFromRows(rows,{nameIndex=0,materialsIndex=30}={}) {
+export function shipBillsFromRows(rows,{nameIndex=0,materialsIndex=31}={}) {
  const result=new Map();
  for(const row of rows){
   const name=String(row[nameIndex]??'').trim(),raw=String(row[materialsIndex]??'').trim();
+  // The workbook contains a separate Ship type header row, and raw material cells
+  // are in column AF (index 31); index 30 is the manufacturing affiliation.
   if(!name || name==='Ship type' || !raw)continue;
   if(result.has(name))throw Error('Duplicate ship design '+name);
   result.set(name,parseMaterialBill(raw));
