@@ -4,9 +4,19 @@
 Only the Production Overview A5:G26 values are writable. No HAS or system tab access.
 """
 import json,os,sys,urllib.request,urllib.parse
+
+SWC_INVENTORY='https://www.swcombine.com/members/inventory2/index.php'
 SHEET_ID=1565113984
 SPREADSHEET_ID="1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8"
 RANGE="'Production Overview'!A5:G26"
+
+def station_link(ids):
+    params=[('entityType','5'),('InvType','2'),('InvID','1838'),('Mode','3'),
+            ('option[0][group]','0'),('option[0][type]','1')]
+    for i,uid in enumerate(ids):
+        if not str(uid).isdecimal():raise ValueError('Non-numeric station ID')
+        params.extend([(f'option[0][values][{i}][0]','1'),(f'option[0][values][{i}][1]',str(uid))])
+    return SWC_INVENTORY+'?'+urllib.parse.urlencode(params)
 
 def publish(preview,token):
     if preview.get("mode")!="dry_run" or preview.get("writeAuthorized") is not False:
@@ -19,14 +29,31 @@ def publish(preview,token):
     totals=[sum(row[c] for row in values[1:-1]) for c in range(1,7)]
     if values[-1]!=["TOTAL",*totals] or totals[-1]!=preview.get("classifiedOrders"):
         raise ValueError("Publication totals mismatch")
+    groups=preview.get("stationIdsBySystemStatus")
+    if not isinstance(groups,list) or len(groups)!=20:
+        raise ValueError("Missing station ID groups")
+    formulas=[row.copy() for row in values]
+    for i,(row,group) in enumerate(zip(values[1:-1],groups),start=1):
+        if not isinstance(group,list) or len(group)!=5:raise ValueError("Invalid station groups")
+        for j,ids in enumerate(group,start=1):
+            if not isinstance(ids,list) or len(ids)!=row[j] or len(set(ids))!=len(ids):
+                raise ValueError("Station ID count mismatch")
+            if ids:
+                url=station_link(ids)
+                formulas[i][j]='=HYPERLINK("'+url+'","'+str(row[j])+'")'
+    if len({uid for group in groups for ids in group for uid in ids})!=totals[-1]:
+        raise ValueError("Duplicate station IDs across dashboard")
     url=f"https://sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values/"+urllib.parse.quote(RANGE,safe="'!:") 
-    payload=json.dumps({"range":RANGE,"majorDimension":"ROWS","values":values}).encode()
-    req=urllib.request.Request(url+"?valueInputOption=RAW",data=payload,method="PUT",headers={"Authorization":"Bearer "+token,"Content-Type":"application/json"})
+    payload=json.dumps({"range":RANGE,"majorDimension":"ROWS","values":formulas}).encode()
+    req=urllib.request.Request(url+"?valueInputOption=USER_ENTERED",data=payload,method="PUT",headers={"Authorization":"Bearer "+token,"Content-Type":"application/json"})
     with urllib.request.urlopen(req,timeout=60) as resp: result=json.load(resp)
     if result.get("updatedCells")!=154:raise ValueError("Unexpected number of updated cells")
     req=urllib.request.Request(url+"?valueRenderOption=UNFORMATTED_VALUE",headers={"Authorization":"Bearer "+token})
     with urllib.request.urlopen(req,timeout=60) as resp:readback=json.load(resp)
-    if readback.get("values")!=values:raise ValueError("Published dashboard failed readback")
+    if readback.get("values")!=values:raise ValueError("Published dashboard counts failed readback")
+    req=urllib.request.Request(url+"?valueRenderOption=FORMULA",headers={"Authorization":"Bearer "+token})
+    with urllib.request.urlopen(req,timeout=60) as resp:formula_readback=json.load(resp)
+    if formula_readback.get("values")!=formulas:raise ValueError("Published hyperlinks failed readback")
     return {"status":"published_and_verified","cells":154,"orders":totals[-1]}
 
 def main():
