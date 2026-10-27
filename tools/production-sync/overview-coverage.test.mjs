@@ -20,3 +20,10 @@ test('unclassified shipyard fails, but depot is allowed',()=>{
  input.stations[1].type_name='Shipyard';
  assert.throws(()=>auditOverviewCoverage(input),/Unclassified audited shipyard/);
 });
+
+test('untracked exported shipyards are reported without pretending they are classified',()=>{
+ const report=auditOverviewCoverage({manifest:{destinations:[{system:'Eberon',memberStationUids:['yard']}]},orders:[{id:'yard',system:'Eberon'}],stations:[{uid:'yard',type_name:'Shipyard',system:'Eberon'},{uid:'other',type_name:'Shipyard',system:'Eberon'}]});
+ assert.equal(report.totals.exportedShipyardsInTrackedSystems,2);
+ assert.equal(report.totals.uncoveredExportShipyardsInTrackedSystems,1);
+ assert.equal(report.uncoveredShipyards[0].uid,'other');
+});
