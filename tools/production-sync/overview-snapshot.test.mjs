@@ -11,5 +11,6 @@ test('full snapshot connects sheet order to hub inventory without writes',()=>{
  const result=calculateOverviewSnapshot({manifest,stations,materials,auditedOrders,rowsBySystem,shipRows});
  assert.equal(result.systems.Eberon.ready_now,1);
  assert.equal(result.reservations[0].sourcePoolId,'s2');
- assert.equal(result.statistics.liveOrders,1);
+ assert.equal(result.statistics.liveOrders,2);
+ assert.equal(result.systems.Eberon.unassigned,1);
 });
