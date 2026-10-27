@@ -606,7 +606,8 @@
       "kind": "oneoff-group",
       "system": "Eberon",
       "memberStationUids": [
-        "5:8355"
+        "5:8355",
+        "5:38213"
       ],
       "oneoffs": [
         {
@@ -2704,7 +2705,9 @@
         "5:9399",
         "5:9203",
         "5:9217",
-        "5:6790"
+        "5:6790",
+        "5:60609",
+        "5:60742"
       ],
       "oneoffs": [
         {
@@ -2772,6 +2775,18 @@
           "coordinate": "15,3",
           "stationUid": "5:6790",
           "ship": "TIE/in Interceptor"
+        },
+        {
+          "row": 120,
+          "coordinate": "8,7",
+          "stationUid": "5:60609",
+          "ship": "None"
+        },
+        {
+          "row": 121,
+          "coordinate": "7,7",
+          "stationUid": "5:60742",
+          "ship": "None"
         }
       ],
       "target": {
