@@ -41,6 +41,9 @@ def publish(preview,token):
             if ids:
                 url=station_link(ids)
                 formulas[i][j]='=HYPERLINK("'+url+'","'+str(row[j])+'")'
+        all_ids=sorted([uid for ids in group for uid in ids],key=int)
+        if len(all_ids)!=row[6]:raise ValueError("System total station count mismatch")
+        if all_ids:formulas[i][6]='=HYPERLINK("'+station_link(all_ids)+'","'+str(row[6])+'")'
     if len({uid for group in groups for ids in group for uid in ids})!=totals[-1]:
         raise ValueError("Duplicate station IDs across dashboard")
     url=f"https://sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values/"+urllib.parse.quote(RANGE,safe="'!:") 
@@ -55,7 +58,7 @@ def publish(preview,token):
     for i,(expected,observed) in enumerate(zip(values,actual)):
         if len(expected)!=len(observed):raise ValueError("Published dashboard column count mismatch")
         for j,(want,got) in enumerate(zip(expected,observed)):
-            if 1<=i<len(values)-1 and 1<=j<=5 and want>0:
+            if 1<=i<len(values)-1 and 1<=j<=6 and want>0:
                 if str(got)!=str(want):raise ValueError("Published linked count mismatch")
             elif got!=want:raise ValueError("Published dashboard value mismatch")
     req=urllib.request.Request(url+"?valueRenderOption=FORMULA",headers={"Authorization":"Bearer "+token})
