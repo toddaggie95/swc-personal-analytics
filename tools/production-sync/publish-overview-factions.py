@@ -129,7 +129,14 @@ def publish(preview,token):
     top_headers=[cell() for _ in range(12)]
     for j,status in enumerate(STATUSES):
         top_headers[1+2*j]=cell(status,bg=PALETTE[j],bold=True)
-    top_headers[11]=cell("Total",bg="#E8EFF6",bold=True,size=10)\n    top_headers[11]["userEnteredFormat"]["textFormat"]["foregroundColor"]=color("#25384B")\n    actions.append({"repeatCell":{"range":{"sheetId":SHEET,"startRowIndex":3,"endRowIndex":4,\n        "startColumnIndex":11,"endColumnIndex":12},\n        "cell":{"userEnteredFormat":{"backgroundColor":color("#E8EFF6"),\n          "horizontalAlignment":"CENTER","verticalAlignment":"MIDDLE",\n          "textFormat":{"bold":True,"fontSize":16,"foregroundColor":color("#25384B")}}},\n        "fields":"userEnteredFormat"}})
+    top_headers[11]=cell("Total",bg="#E8EFF6",bold=True,size=10)
+    top_headers[11]["userEnteredFormat"]["textFormat"]["foregroundColor"]=color("#25384B")
+    actions.append({"repeatCell":{"range":{"sheetId":SHEET,"startRowIndex":3,"endRowIndex":4,
+        "startColumnIndex":11,"endColumnIndex":12},
+        "cell":{"userEnteredFormat":{"backgroundColor":color("#E8EFF6"),
+          "horizontalAlignment":"CENTER","verticalAlignment":"MIDDLE",
+          "textFormat":{"bold":True,"fontSize":16,"foregroundColor":color("#25384B")}}},
+        "fields":"userEnteredFormat"}})
     actions.append({"updateCells":{"start":{"sheetId":SHEET,"rowIndex":2,"columnIndex":0},
                     "rows":[{"values":top_headers}],"fields":"userEnteredValue,userEnteredFormat"}})
     for row in (2,3):
