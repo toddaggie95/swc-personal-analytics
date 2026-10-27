@@ -13,3 +13,10 @@ test('coverage separates manifest members, orders, and legacy grid counts',()=>{
 test('duplicate manifest membership fails closed',()=>{
  assert.throws(()=>auditOverviewCoverage({manifest:{destinations:[{system:'A',memberStationUids:['a','a']}]},orders:[]}),/Duplicate/);
 });
+
+test('unclassified shipyard fails, but depot is allowed',()=>{
+ const input={manifest:{destinations:[{system:'Eberon',memberStationUids:['yard','depot']}]},orders:[{id:'yard',system:'Eberon'}],stations:[{uid:'yard',type_name:'Shipyard',system:'Eberon'},{uid:'depot',type_name:'Trade Station',system:'Eberon'}]};
+ assert.equal(auditOverviewCoverage(input).unmatchedMembers.length,1);
+ input.stations[1].type_name='Shipyard';
+ assert.throws(()=>auditOverviewCoverage(input),/Unclassified audited shipyard/);
+});
