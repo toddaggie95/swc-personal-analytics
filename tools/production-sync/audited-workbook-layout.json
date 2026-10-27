@@ -2777,13 +2777,13 @@
           "ship": "TIE/in Interceptor"
         },
         {
-          "row": 120,
+          "row": 119,
           "coordinate": "8,7",
           "stationUid": "5:60609",
           "ship": "None"
         },
         {
-          "row": 121,
+          "row": 120,
           "coordinate": "7,7",
           "stationUid": "5:60742",
           "ship": "None"
