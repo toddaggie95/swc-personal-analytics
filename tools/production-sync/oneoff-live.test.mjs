@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mapProductionOrders} from './readiness-orders.mjs';
 import {auditOrderCoverage} from './order-coverage.mjs';
-const manifest={destinations:[{id:'Tholatin-oneoffs',kind:'oneoff-group',system:'Tholatin',memberStationUids:['5:3579','5:3114'],oneoffs:[{row:110,coordinate:'8,10',stationUid:'5:3579',ship:'Toscan'},{row:111,coordinate:'8,11',stationUid:'5:3114',ship:'Toscan'}]}]};
+const manifest={destinations:[{id:'Tholatin-oneoffs',kind:'oneoff-group',system:'Tholatin',memberStationUids:['5:3579','5:3114'],oneoffs:[{row:109,coordinate:'8,10',stationUid:'5:3579',ship:'Toscan'},{row:110,coordinate:'8,11',stationUid:'5:3114',ship:'Toscan'}]}]};
 const stations=[{uid:'5:3579',system:'Tholatin',sysX:'8',sysY:'10'},{uid:'5:3114',system:'Tholatin',sysX:'8',sysY:'11'}];
 const rows=Array.from({length:112},()=>[]);
 rows[110]=['8,10','TIE/in Interceptor','48','','5:3579'];
