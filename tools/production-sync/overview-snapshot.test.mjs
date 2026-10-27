@@ -7,7 +7,7 @@ test('full snapshot connects sheet order to hub inventory without writes',()=>{
  const materials=[{uid:'p1',type_name:'Meleenium',quantity:'480',container_type_name:'Stations',container_uid:'s2',system:'Eberon'}];
  const auditedOrders=[{destinationId:'Eberon-hub-1-0',system:'Eberon',x:4,y:9,ship:'TIE/in Interceptor',row:2}];
  const rowsBySystem={Eberon:[[],['Hub (5,10)'],['4,9','TIE/in Interceptor','48','']]};
- const shipRows=[['Ship type',...Array(30).fill(''),'Raw materials'],['TIE/in Interceptor',...Array(30).fill(''),'Meleenium: 10']];
+ const shipRows=[['Ship type',...Array(28).fill(''),'Raw materials'],['TIE/in Interceptor',...Array(28).fill(''),'Meleenium: 10']];
  const result=calculateOverviewSnapshot({manifest,stations,materials,auditedOrders,rowsBySystem,shipRows});
  assert.equal(result.systems.Eberon.ready_now,1);
  assert.equal(result.reservations[0].sourcePoolId,'s2');
