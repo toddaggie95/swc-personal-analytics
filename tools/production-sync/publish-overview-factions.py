@@ -140,17 +140,20 @@ def publish(preview,token):
             actions.append({"mergeCells":{"range":{"sheetId":SHEET,"startRowIndex":row,
                 "endRowIndex":row+1,"startColumnIndex":col,"endColumnIndex":col+2},
                 "mergeType":"MERGE_ALL"}})
-    # Remove the legacy bottom border at row 25 and frame the new last row (46).
+    # Reset all old table borders; legacy outlines may remain on arbitrary cells.
+    # Only the final TOTAL row receives a dark bottom rule.
+    clear_border={"style":"NONE"}
     actions.extend([
-      {"updateBorders":{"range":{"sheetId":SHEET,"startRowIndex":24,"endRowIndex":26,
-        "startColumnIndex":0,"endColumnIndex":12},"innerHorizontal":{"style":"NONE"}}},
-      {"updateBorders":{"range":{"sheetId":SHEET,"startRowIndex":24,"endRowIndex":25,
-        "startColumnIndex":0,"endColumnIndex":12},"bottom":{"style":"NONE"}}},
-      {"updateBorders":{"range":{"sheetId":SHEET,"startRowIndex":25,"endRowIndex":26,
-        "startColumnIndex":0,"endColumnIndex":12},"top":{"style":"NONE"}}},
+      {"updateBorders":{"range":{"sheetId":SHEET,"startRowIndex":4,"endRowIndex":46,
+        "startColumnIndex":0,"endColumnIndex":12},
+        "top":clear_border,"bottom":clear_border,"left":clear_border,
+        "right":clear_border,"innerHorizontal":clear_border,"innerVertical":clear_border}},
       {"updateBorders":{"range":{"sheetId":SHEET,"startRowIndex":45,"endRowIndex":46,
         "startColumnIndex":0,"endColumnIndex":12},
-        "bottom":{"style":"SOLID_MEDIUM","color":color("#1F2933")}}}
+        "bottom":{"style":"SOLID_MEDIUM","color":color("#1F2933")}}},
+      {"repeatCell":{"range":{"sheetId":SHEET,"startRowIndex":0,"endRowIndex":100,
+        "startColumnIndex":12,"endColumnIndex":16},"cell":{},
+        "fields":"userEnteredValue,userEnteredFormat,note,dataValidation"}}
     ])
     actions+=merges
     request(token,":batchUpdate",{"requests":actions})
