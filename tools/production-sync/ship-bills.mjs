@@ -1,5 +1,5 @@
 // Pure, fail-closed parser for Ships tab material specifications.
-// Rows use the existing Ships master columns: A ship name, AE raw materials.
+// Rows use the existing Ships master columns: A ship name, AF raw materials.
 import {MATERIALS} from './production-sync.mjs';
 export function parseMaterialBill(text) {
  if(typeof text!=='string'||!text.trim())throw Error('Missing raw materials');
