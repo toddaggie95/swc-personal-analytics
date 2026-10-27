@@ -1,4 +1,4 @@
-name: SWC production overview readiness (read only)
+name: SWC production overview readiness and publish
 on:
   workflow_dispatch:
   push:
@@ -27,14 +27,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Authenticate Google Sheets and Drive (read-only scopes)
+      - name: Authenticate Google Sheets publisher and Drive exports
         id: google
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: 'projects/772242617730/locations/global/workloadIdentityPools/github-actions/providers/github'
           service_account: 'swc-production-sync@swc-analytics-512519.iam.gserviceaccount.com'
           token_format: access_token
-          access_token_scopes: https://www.googleapis.com/auth/drive.readonly,https://www.googleapis.com/auth/spreadsheets.readonly
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly,https://www.googleapis.com/auth/spreadsheets
       - name: Download latest four exports
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
@@ -79,6 +79,11 @@ jobs:
             "${{ runner.temp }}/overview-readiness.json" \
             "${{ runner.temp }}/overview-shadow-audit.json" \
             "${{ runner.temp }}/overview-publish-preview.json"
+      - name: Publish validated Production Overview (A5:G26 only)
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          ENABLE_OVERVIEW_WRITES: 'true'
+        run: python3 tools/production-sync/publish-overview.py "${{ runner.temp }}/overview-publish-preview.json"
       - name: Upload read-only readiness report
         if: always()
         uses: actions/upload-artifact@v4
