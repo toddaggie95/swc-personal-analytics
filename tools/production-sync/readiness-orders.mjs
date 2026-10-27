@@ -51,6 +51,13 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
   const matched=possible.filter(x=>d.memberStationUids.includes(x.uid) && (!oneoff || x.uid===String(row[4]??'').trim()));
   if(matched.length!==1)throw Error('Ambiguous station at '+entry.system+':'+entry.x+','+entry.y);
   const station=matched[0];
+  // Inventory hyperlinks must use the station owner's faction inventory.
+  // TFF=1174, TJO=1838; never infer ownership from the station name.
+  const source=stationByUid.get(station.uid);
+  const ownerUid=String(source?.owner_type_uid??'');
+  const ownerMatch=/^20:(1174|1838)$/.exec(ownerUid);
+  if(!ownerMatch)throw Error('Unrecognized production station faction owner '+station.uid+': '+ownerUid);
+  const ownerFaction=ownerMatch[1]==='1174'?'TFF':'TJO';
   if(oneoff && String(row[4]??'').trim()!==station.uid)throw Error('One-off UID mismatch '+station.uid);
   if(used.has(station.uid))throw Error('Station has duplicate orders '+station.uid);
   used.add(station.uid);
@@ -62,7 +69,7 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
   if(isAssigned&&started!=='yes'&&!bom)throw Error('Unverified ship material bill '+ship);
   const bill=Object.fromEntries(Object.entries(bom??{}).map(([m,n])=>[m,n*qty]));
   if(Object.values(bill).some(x=>!Number.isSafeInteger(x)))throw Error('Material multiplication overflow '+station.uid);
-  output.push({id:station.uid,stationPoolId:station.uid,system:entry.system,destinationId:station.destinationId,ship,quantity:qty,started:started==='yes',bill});
+  output.push({id:station.uid,stationPoolId:station.uid,ownerFaction,ownerFactionId:ownerMatch[1],system:entry.system,destinationId:station.destinationId,ship,quantity:qty,started:started==='yes',bill});
  }
  return output;
 }
