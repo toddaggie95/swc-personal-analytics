@@ -17,7 +17,7 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
  const output=[],used=new Set();
  const completeOrders=[...auditedOrders];
  for(const d of manifest.destinations.filter(x=>x.kind==='oneoff-group'))for(const one of d.oneoffs??[]){
-  const row=one.row,values=rowsBySystem[d.system]?.[row];
+  const row=one.row+1,values=rowsBySystem[d.system]?.[row];
   if(!values)throw Error('Missing one-off row '+d.system+':'+row);
   const coord=String(values[0]??'').replace(/[()]/g,'').trim();
   if(coord!==String(one.coordinate).replace(/[()]/g,'').trim())throw Error('One-off coordinate drift '+d.system+':'+row);
