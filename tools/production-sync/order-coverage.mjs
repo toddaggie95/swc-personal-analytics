@@ -20,6 +20,7 @@ export function auditOrderCoverage({manifest,auditedOrders,rowsBySystem}) {
   if(!String(rows[headerRow]?.[col]??'').includes('('+d.center.x+','+d.center.y+')'))throw Error('Hub center heading drift '+d.id);
   for(let row=headerRow+1;row<=headerRow+9;row++){
    const values=rows[row]??[],ship=String(values[col+1]??'').trim();
+   if(!String(values[col]??'').trim())continue;
    if(!ship||ship==='None')continue;
    const key=d.id+'|'+row;
    checked.push(key);
