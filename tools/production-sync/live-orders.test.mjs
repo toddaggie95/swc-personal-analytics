@@ -15,3 +15,10 @@ test('rejects missing station rows rather than silently excluding production',()
  const rowsBySystem={Eberon:[[],['Hub (5,10)'],[]]};
  assert.throws(()=>liveProductionOrders({manifest,stations,rowsBySystem}),/coverage incomplete/);
 });
+
+test('vacant hub coordinate is allowed only when unassigned',()=>{
+ const rowsBySystem={Eberon:[[],['Hub (5,10)'],['4,9','TIE/in Interceptor','1',''],['5,9','None','','']]};
+ assert.equal(liveProductionOrders({manifest,stations,rowsBySystem}).length,1);
+ rowsBySystem.Eberon[3][1]='TIE/in Interceptor';
+ assert.throws(()=>liveProductionOrders({manifest,stations,rowsBySystem}),/Unknown station coordinate/);
+});
