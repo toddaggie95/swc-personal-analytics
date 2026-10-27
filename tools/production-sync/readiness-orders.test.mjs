@@ -22,3 +22,10 @@ test('fails closed on ambiguous station coordinates',()=>{
 test('fails closed on missing ship bill',()=>{
  const args=inputs();args.shipBills=new Map();assert.throws(()=>mapProductionOrders(args),/Unverified/);
 });
+
+test('already-started ship does not require another material bill',()=>{
+ const args=inputs();args.shipBills=new Map();args.rowsBySystem={Eberon:[[],['Hub (5,10)'],['4,9','TIE/in Interceptor','48','Yes','']]};
+ const mapped=mapProductionOrders(args);
+ assert.equal(mapped[0].started,true);
+ assert.deepEqual(mapped[0].bill,{});
+});
