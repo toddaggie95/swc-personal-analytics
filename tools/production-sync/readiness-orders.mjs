@@ -57,8 +57,9 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
   const isAssigned=ship!==''&&ship!=='None';
   const qty=isAssigned?Number(qtyRaw):0;
   if(isAssigned&&(!Number.isSafeInteger(qty)||qty<=0))throw Error('Invalid order quantity '+station.uid);
-  const bom=isAssigned?shipBills.get(ship):null;
-  if(isAssigned&&!bom)throw Error('Unverified ship material bill '+ship);
+  // Started production consumes no new materials in this planner; its bill is not needed.
+  const bom=isAssigned&&started!=='yes'?shipBills.get(ship):null;
+  if(isAssigned&&started!=='yes'&&!bom)throw Error('Unverified ship material bill '+ship);
   const bill=Object.fromEntries(Object.entries(bom??{}).map(([m,n])=>[m,n*qty]));
   if(Object.values(bill).some(x=>!Number.isSafeInteger(x)))throw Error('Material multiplication overflow '+station.uid);
   output.push({id:station.uid,stationPoolId:station.uid,system:entry.system,destinationId:station.destinationId,ship,quantity:qty,started:started==='yes',bill});
