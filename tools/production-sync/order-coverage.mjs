@@ -8,7 +8,7 @@ export function auditOrderCoverage({manifest,auditedOrders,rowsBySystem}) {
   if(!rows)throw Error('Missing live tab '+d.system);
   if(d.kind==='oneoff-group'){
    for(const one of d.oneoffs??[]){
-    const row=one.row+1,values=rows[row]??[];
+    const row=one.row,values=rows[row]??[];
     const ship=String(values[1]??'').trim();
     const uid=String(values[4]??'').trim();
     if(uid!==one.stationUid)unmappedOneoffs.push({system:d.system,destinationId:d.id,row,uid,expectedUid:one.stationUid,ship});
