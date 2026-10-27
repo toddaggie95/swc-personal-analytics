@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Prepare a non-writing, fully validated Production Overview publication preview."""
-import json,sys
+import json,sys,re
 from collections import defaultdict
 
 STATUSES=("building","ready_now","transfer","blocked","unassigned")
@@ -25,10 +25,13 @@ def preview(snapshot,audit):
     if len({r["system"] for r in rows})!=len(rows):raise ValueError("Duplicate system")
     grouped=defaultdict(list)
     for order in orders:
-        system,status,uid=order.get("system"),order.get("status"),str(order.get("id",""))
-        if not system or status not in STATUSES or not uid.isdecimal():
+        system,status,raw_uid=order.get("system"),order.get("status"),str(order.get("id",""))
+        # Station exports identify entities with a canonical type prefix (e.g. "5:25845").
+        # SWC inventory search expects the numeric entity ID, not the export UID.
+        match=re.fullmatch(r"(?:\d+:)?(\d+)",raw_uid)
+        if not system or status not in STATUSES or not match:
             raise ValueError("Missing or invalid station UID/status for hyperlink")
-        grouped[(system,status)].append(uid)
+        grouped[(system,status)].append(match.group(1))
     if len({uid for ids in grouped.values() for uid in ids})!=len(orders):
         raise ValueError("Duplicate station IDs in readiness orders")
     output=[]
