@@ -27,7 +27,15 @@ export function liveProductionOrders({manifest,stations,rowsBySystem}) {
     }
     if(!/^\d+,\d+$/.test(xy))throw Error('Malformed hub coordinate '+d.id+':'+row);
     const uid=expected.get(xy);
-    if(!uid)throw Error('Unknown station coordinate '+d.id+':'+xy);
+    if(!uid){
+     // The audited layout can display a vacant orbital slot without a station UID.
+     // Such a row is valid only when explicitly unassigned and has no start flag.
+     const ship=String(values[col+1]??'').trim(),qty=String(values[col+2]??'').trim(),started=String(values[col+3]??'').trim();
+     const [x,y]=xy.split(',').map(Number);
+     if(Math.abs(x-d.center.x)>1||Math.abs(y-d.center.y)>1||!['','None'].includes(ship)||qty||started)
+      throw Error('Unknown station coordinate '+d.id+':'+xy);
+     continue;
+    }
     if(found.has(uid)||seen.has(uid))throw Error('Duplicate live production station '+uid);
     found.add(uid);seen.add(uid);
     const [x,y]=xy.split(',').map(Number);
