@@ -1,6 +1,6 @@
 // Read-only adapter for audited production order coordinates and live sheet rows.
 // Requires exact station UID mapping; never infers a station from nearby coordinates.
-export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySystem,shipBills}) {
+export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySystem,shipBills,liveOrders=false}) {
  const stationByUid=new Map(stations.map(s=>[s.uid,s]));
  const byLocation=new Map(),byUid=new Map();
  for(const d of manifest.destinations){
@@ -16,7 +16,7 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
  }
  const output=[],used=new Set();
  const completeOrders=[...auditedOrders];
- for(const d of manifest.destinations.filter(x=>x.kind==='oneoff-group'))for(const one of d.oneoffs??[]){
+ if(!liveOrders)for(const d of manifest.destinations.filter(x=>x.kind==='oneoff-group'))for(const one of d.oneoffs??[]){
   const row=one.row+(d.system==='Tholatin'?0:1),values=rowsBySystem[d.system]?.[row];
   if(!values)throw Error('Missing one-off row '+d.system+':'+row);
   const coord=String(values[0]??'').replace(/[()]/g,'').trim();
