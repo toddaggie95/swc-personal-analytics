@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mapProductionOrders} from './readiness-orders.mjs';
-const manifest={destinations:[{id:'Eberon-hub-1-0',kind:'hub',title:'Hub (5,10)',target:{hasColumn:2,materialStartRow:12},memberStationUids:['s1']}]};
+const manifest={destinations:[{id:'Eberon-hub-1-0',kind:'hub',title:'Hub (5,10)',center:{x:5,y:10},target:{hasColumn:2,materialStartRow:12},memberStationUids:['s1']}]};
 const stations=[{uid:'s1',system:'Eberon',sysX:'4',sysY:'9'}];
 const auditedOrders=[{destinationId:'Eberon-hub-1-0',system:'Eberon',x:4,y:9,ship:'TIE/in Interceptor',row:2}];
 const rowsBySystem={Eberon:[[],['Hub (5,10)'],['4,9','TIE/in Interceptor','48','', '']]};
