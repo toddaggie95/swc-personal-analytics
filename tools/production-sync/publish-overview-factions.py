@@ -140,6 +140,18 @@ def publish(preview,token):
             actions.append({"mergeCells":{"range":{"sheetId":SHEET,"startRowIndex":row,
                 "endRowIndex":row+1,"startColumnIndex":col,"endColumnIndex":col+2},
                 "mergeType":"MERGE_ALL"}})
+    # Remove the legacy bottom border at row 25 and frame the new last row (46).
+    actions.extend([
+      {"updateBorders":{"range":{"sheetId":SHEET,"startRowIndex":24,"endRowIndex":26,
+        "startColumnIndex":0,"endColumnIndex":12},"innerHorizontal":{"style":"NONE"}}},
+      {"updateBorders":{"range":{"sheetId":SHEET,"startRowIndex":24,"endRowIndex":25,
+        "startColumnIndex":0,"endColumnIndex":12},"bottom":{"style":"NONE"}}},
+      {"updateBorders":{"range":{"sheetId":SHEET,"startRowIndex":25,"endRowIndex":26,
+        "startColumnIndex":0,"endColumnIndex":12},"top":{"style":"NONE"}}},
+      {"updateBorders":{"range":{"sheetId":SHEET,"startRowIndex":45,"endRowIndex":46,
+        "startColumnIndex":0,"endColumnIndex":12},
+        "bottom":{"style":"SOLID_MEDIUM","color":color("#1F2933")}}}
+    ])
     actions+=merges
     request(token,":batchUpdate",{"requests":actions})
     # Read back every populated cell and verify formulas, not just displayed totals.
