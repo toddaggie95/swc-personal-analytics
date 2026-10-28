@@ -8,6 +8,7 @@ import {liveProductionOrders} from './live-orders.mjs';
 import {allocateReadiness} from './production-readiness.mjs';
 import {summarizeReadiness} from './readiness-summary.mjs';
 import {auditOverviewCoverage} from './overview-coverage.mjs';
+import {calculateMaterialBalance} from './material-balance.mjs';
 export function calculateOverviewSnapshot({manifest,stations,materials,auditedOrders,rowsBySystem,shipRows}) {
  const currentOrders=liveProductionOrders({manifest,stations,rowsBySystem});
  const coverage={status:'complete',checkedOrders:currentOrders.length,source:'live_spreadsheet'};
@@ -18,6 +19,7 @@ export function calculateOverviewSnapshot({manifest,stations,materials,auditedOr
  const priority=o=>/behemoth|endurance/i.test(o.ship)?0:1;
  const allocation=allocateReadiness({pools,orders,priority});
  const summary=summarizeReadiness(allocation.orders);
+ const materialBalance=calculateMaterialBalance({pools,orders});
  const coverageAudit=auditOverviewCoverage({manifest,orders:allocation.orders,stations});
  const bySystem={};
  for(const o of allocation.orders){
@@ -27,5 +29,5 @@ export function calculateOverviewSnapshot({manifest,stations,materials,auditedOr
  }
  const counted=Object.values(bySystem).reduce((n,s)=>n+Object.values(s).reduce((a,b)=>a+b,0),0);
  if(counted!==orders.length)throw Error('Order reconciliation failed');
- return {schemaVersion:1,mode:'read_only',statistics:{...statistics,liveOrders:orders.length,orderSource:'live_spreadsheet'},systems:bySystem,summary,coverageAudit,orders:allocation.orders,reservations:allocation.reservations};
+ return {schemaVersion:1,mode:'read_only',statistics:{...statistics,liveOrders:orders.length,orderSource:'live_spreadsheet'},systems:bySystem,summary,materialBalance,coverageAudit,orders:allocation.orders,reservations:allocation.reservations};
 }
