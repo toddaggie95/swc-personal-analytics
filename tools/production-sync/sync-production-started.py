@@ -25,7 +25,7 @@ def plan(manifest,stations,rows_by_system):
   if missing:raise ValueError("Tracked stations missing from exports: "+str(missing[:10]))
   if dest["kind"]=="hub":
    col=dest["target"]["hasColumn"]-2
-   header=dest["target"]["materialStartRow"]-12
+   header=dest["target"]["materialStartRow"]-11
    if header>=len(rows) or col>=len(rows[header]) or "("+str(dest["center"]["x"])+","+str(dest["center"]["y"])+")" not in str(rows[header][col]):raise ValueError("Hub heading drift "+dest["id"])
    positions={}
    for row_idx in range(header+1,header+10):
