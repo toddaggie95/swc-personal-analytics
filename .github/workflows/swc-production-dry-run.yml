@@ -145,7 +145,10 @@ jobs:
             "${{ runner.temp }}/system-has-comparison.json" \
             "${{ runner.temp }}/has-write-report.json"
 
-      - name: Test production Started synchronization\n        run: python3 -m unittest discover -s tools/production-sync -p 'test_sync_production_started.py' -v\n\n      - name: Synchronize and verify production Started flags from station exports
+      - name: Test production Started synchronization
+        run: python3 -m unittest discover -s tools/production-sync -p 'test_sync_production_started.py' -v
+
+      - name: Synchronize and verify production Started flags from station exports
         if: success() && inputs.enable_has_writes == true
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
