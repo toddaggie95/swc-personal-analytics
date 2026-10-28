@@ -87,6 +87,12 @@ jobs:
             --tff-materials "${{ runner.temp }}/swc-exports/tff-materials.csv" \
             --tjo-materials "${{ runner.temp }}/swc-exports/tjo-materials.csv" \
             --out "${{ runner.temp }}/overview-readiness.json"
+      - name: Validate material matrix (no writes unless accepted and explicitly enabled)
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          ACCEPTED_HAS_BATCH: ${{ steps.accepted_batch.outputs.verified }}
+          ENABLE_MATERIAL_BALANCE_WRITES: 'false'
+        run: python3 tools/production-sync/publish-material-matrix.py "${{ runner.temp }}/overview-readiness.json"
       - name: Shadow audit against live HAS and production orders (read only)
         run: |
           node tools/production-sync/overview-shadow-audit.mjs \
