@@ -35,8 +35,9 @@ def group_station_notices(changes):
         uid=value(change.get("uid"))
         if not uid:raise ValueError("Missing change station UID")
         row=by_uid.setdefault(uid,{"uid":uid,"system":"","fields":{},"types":[]})
-        system=change.get("system") or (change.get("after") or {}).get("system") if isinstance(change.get("after"),dict) else change.get("system")
-        system=system or (change.get("before") or {}).get("system") if isinstance(change.get("before"),dict) else system
+        after=change.get("after")
+        before=change.get("before")
+        system=change.get("system") or (after.get("system") if isinstance(after,dict) else None) or (before.get("system") if isinstance(before,dict) else None)
         if system and row["system"] and system!=row["system"]:raise ValueError("Conflicting station systems "+uid)
         row["system"]=system or row["system"]
         field=change.get("field")
