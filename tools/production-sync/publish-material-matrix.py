@@ -8,14 +8,16 @@ def matrix(snapshot):
     b=snapshot["materialBalance"]
     mats=b["materials"]
     systems=b["systems"]
+    extra=b.get("inventoryOnlySystems",[])
+    all_systems=systems+extra
     if snapshot["mode"]!="read_only" or len(mats)!=21 or len(systems)!=20:
         raise ValueError("Unexpected material balance scope")
-    if len(set(mats))!=21 or len({s["system"] for s in systems})!=20:
+    if len(set(mats))!=21 or len({s["system"] for s in all_systems})!=len(all_systems):
         raise ValueError("Duplicate system/material")
     rows=[["System",*mats]]
     totals={k:{m:0 for m in mats} for k in ("missing","excess","net")}
     colors=[]
-    for s in systems:
+    for s in all_systems:
         row=[s["system"]]; shades=[None]
         for m in mats:
             v=s["materials"][m]
@@ -70,7 +72,7 @@ def publish(snapshot,token):
         for j,want in enumerate(row):
             if (got[j] if j<len(got) else "")!=want:
                 raise ValueError("Readback mismatch row "+str(i+1)+" column "+str(j+14))
-    return {"status":"published_and_verified","systems":20,"materials":21}
+    return {"status":"published_and_verified","systems":20,"additionalSystems":len(snapshot["materialBalance"].get("inventoryOnlySystems",[])),"materials":21}
 if __name__=="__main__":
     with open(sys.argv[1],encoding="utf-8") as f:s=json.load(f)
     if os.getenv("ENABLE_MATERIAL_BALANCE_WRITES")=="true" and os.getenv("ACCEPTED_HAS_BATCH")=="true":
