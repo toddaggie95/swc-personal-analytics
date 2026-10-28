@@ -16,6 +16,7 @@ with open(os.path.join(folder,'batch-acceptance-report.json')) as f: acceptance=
 with open(os.path.join(folder,'has-write-report.json')) as f: write=json.load(f)
 print('Acceptance report:',json.dumps(acceptance)[:1200])
 print('HAS write report:',json.dumps(write)[:1200])
-if not acceptance or not write:raise SystemExit('Missing verification records')
+if acceptance.get('status')!='accepted' or write.get('status')!='verified':raise SystemExit('Batch not accepted and HAS not verified')
+if len(acceptance.get('acceptedFiles',[]))!=4:raise SystemExit('Accepted export file count is not four')
 PY
 echo "verified=true" >> "$GITHUB_OUTPUT"
