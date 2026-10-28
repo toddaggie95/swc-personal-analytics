@@ -40,7 +40,19 @@ def publish(report):
       {"updateDimensionProperties":{"range":{"sheetId":sheet,"dimension":"COLUMNS","startIndex":0,"endIndex":6},"properties":{"pixelSize":175},"fields":"pixelSize"}}
     ]
     call(":batchUpdate",{"requests":requests})
-    print("Published Production Changes:",len(changes),"changes")
+    # Read back the published report. A successful write response alone is insufficient.
+    import urllib.parse
+    check_range=urllib.parse.quote("'Production Changes'!A1:B4",safe="")
+    req=urllib.request.Request(
+        "https://sheets.googleapis.com/v4/spreadsheets/"+ID+"/values/"+check_range,
+        headers={"Authorization":"Bearer "+os.environ["GOOGLE_ACCESS_TOKEN"]})
+    with urllib.request.urlopen(req,timeout=90) as response:
+        actual=json.load(response).get("values",[])
+    expected=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],
+              ["Current accepted batch",value(report.get("currentBatch"))],["Changes detected",str(len(changes))]]
+    if actual!=expected:
+        raise RuntimeError("Production Changes readback failed: "+repr(actual))
+    print("Published and verified Production Changes:",len(changes),"changes")
 if __name__=="__main__":
     if len(sys.argv)!=2:raise SystemExit("Usage: publish-production-changes.py report.json")
     if os.getenv("ACCEPTED_HAS_BATCH")!="true":raise SystemExit("Refusing unverified HAS publication")
