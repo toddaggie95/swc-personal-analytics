@@ -10,9 +10,11 @@ if [[ -z "$previous" ]]; then
   exit 0
 fi
 echo "Previous successful overview run: $previous"
-gh run download "$previous" -R "$repo" -n swc-production-overview-readonly -D "$output"
-if [[ ! -s "$output/production-change-snapshot.json" ]]; then
+history="$output/previous-overview-artifact"
+mkdir -p "$history"
+gh run download "$previous" -R "$repo" -n swc-production-overview-readonly -D "$history"
+if [[ ! -s "$history/production-change-snapshot.json" ]]; then
   echo "Previous run does not contain a snapshot; baseline will be created."
   exit 0
 fi
-mv "$output/production-change-snapshot.json" "$output/previous-production-snapshot.json"
+cp "$history/production-change-snapshot.json" "$output/previous-production-snapshot.json"
