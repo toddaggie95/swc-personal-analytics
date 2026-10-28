@@ -12,7 +12,8 @@ while IFS=$'\t' read -r previous event; do
   [[ -n "$previous" ]] || continue
   [[ "$previous" -lt "$current" ]] || continue
   echo "Checking previous successful overview run: $previous"
-  rm -f "$history"/*
+  history="$output/previous-overview-artifact/$previous"
+  mkdir -p "$history"
   if ! gh run download "$previous" -R "$repo" -n swc-production-overview-readonly -D "$history"; then
     echo "Artifact unavailable for $previous; checking earlier run."
     continue
