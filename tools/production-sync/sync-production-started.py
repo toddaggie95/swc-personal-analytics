@@ -94,9 +94,9 @@ def main():
    for c,v in zip(changes,response):
     observed=str(v.get("values",[[]])[0][0] if v.get("values") and v["values"][0] else "").strip()
     if observed!=c["previous"]:raise ValueError("Concurrent edit "+c["uid"])
-   request(base+":batchUpdate",token,{"valueInputOption":"RAW","data":[{"range":r,"values":[["Yes"]]} for r in targets]})
+   request(base+":batchUpdate",token,{"valueInputOption":"RAW","data":[{"range":r,"values":[[c["proposed"]]]} for r,c in zip(targets,changes)]})
    response=request(base+":batchGet?"+urllib.parse.urlencode([("ranges",r) for r in targets]+[("valueRenderOption","FORMATTED_VALUE")]),token)["valueRanges"]
-   if len(response)!=len(changes) or any(v.get("values",[[]])[0][0]!="Yes" for v in response):raise ValueError("Started readback mismatch")
+   if len(response)!=len(changes) or any(str(v.get("values",[[]])[0][0] if v.get("values") and v["values"][0] else "")!=c["proposed"] for v,c in zip(response,changes)):raise ValueError("Started readback mismatch")
   result["status"]="verified";result["verifiedCells"]=len(changes)
  except Exception as e:
   result["status"]="write_or_verification_failed";result["error"]=str(e);raise
