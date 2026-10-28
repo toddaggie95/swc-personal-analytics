@@ -24,4 +24,5 @@ def identities(manifest):return {(x['id'],x['sha256']) for x in manifest['files'
 if len(identities(original))!=4 or identities(original)!=identities(current):raise SystemExit('Current exports do not match accepted HAS batch')
 if {x['id'] for x in original['files']}!=set(acceptance['acceptedFiles']):raise SystemExit('Acceptance record does not match HAS manifest')
 PY
+printf '{"verified":true,"hasRunId":"%s"}\n' "$run" > "$output/accepted-has-verification.json"
 echo "verified=true" >> "$GITHUB_OUTPUT"
