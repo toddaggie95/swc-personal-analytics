@@ -1,4 +1,4 @@
-import importlib.util,unittest
+import importlib.util,unittest,inspect
 from pathlib import Path
 spec=importlib.util.spec_from_file_location("faction_publisher",Path(__file__).with_name("publish-overview-factions.py"))
 mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
@@ -18,6 +18,10 @@ class FactionPublisherTests(unittest.TestCase):
   return {"mode":"dry_run","writeAuthorized":False,"targetSheet":"Production Overview",
           "range":"A5:G26","values":rows,"classifiedOrders":4,
           "stationIdsBySystemStatusFaction":groups}
+ def test_recurring_publisher_does_not_clear_material_matrix(self):
+  source=inspect.getsource(mod.publish)
+  self.assertNotIn('"startColumnIndex":12,"endColumnIndex":16',source)
+  self.assertNotIn('"fields":"userEnteredValue,userEnteredFormat,note,dataValidation"',source)
  def test_chamble_mixed_factions(self):
   rows,merges,top=mod.build(self.sample())
   self.assertEqual(len(rows),42)
