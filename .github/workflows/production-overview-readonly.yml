@@ -1,6 +1,12 @@
 name: SWC production overview readiness and publish
 on:
   workflow_dispatch:
+    inputs:
+      accepted_batch_verified:
+        description: 'Only notify after an independently verified accepted HAS export batch'
+        type: boolean
+        required: true
+        default: false
   push:
     branches:
       - feature/production-overview-readiness
@@ -120,7 +126,7 @@ jobs:
           console.log(JSON.stringify(result));
           JS
       - name: Publish GitHub notification issue on production changes
-        if: success() && steps.production_changes.outputs.notify == 'true'
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.accepted_batch_verified == true && steps.production_changes.outputs.notify == 'true'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
