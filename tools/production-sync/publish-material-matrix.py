@@ -14,7 +14,10 @@ def matrix(snapshot):
         raise ValueError("Unexpected material balance scope")
     if len(set(mats))!=21 or len({s["system"] for s in all_systems})!=len(all_systems):
         raise ValueError("Duplicate system/material")
-    rows=[["System",*mats]]
+    demand={m:sum(row["materials"][m]["required"] for row in systems) for m in mats}
+    usage={m:sum(1 for o in snapshot.get("orders",[]) if not o.get("started") and (o.get("bill") or {}).get(m,0)>0) for m in mats}
+    mats=sorted(mats,key=lambda m:(-demand[m],-usage[m],m))
+    rows=[["System",*[m.title() for m in mats]]]
     totals={k:{m:0 for m in mats} for k in ("missing","excess","net")}
     colors=[]
     for s in all_systems:
@@ -59,11 +62,22 @@ def publish(snapshot,token):
         return {"userEnteredValue":{"numberValue":v} if type(v)==int else {"stringValue":str(v)}}
     payload=[{"values":[cell(v) for v in row]} for row in rows]
     actions.append({"updateCells":{"range":{"sheetId":TAB_ID,"startRowIndex":0,"endRowIndex":bottom,"startColumnIndex":START,"endColumnIndex":end},"rows":payload,"fields":"userEnteredValue"}})
+    # Reset previous highlights so changed balances cannot retain stale colors.
+    actions.append({"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":1,"endRowIndex":bottom,"startColumnIndex":START+1,"endColumnIndex":end},"cell":{"userEnteredFormat":{"backgroundColor":{"red":1,"green":1,"blue":1}}},"fields":"userEnteredFormat.backgroundColor"}})
     for i,shades in enumerate(colors,1):
         for j,shade in enumerate(shades):
             if shade:
                 r,g,b=PALETTE[shade]
                 actions.append({"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":i,"endRowIndex":i+1,"startColumnIndex":START+j,"endColumnIndex":START+j+1},"cell":{"userEnteredFormat":{"backgroundColor":{"red":r,"green":g,"blue":b}}},"fields":"userEnteredFormat.backgroundColor"}})
+    # Consistent readable headings, widths, numeric grouping, and summary emphasis.
+    actions.extend([
+      {"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":0,"endRowIndex":1,"startColumnIndex":START,"endColumnIndex":end},"cell":{"userEnteredFormat":{"backgroundColor":{"red":0.12,"green":0.20,"blue":0.30},"textFormat":{"foregroundColor":{"red":1,"green":1,"blue":1},"bold":True},"horizontalAlignment":"CENTER","verticalAlignment":"MIDDLE"}},"fields":"userEnteredFormat.backgroundColor,userEnteredFormat.textFormat,userEnteredFormat.horizontalAlignment,userEnteredFormat.verticalAlignment"}},
+      {"updateDimensionProperties":{"range":{"sheetId":TAB_ID,"dimension":"COLUMNS","startIndex":START,"endIndex":START+1},"properties":{"pixelSize":172},"fields":"pixelSize"}},
+      {"updateDimensionProperties":{"range":{"sheetId":TAB_ID,"dimension":"COLUMNS","startIndex":START+1,"endIndex":end},"properties":{"pixelSize":116},"fields":"pixelSize"}},
+      {"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":1,"endRowIndex":bottom,"startColumnIndex":START+1,"endColumnIndex":end},"cell":{"userEnteredFormat":{"numberFormat":{"type":"NUMBER","pattern":"#,##0;[Red](#,##0);–"},"horizontalAlignment":"RIGHT"}},"fields":"userEnteredFormat.numberFormat,userEnteredFormat.horizontalAlignment"}},
+      {"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":bottom-3,"endRowIndex":bottom,"startColumnIndex":START,"endColumnIndex":end},"cell":{"userEnteredFormat":{"textFormat":{"bold":True},"backgroundColor":{"red":0.90,"green":0.94,"blue":0.98}}},"fields":"userEnteredFormat.textFormat.bold,userEnteredFormat.backgroundColor"}},
+      {"updateDimensionProperties":{"range":{"sheetId":TAB_ID,"dimension":"ROWS","startIndex":0,"endIndex":1},"properties":{"pixelSize":34},"fields":"pixelSize"}}
+    ])
     request(token,":batchUpdate",{"requests":actions})
     rng=urllib.parse.quote("'Production Overview'!N1:AI"+str(bottom),safe="")
     actual=request(token,"/values/"+rng+"?valueRenderOption=UNFORMATTED_VALUE").get("values",[])
