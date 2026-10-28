@@ -59,6 +59,14 @@ def plan(manifest,stations,rows_by_system):
     unresolved.append({"uid":uid,"system":sheet,"row":row_idx,"status":status,"current":current})
  return {"checkedShipyards":checked,"changes":updates,"unresolved":unresolved,"statuses":dict(Counter(s.get("productionStatus","").strip().lower() for s in stations))}
 
+def column_name(index):
+ name=""
+ while index>=0:
+  index,rem=divmod(index,26)
+  name=chr(65+rem)+name
+  index-=1
+ return name
+
 def main():
  if len(sys.argv)!=6:raise SystemExit("Usage: sync-production-started.py manifest tff-stations tjo-stations report.json write-flag")
  with open(sys.argv[1]) as f:manifest=json.load(f)
@@ -79,7 +87,7 @@ def main():
  save()
  if sys.argv[5]!="true":result["status"]="dry_run";save();print(json.dumps(result));return
  changes=result["changes"]
- targets=["'"+c["system"].replace("'","''")+"'!"+chr(65+c["column"])+str(c["row"]) for c in changes]
+ targets=["'"+c["system"].replace("'","''")+"'!"+column_name(c["column"])+str(c["row"]) for c in changes]
  try:
   if changes:
    response=request(base+":batchGet?"+urllib.parse.urlencode([("ranges",r) for r in targets]+[("valueRenderOption","FORMULA")]),token)["valueRanges"]
