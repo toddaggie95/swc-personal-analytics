@@ -115,7 +115,13 @@ def main():
    request(base+":batchUpdate",token,{"valueInputOption":"RAW","data":[{"range":r,"values":[[c["proposed"]]]} for r,c in zip(targets,changes)]})
    response=request(base+":batchGet?"+urllib.parse.urlencode([("ranges",r) for r in targets]+[("valueRenderOption","FORMATTED_VALUE")]),token)["valueRanges"]
    if len(response)!=len(changes) or any(str(v.get("values",[[]])[0][0] if v.get("values") and v["values"][0] else "")!=c["proposed"] for v,c in zip(response,changes)):raise ValueError("Started readback mismatch")
-  result["status"]="verified";result["verifiedCells"]=len(changes)
+  # Reconcile ALL tracked shipyards on a fresh full workbook read, not only changed cells.
+  after=request(url,token)["valueRanges"]
+  if len(after)!=len(systems):raise ValueError("Incomplete post-write workbook audit")
+  verified=plan(manifest,stations,{system:[[]]+item.get("values",[]) for system,item in zip(systems,after)})
+  if verified["checkedShipyards"]!=result["checkedShipyards"] or verified["changes"]:
+   raise ValueError("Full Started reconciliation failed: "+str(verified["changes"][:10]))
+  result["status"]="verified";result["verifiedCells"]=len(changes);result["postAuditShipyards"]=verified["checkedShipyards"]
  except Exception as e:
   result["status"]="write_or_verification_failed";result["error"]=str(e);raise
  finally:save()
