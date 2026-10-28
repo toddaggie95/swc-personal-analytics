@@ -2,8 +2,7 @@
 """Synchronize tracked shipyard Started flags from accepted TFF/TJO station exports.
 
 Fail closed on station identity/coordinates, ambiguous statuses, formulas and concurrent edits.
-Only 'running' is authoritative for Yes. Other explicit statuses are reported for review,
-not silently converted to blank (completion semantics require separate policy).
+Exported 'running' maps to Yes; blank or known nonrunning status maps to blank.
 """
 import csv,json,os,sys,urllib.parse,urllib.request
 from collections import Counter
@@ -27,7 +26,7 @@ def plan(manifest,stations,rows_by_system):
   if dest["kind"]=="hub":
    col=dest["target"]["hasColumn"]-2
    header=dest["target"]["materialStartRow"]-11
-   if "("+str(dest["center"]["x"])+","+str(dest["center"]["y"])+")" not in str(rows[header][col]):raise ValueError("Hub heading drift "+dest["id"])
+   if header>=len(rows) or col>=len(rows[header]) or "("+str(dest["center"]["x"])+","+str(dest["center"]["y"])+")" not in str(rows[header][col]):raise ValueError("Hub heading drift "+dest["id"])
    positions={}
    for row_idx in range(header+1,header+10):
     row=rows[row_idx] if row_idx<len(rows) else []
@@ -55,10 +54,11 @@ def plan(manifest,stations,rows_by_system):
    if current.startswith("="):raise ValueError("Formula in Started "+uid)
    if current.lower() not in ("","yes","no"):raise ValueError("Unknown Started value "+uid+": "+current)
    checked+=1
-   if status=="running":
-    if current.lower()!="yes":updates.append({"uid":uid,"system":sheet,"row":row_idx,"column":col,"previous":current,"proposed":"Yes","status":status})
-   elif status not in ("",):
-    unresolved.append({"uid":uid,"system":sheet,"row":row_idx,"status":status,"current":current})
+   if status not in ("","running","paused","stopped","complete","completed","idle","none","cancelled","canceled"):
+    raise ValueError("Unrecognized productionStatus "+uid+": "+status)
+   desired="Yes" if status=="running" else ""
+   if current!=desired:
+    updates.append({"uid":uid,"system":sheet,"row":row_idx,"column":col,"previous":current,"proposed":desired,"status":status})
  return {"checkedShipyards":checked,"changes":updates,"unresolved":unresolved,"statuses":dict(Counter(s.get("productionStatus","").strip().lower() for s in stations))}
 
 def column_name(index):
@@ -89,10 +89,15 @@ def main():
  save()
  if sys.argv[5]!="true":result["status"]="dry_run";save();print(json.dumps(result));return
  changes=result["changes"]
+ result["transitionCounts"]={"toYes":sum(c["proposed"]=="Yes" for c in changes),"toBlank":sum(c["proposed"]=="" for c in changes)}
+ if len(changes)>max(100,result["checkedShipyards"]//4):
+  result["status"]="blocked_excessive_changes";save()
+  raise ValueError("Production status change count exceeds safety threshold: "+str(len(changes)))
  targets=["'"+c["system"].replace("'","''")+"'!"+column_name(c["column"])+str(c["row"]) for c in changes]
  try:
   if changes:
    response=request(base+":batchGet?"+urllib.parse.urlencode([("ranges",r) for r in targets]+[("valueRenderOption","FORMULA")]),token)["valueRanges"]
+   if len(response)!=len(changes):raise ValueError("Incomplete Started preflight")
    for c,v in zip(changes,response):
     observed=str(v.get("values",[[]])[0][0] if v.get("values") and v["values"][0] else "").strip()
     if observed!=c["previous"]:raise ValueError("Concurrent edit "+c["uid"])

@@ -146,7 +146,7 @@ jobs:
             "${{ runner.temp }}/has-write-report.json"
 
       - name: Test production Started synchronization
-        run: python3 -m unittest discover -s tools/production-sync -p 'test_sync_production_started.py' -v
+        run: python3 -m unittest discover -s tools/production-sync -p 'test_sync*.py' -v
 
       - name: Synchronize and verify production Started flags from station exports
         if: success() && inputs.enable_has_writes == true

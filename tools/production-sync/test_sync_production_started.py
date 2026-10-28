@@ -20,7 +20,7 @@ class StartedSyncTests(unittest.TestCase):
   self.assertEqual(result["checkedShipyards"],3)
   self.assertEqual([(c["uid"],c["proposed"]) for c in result["changes"]],[("5:1","Yes"),("5:2","Yes")])
  def test_reject_coordinate_drift(self):
-  manifest={"destinations":[{"id":"x","kind":"oneoff-group","system":"Kashyyyk","oneoffs":[{"stationUid":"5:1","row":1}]}]}
+  manifest={"destinations":[{"id":"x","kind":"oneoff-group","system":"Kashyyyk","memberStationUids":["5:1"],"oneoffs":[{"stationUid":"5:1","row":1}]}]}
   station={"uid":"5:1","system":"Kashyyyk","sysX":"4","sysY":"16","type_name":"Shipyard I","productionStatus":"running"}
   with self.assertRaisesRegex(ValueError,"coordinate mismatch"):
    sync.plan(manifest,[station],{"Kashyyyk":[[],[],["0,0","","","","5:1"]]})
