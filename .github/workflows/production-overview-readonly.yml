@@ -102,6 +102,9 @@ jobs:
             --snapshot-out "${{ runner.temp }}/production-change-snapshot.json" \
             --report-out "${{ runner.temp }}/production-change-report.json" \
             --batch-id "${{ github.run_id }}-${{ github.run_attempt }}"
+      - name: Render human-readable production changes
+        if: success()
+        run: node tools/production-sync/write-production-change-summary.mjs "${{ runner.temp }}/production-change-report.json" "${{ runner.temp }}/production-change-summary.txt"
       - name: Upload read-only readiness report
         if: always()
         uses: actions/upload-artifact@v4
@@ -112,6 +115,7 @@ jobs:
             ${{ runner.temp }}/previous-production-snapshot.json
             ${{ runner.temp }}/production-change-snapshot.json
             ${{ runner.temp }}/production-change-report.json
+            ${{ runner.temp }}/production-change-summary.txt
             ${{ runner.temp }}/overview-shadow-audit.json
             ${{ runner.temp }}/overview-publish-preview.json
             ${{ runner.temp }}/swc-exports/export-manifest.json
