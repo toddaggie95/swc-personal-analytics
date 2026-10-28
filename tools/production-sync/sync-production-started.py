@@ -22,6 +22,8 @@ def plan(manifest,stations,rows_by_system):
  updates=[];unresolved=[];checked=0;seen=set()
  for dest in manifest["destinations"]:
   sheet=dest["system"];rows=rows_by_system[sheet]
+  missing=[uid for uid in dest["memberStationUids"] if uid not in by_uid]
+  if missing:raise ValueError("Tracked stations missing from exports: "+str(missing[:10]))
   if dest["kind"]=="hub":
    col=dest["target"]["hasColumn"]-2
    header=dest["target"]["materialStartRow"]-11
@@ -31,7 +33,7 @@ def plan(manifest,stations,rows_by_system):
     row=rows[row_idx] if row_idx<len(rows) else []
     xy=str(row[col] if col<len(row) else "").replace("(","").replace(")","").replace(" ","")
     if xy:positions[xy]=(row_idx,col+3)
-   members=[(uid,positions.get(str(by_uid[uid].get("sysX"))+","+str(by_uid[uid].get("sysY")))) for uid in dest["memberStationUids"] if uid in by_uid]
+   members=[(uid,positions.get(str(by_uid[uid].get("sysX"))+","+str(by_uid[uid].get("sysY")))) for uid in dest["memberStationUids"]]
   elif dest["kind"]=="oneoff-group":
    members=[(one["stationUid"],(one["row"]+(0 if sheet=="Tholatin" else 1),3)) for one in dest.get("oneoffs",[])]
   else:raise ValueError("Unknown destination "+dest["kind"])
