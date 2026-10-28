@@ -12,6 +12,20 @@ def value(x):
     if isinstance(x,bool):return "Yes" if x else "No"
     if isinstance(x,dict):return json.dumps(x,sort_keys=True)
     return str(x)
+def verify_readback(report, changes):
+    # Read back the published report. A successful write response alone is insufficient.
+    import urllib.parse
+    check_range=urllib.parse.quote("'Production Changes'!A1:B4",safe="")
+    req=urllib.request.Request(
+        "https://sheets.googleapis.com/v4/spreadsheets/"+ID+"/values/"+check_range,
+        headers={"Authorization":"Bearer "+os.environ["GOOGLE_ACCESS_TOKEN"]})
+    with urllib.request.urlopen(req,timeout=90) as response:
+        actual=json.load(response).get("values",[])
+    expected=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],
+              ["Current accepted batch",value(report.get("currentBatch"))],["Changes detected",str(len(changes))]]
+    if actual!=expected:
+        raise RuntimeError("Production Changes readback failed: "+repr(actual))
+
 def publish(report):
     if report.get("status") not in ("compared","baseline_created") or not isinstance(report.get("changes"),list):raise ValueError("Invalid report")
     changes=report["changes"]
@@ -40,18 +54,7 @@ def publish(report):
       {"updateDimensionProperties":{"range":{"sheetId":sheet,"dimension":"COLUMNS","startIndex":0,"endIndex":6},"properties":{"pixelSize":175},"fields":"pixelSize"}}
     ]
     call(":batchUpdate",{"requests":requests})
-    # Read back the published report. A successful write response alone is insufficient.
-    import urllib.parse
-    check_range=urllib.parse.quote("'Production Changes'!A1:B4",safe="")
-    req=urllib.request.Request(
-        "https://sheets.googleapis.com/v4/spreadsheets/"+ID+"/values/"+check_range,
-        headers={"Authorization":"Bearer "+os.environ["GOOGLE_ACCESS_TOKEN"]})
-    with urllib.request.urlopen(req,timeout=90) as response:
-        actual=json.load(response).get("values",[])
-    expected=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],
-              ["Current accepted batch",value(report.get("currentBatch"))],["Changes detected",str(len(changes))]]
-    if actual!=expected:
-        raise RuntimeError("Production Changes readback failed: "+repr(actual))
+    verify_readback(report, changes)
     print("Published and verified Production Changes:",len(changes),"changes")
 if __name__=="__main__":
     if len(sys.argv)!=2:raise SystemExit("Usage: publish-production-changes.py report.json")
