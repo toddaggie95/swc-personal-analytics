@@ -145,6 +145,21 @@ jobs:
             "${{ runner.temp }}/system-has-comparison.json" \
             "${{ runner.temp }}/has-write-report.json"
 
+      - name: Test production Started synchronization
+        run: python3 -m unittest discover -s tools/production-sync -p 'test_sync_production_started.py' -v
+
+      - name: Synchronize and verify production Started flags from station exports
+        if: success() && inputs.enable_has_writes == true
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
+        run: |
+          python3 tools/production-sync/sync-production-started.py \
+            tools/production-sync/audited-workbook-layout.json \
+            "${{ runner.temp }}/swc-exports/tff-stations.csv" \
+            "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
+            "${{ runner.temp }}/production-started-write-report.json" true
+
       - name: Accept verified export batch (no cleanup)
         if: success() && inputs.enable_has_writes == true
         env:
