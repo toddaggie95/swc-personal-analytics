@@ -26,7 +26,7 @@ def plan(manifest,stations,rows_by_system):
   if dest["kind"]=="hub":
    col=dest["target"]["hasColumn"]-2
    header=dest["target"]["materialStartRow"]-11
-   if "("+str(dest["center"]["x"])+","+str(dest["center"]["y"])+")" not in str(rows[header][col]):raise ValueError("Hub heading drift "+dest["id"])
+   if header>=len(rows) or col>=len(rows[header]) or "("+str(dest["center"]["x"])+","+str(dest["center"]["y"])+")" not in str(rows[header][col]):raise ValueError("Hub heading drift "+dest["id"])
    positions={}
    for row_idx in range(header+1,header+10):
     row=rows[row_idx] if row_idx<len(rows) else []
@@ -57,7 +57,7 @@ def plan(manifest,stations,rows_by_system):
    if status not in ("","running","paused","stopped","complete","completed","idle","none","cancelled","canceled"):
     raise ValueError("Unrecognized productionStatus "+uid+": "+status)
    desired="Yes" if status=="running" else ""
-   if (current.lower()=="yes")!=(desired=="Yes"):
+   if current!=desired:
     updates.append({"uid":uid,"system":sheet,"row":row_idx,"column":col,"previous":current,"proposed":desired,"status":status})
  return {"checkedShipyards":checked,"changes":updates,"unresolved":unresolved,"statuses":dict(Counter(s.get("productionStatus","").strip().lower() for s in stations))}
 
@@ -97,6 +97,7 @@ def main():
  try:
   if changes:
    response=request(base+":batchGet?"+urllib.parse.urlencode([("ranges",r) for r in targets]+[("valueRenderOption","FORMULA")]),token)["valueRanges"]
+   if len(response)!=len(changes):raise ValueError("Incomplete Started preflight")
    for c,v in zip(changes,response):
     observed=str(v.get("values",[[]])[0][0] if v.get("values") and v["values"][0] else "").strip()
     if observed!=c["previous"]:raise ValueError("Concurrent edit "+c["uid"])
