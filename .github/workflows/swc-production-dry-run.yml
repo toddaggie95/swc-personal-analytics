@@ -133,6 +133,21 @@ jobs:
             "${{ runner.temp }}/swc-exports/tjo-materials.csv" \
             "${{ runner.temp }}/pile-trace.json"
 
+      - name: Test production Started synchronization
+        run: python3 -m unittest discover -s tools/production-sync -p 'test_sync*.py' -v
+
+      - name: Preflight every tracked production Started cell (read only)
+        if: success()
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
+        run: |
+          python3 tools/production-sync/sync-production-started.py \
+            tools/production-sync/audited-workbook-layout.json \
+            "${{ runner.temp }}/swc-exports/tff-stations.csv" \
+            "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
+            "${{ runner.temp }}/production-started-preflight.json" false
+
       - name: Apply and verify HAS updates (opt-in only)
         if: success() && inputs.enable_has_writes == true
         env:
@@ -144,9 +159,6 @@ jobs:
             "${{ runner.temp }}/spreadsheet-comparison.json" \
             "${{ runner.temp }}/system-has-comparison.json" \
             "${{ runner.temp }}/has-write-report.json"
-
-      - name: Test production Started synchronization
-        run: python3 -m unittest discover -s tools/production-sync -p 'test_sync*.py' -v
 
       - name: Synchronize and verify production Started flags from station exports
         if: success() && inputs.enable_has_writes == true
@@ -201,6 +213,8 @@ jobs:
             ${{ runner.temp }}/system-has-audit.json
             ${{ runner.temp }}/system-has-comparison.json
             ${{ runner.temp }}/has-write-report.json
+            ${{ runner.temp }}/production-started-preflight.json
+            ${{ runner.temp }}/production-started-write-report.json
             ${{ runner.temp }}/batch-acceptance-report.json
             ${{ runner.temp }}/trash-report.json
           retention-days: 90

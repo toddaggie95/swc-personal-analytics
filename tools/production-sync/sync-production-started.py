@@ -23,6 +23,7 @@ def plan(manifest,stations,rows_by_system):
   sheet=dest["system"];rows=rows_by_system[sheet]
   missing=[uid for uid in dest["memberStationUids"] if uid not in by_uid]
   if missing:raise ValueError("Tracked stations missing from exports: "+str(missing[:10]))
+  positions={}
   if dest["kind"]=="hub":
    col=dest["target"]["hasColumn"]-2
    header=dest["target"]["materialStartRow"]-11
@@ -31,10 +32,15 @@ def plan(manifest,stations,rows_by_system):
    for row_idx in range(header+1,header+10):
     row=rows[row_idx] if row_idx<len(rows) else []
     xy=str(row[col] if col<len(row) else "").replace("(","").replace(")","").replace(" ","")
-    if xy:positions[xy]=(row_idx,col+3)
+    if xy:
+     if xy in positions:raise ValueError("Duplicate hub coordinate "+dest["id"]+": "+xy)
+     positions[xy]=(row_idx,col+3)
    members=[(uid,positions.get(str(by_uid[uid].get("sysX"))+","+str(by_uid[uid].get("sysY")))) for uid in dest["memberStationUids"]]
   elif dest["kind"]=="oneoff-group":
    members=[(one["stationUid"],(one["row"]+(0 if sheet=="Tholatin" else 1),3)) for one in dest.get("oneoffs",[])]
+   unrepresented=set(dest["memberStationUids"])-{one["stationUid"] for one in dest.get("oneoffs",[])}
+   unexpected=[uid for uid in unrepresented if "shipyard" in by_uid[uid].get("type_name","").lower()]
+   if unexpected:raise ValueError("Tracked shipyard absent from one-off rows "+str(unexpected))
   else:raise ValueError("Unknown destination "+dest["kind"])
   for uid,location in members:
    station=by_uid[uid]
@@ -42,7 +48,7 @@ def plan(manifest,stations,rows_by_system):
    if "shipyard" not in station.get("type_name","").lower():continue
    if uid in seen:raise ValueError("Duplicate tracked shipyard "+uid)
    seen.add(uid)
-   if location is None:raise ValueError("Shipyard missing from hub "+uid)
+   if location is None:raise ValueError("Shipyard missing from hub "+uid+" at "+str(station.get("sysX"))+","+str(station.get("sysY"))+"; header="+str(header)+" col="+str(col)+"; known="+str(sorted(positions)))
    row_idx,col=location;row=rows[row_idx] if row_idx<len(rows) else []
    coordcol=0 if dest["kind"]=="oneoff-group" else col-3
    xy=str(row[coordcol] if coordcol<len(row) else "").replace("(","").replace(")","").replace(" ","")
@@ -59,6 +65,8 @@ def plan(manifest,stations,rows_by_system):
    desired="Yes" if status=="running" else ""
    if current!=desired:
     updates.append({"uid":uid,"system":sheet,"row":row_idx,"column":col,"previous":current,"proposed":desired,"status":status})
+ targets=[(c["system"],c["row"],c["column"]) for c in updates]
+ if len(targets)!=len(set(targets)):raise ValueError("Two station UIDs mapped to same Started cell")
  return {"checkedShipyards":checked,"changes":updates,"unresolved":unresolved,"statuses":dict(Counter(s.get("productionStatus","").strip().lower() for s in stations))}
 
 def column_name(index):
@@ -79,20 +87,23 @@ def main():
  systems=sorted({d["system"] for d in manifest["destinations"]})
  base=f"https://sheets.googleapis.com/v4/spreadsheets/{sid}/values"
  ranges=["'"+s.replace("'","''")+"'!A1:AZ200" for s in systems]
- url=base+":batchGet?"+urllib.parse.urlencode([("ranges",r) for r in ranges]+[("valueRenderOption","FORMULA")])
+ url=base+":batchGet?"+urllib.parse.urlencode([("ranges",r) for r in ranges]+[("valueRenderOption","FORMATTED_VALUE")])
  response=request(url,token)["valueRanges"]
  if len(response)!=len(systems):raise ValueError("Incomplete system read")
  rows={s:[[]]+v.get("values",[]) for s,v in zip(systems,response)}
  result=plan(manifest,stations,rows);result["status"]="prepared"
+ result["transitionCounts"]={"toYes":sum(c["proposed"]=="Yes" for c in result["changes"]),"toBlank":sum(c["proposed"]=="" for c in result["changes"])}
  def save():
   with open(sys.argv[4],"w") as f:json.dump(result,f,indent=2)
  save()
- if sys.argv[5]!="true":result["status"]="dry_run";save();print(json.dumps(result));return
  changes=result["changes"]
- result["transitionCounts"]={"toYes":sum(c["proposed"]=="Yes" for c in changes),"toBlank":sum(c["proposed"]=="" for c in changes)}
  if len(changes)>max(100,result["checkedShipyards"]//4):
   result["status"]="blocked_excessive_changes";save()
   raise ValueError("Production status change count exceeds safety threshold: "+str(len(changes)))
+ if sys.argv[5]!="true":
+  result["status"]="dry_run";save()
+  print(json.dumps({"status":"dry_run","checkedShipyards":result["checkedShipyards"],"transitionCounts":result["transitionCounts"]}))
+  return
  targets=["'"+c["system"].replace("'","''")+"'!"+column_name(c["column"])+str(c["row"]) for c in changes]
  try:
   if changes:
@@ -104,7 +115,13 @@ def main():
    request(base+":batchUpdate",token,{"valueInputOption":"RAW","data":[{"range":r,"values":[[c["proposed"]]]} for r,c in zip(targets,changes)]})
    response=request(base+":batchGet?"+urllib.parse.urlencode([("ranges",r) for r in targets]+[("valueRenderOption","FORMATTED_VALUE")]),token)["valueRanges"]
    if len(response)!=len(changes) or any(str(v.get("values",[[]])[0][0] if v.get("values") and v["values"][0] else "")!=c["proposed"] for v,c in zip(response,changes)):raise ValueError("Started readback mismatch")
-  result["status"]="verified";result["verifiedCells"]=len(changes)
+  # Reconcile ALL tracked shipyards on a fresh full workbook read, not only changed cells.
+  after=request(url,token)["valueRanges"]
+  if len(after)!=len(systems):raise ValueError("Incomplete post-write workbook audit")
+  verified=plan(manifest,stations,{system:[[]]+item.get("values",[]) for system,item in zip(systems,after)})
+  if verified["checkedShipyards"]!=result["checkedShipyards"] or verified["changes"]:
+   raise ValueError("Full Started reconciliation failed: "+str(verified["changes"][:10]))
+  result["status"]="verified";result["verifiedCells"]=len(changes);result["postAuditShipyards"]=verified["checkedShipyards"]
  except Exception as e:
   result["status"]="write_or_verification_failed";result["error"]=str(e);raise
  finally:save()
