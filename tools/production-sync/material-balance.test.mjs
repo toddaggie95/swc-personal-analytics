@@ -45,5 +45,7 @@ test('inventory in untracked systems is excluded while same-system station inven
  assert.equal(x.statistics.systems,2);
  assert.equal(x.systems.some(s=>s.system==='Untracked'),false);
  assert.equal(x.systems.find(s=>s.system==='Kashyyyk').materials.meleenium.have,130);
- assert.equal(x.totals.have.meleenium,160);
+ assert.equal(x.statistics.inventoryOnlySystems,1);
+ assert.equal(x.inventoryOnlySystems[0].system,'Untracked');
+ assert.equal(x.totals.have.meleenium,1000159);
 });
