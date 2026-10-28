@@ -11,6 +11,7 @@ on:
 permissions:
   contents: read
   id-token: write
+  issues: write
 
 concurrency:
   group: swc-overview-readonly
@@ -105,6 +106,29 @@ jobs:
       - name: Render human-readable production changes
         if: success()
         run: node tools/production-sync/write-production-change-summary.mjs "${{ runner.temp }}/production-change-report.json" "${{ runner.temp }}/production-change-summary.txt"
+      - name: Detect notification-worthy changes
+        id: production_changes
+        if: success()
+        run: |
+          python3 - <<'PY'
+          import json,os
+          with open(os.environ["RUNNER_TEMP"]+"/production-change-report.json") as f:
+              report=json.load(f)
+          changes=report.get("changes",[])
+          enabled=report.get("status")=="compared" and len(changes)>0
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
+              f.write("notify="+str(enabled).lower()+"\n")
+              f.write("count="+str(len(changes))+"\n")
+          print("Notification required:",enabled,"changes:",len(changes))
+          PY
+      - name: Publish GitHub notification issue on production changes
+        if: success() && steps.production_changes.outputs.notify == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHANGE_COUNT: ${{ steps.production_changes.outputs.count }}
+        run: |
+          gh issue create --title "SWC production: ${CHANGE_COUNT} station changes (run #${GITHUB_RUN_NUMBER})" --body-file "${RUNNER_TEMP}/production-change-summary.txt"
       - name: Upload read-only readiness report
         if: always()
         uses: actions/upload-artifact@v4
