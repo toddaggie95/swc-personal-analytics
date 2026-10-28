@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - feature/audited-production-destinations
+      - feature/production-overview-readiness
     paths:
       - 'tools/production-sync/**'
       - '.github/workflows/production-sync-tests.yml'

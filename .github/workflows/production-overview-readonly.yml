@@ -1,16 +1,24 @@
-name: SWC production overview readiness (read only)
+name: SWC production overview readiness and publish
 on:
+  workflow_run:
+    workflows: ['SWC production CSV dry run']
+    types: [completed]
   workflow_dispatch:
     inputs:
-      source_branch:
-        description: 'Readiness implementation branch (read-only execution)'
-        required: true
-        type: choice
-        options:
-          - feature/production-overview-readiness
-        default: feature/production-overview-readiness
+      accepted_batch_run_id:
+        description: 'Successful HAS workflow run ID containing a verified batch acceptance artifact (blank for preview only)'
+        type: string
+        required: false
+        default: ''
+  push:
+    branches:
+      - feature/production-overview-readiness
+    paths:
+      - 'tools/production-sync/**'
+      - '.github/workflows/production-overview-readonly.yml'
 
 permissions:
+  actions: read
   contents: read
   id-token: write
 
@@ -20,43 +28,46 @@ concurrency:
 
 jobs:
   overview:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout approved development branch
+      - name: Checkout audited development branch
         uses: actions/checkout@v4
-        with:
-          ref: feature/production-overview-readiness
-          persist-credentials: false
-      - name: Guard development-only execution
-        shell: bash
-        env:
-          REQUESTED_BRANCH: ${{ inputs.source_branch }}
-        run: |
-          test "$REQUESTED_BRANCH" = "feature/production-overview-readiness" || exit 1
-          test -f tools/production-sync/overview-cli.mjs || exit 1
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Authenticate Google Sheets and Drive (read-only scopes)
+      - name: Authenticate Google Sheets publisher and Drive exports
         id: google
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: 'projects/772242617730/locations/global/workloadIdentityPools/github-actions/providers/github'
           service_account: 'swc-production-sync@swc-analytics-512519.iam.gserviceaccount.com'
           token_format: access_token
-          access_token_scopes: https://www.googleapis.com/auth/drive.readonly,https://www.googleapis.com/auth/spreadsheets.readonly
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly,https://www.googleapis.com/auth/spreadsheets
+      - name: Reject unsuccessful upstream HAS runs before accessing exports
+        if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success'
+        run: |
+          echo "Upstream HAS workflow did not succeed; refusing downstream publication."
+          exit 1
       - name: Download latest four exports
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
           SWC_EXPORT_OUTPUT: ${{ runner.temp }}/swc-exports
         run: python3 tools/production-sync/download-drive-exports.py
+      - name: Verify accepted HAS batch provenance
+        id: accepted_batch
+        if: success() && (github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.accepted_batch_run_id != ''))
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCEPTED_RUN_ID: ${{ github.event.workflow_run.id || inputs.accepted_batch_run_id }}
+        run: bash tools/production-sync/verify-accepted-batch.sh "${{ runner.temp }}"
       - name: Validate readiness implementation
         run: |
           node --test tools/production-sync/*.test.mjs
-          python3 -m unittest discover -s tools/production-sync -p 'test_capture_overview_snapshot.py' -v
+          python3 -m unittest discover -s tools/production-sync -p 'test_*.py' -v
       - name: Capture live production assignments and ship bills (read only)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
@@ -75,7 +86,7 @@ jobs:
             --tff-materials "${{ runner.temp }}/swc-exports/tff-materials.csv" \
             --tjo-materials "${{ runner.temp }}/swc-exports/tjo-materials.csv" \
             --out "${{ runner.temp }}/overview-readiness.json"
-      - name: Independently compare live HAS and production orders (read only)
+      - name: Shadow audit against live HAS and production orders (read only)
         run: |
           node tools/production-sync/overview-shadow-audit.mjs \
             --snapshot "${{ runner.temp }}/overview-input.json" \
@@ -85,6 +96,46 @@ jobs:
             --tff-materials "${{ runner.temp }}/swc-exports/tff-materials.csv" \
             --tjo-materials "${{ runner.temp }}/swc-exports/tjo-materials.csv" \
             --out "${{ runner.temp }}/overview-shadow-audit.json"
+      - name: Prepare guarded dashboard publication preview (no writes)
+        run: |
+          python3 tools/production-sync/overview-publish-preview.py \
+            "${{ runner.temp }}/overview-readiness.json" \
+            "${{ runner.temp }}/overview-shadow-audit.json" \
+            "${{ runner.temp }}/overview-publish-preview.json"
+      - name: Publish faction-aware Production Overview (A3:L46 only)
+        if: success() && steps.accepted_batch.outputs.verified == 'true'
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          ENABLE_OVERVIEW_WRITES: 'true'
+        run: python3 tools/production-sync/publish-overview-factions.py "${{ runner.temp }}/overview-publish-preview.json"
+      - name: Restore prior successful production snapshot
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCEPTED_HISTORY_ONLY: 'true'
+        run: bash tools/production-sync/restore-production-snapshot.sh "${{ runner.temp }}"
+      - name: Generate production change snapshot (no notifications)
+        if: success()
+        run: |
+          prior=()
+          if [ -s "${{ runner.temp }}/previous-production-snapshot.json" ]; then
+            prior=(--previous "${{ runner.temp }}/previous-production-snapshot.json")
+          fi
+          node tools/production-sync/production-change-cli.mjs \
+            "${prior[@]}" \
+            --overview "${{ runner.temp }}/overview-readiness.json" \
+            --snapshot-out "${{ runner.temp }}/production-change-snapshot.json" \
+            --report-out "${{ runner.temp }}/production-change-report.json" \
+            --batch-id "${{ steps.accepted_batch.outputs.verified == 'true' && (github.event.workflow_run.id || inputs.accepted_batch_run_id) || format('preview-{0}-{1}', github.run_id, github.run_attempt) }}"
+      - name: Render human-readable production changes
+        if: success()
+        run: node tools/production-sync/write-production-change-summary.mjs "${{ runner.temp }}/production-change-report.json" "${{ runner.temp }}/production-change-summary.txt"
+      - name: Replace Production Changes tab after verified HAS import
+        if: success() && steps.accepted_batch.outputs.verified == 'true'
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          ACCEPTED_HAS_BATCH: 'true'
+        run: python3 tools/production-sync/publish-production-changes.py "${{ runner.temp }}/production-change-report.json"
       - name: Upload read-only readiness report
         if: always()
         uses: actions/upload-artifact@v4
@@ -92,7 +143,13 @@ jobs:
           name: swc-production-overview-readonly
           path: |
             ${{ runner.temp }}/overview-readiness.json
+            ${{ runner.temp }}/previous-production-snapshot.json
+            ${{ runner.temp }}/accepted-has-verification.json
+            ${{ runner.temp }}/production-change-snapshot.json
+            ${{ runner.temp }}/production-change-report.json
+            ${{ runner.temp }}/production-change-summary.txt
             ${{ runner.temp }}/overview-shadow-audit.json
+            ${{ runner.temp }}/overview-publish-preview.json
             ${{ runner.temp }}/swc-exports/export-manifest.json
           if-no-files-found: warn
-          retention-days: 30
+          retention-days: 90

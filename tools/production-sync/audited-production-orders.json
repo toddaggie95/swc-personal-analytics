@@ -1937,22 +1937,22 @@
       "destinationId": "Tholatin-hub-1-0",
       "system": "Tholatin",
       "x": 8,
-      "y": 10,
-      "ship": "TIE/in Interceptor",
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
       "row": 3
     },
     {
       "destinationId": "Tholatin-hub-1-0",
       "system": "Tholatin",
-      "x": 8,
-      "y": 11,
-      "ship": "TIE/in Interceptor",
+      "x": 9,
+      "y": 12,
+      "ship": "Alpha-class Xg-1 Star Wing",
       "row": 4
     },
     {
       "destinationId": "Tholatin-hub-1-0",
       "system": "Tholatin",
-      "x": 8,
+      "x": 10,
       "y": 12,
       "ship": "Alpha-class Xg-1 Star Wing",
       "row": 5
@@ -1960,23 +1960,23 @@
     {
       "destinationId": "Tholatin-hub-1-0",
       "system": "Tholatin",
-      "x": 9,
-      "y": 12,
+      "x": 8,
+      "y": 13,
       "ship": "Alpha-class Xg-1 Star Wing",
       "row": 6
     },
     {
       "destinationId": "Tholatin-hub-1-0",
       "system": "Tholatin",
-      "x": 10,
-      "y": 12,
+      "x": 9,
+      "y": 13,
       "ship": "Alpha-class Xg-1 Star Wing",
       "row": 7
     },
     {
       "destinationId": "Tholatin-hub-1-0",
       "system": "Tholatin",
-      "x": 8,
+      "x": 10,
       "y": 13,
       "ship": "Alpha-class Xg-1 Star Wing",
       "row": 8
@@ -1984,42 +1984,26 @@
     {
       "destinationId": "Tholatin-hub-1-0",
       "system": "Tholatin",
-      "x": 9,
-      "y": 13,
+      "x": 8,
+      "y": 14,
       "ship": "Alpha-class Xg-1 Star Wing",
       "row": 9
     },
     {
       "destinationId": "Tholatin-hub-1-0",
       "system": "Tholatin",
-      "x": 10,
-      "y": 13,
+      "x": 9,
+      "y": 14,
       "ship": "Alpha-class Xg-1 Star Wing",
       "row": 10
     },
     {
       "destinationId": "Tholatin-hub-1-0",
       "system": "Tholatin",
-      "x": 8,
-      "y": 14,
-      "ship": "Alpha-class Xg-1 Star Wing",
-      "row": 11
-    },
-    {
-      "destinationId": "Tholatin-hub-1-1",
-      "system": "Tholatin",
-      "x": 9,
-      "y": 14,
-      "ship": "Alpha-class Xg-1 Star Wing",
-      "row": 3
-    },
-    {
-      "destinationId": "Tholatin-hub-1-1",
-      "system": "Tholatin",
       "x": 10,
       "y": 14,
       "ship": "Alpha-class Xg-1 Star Wing",
-      "row": 4
+      "row": 11
     },
     {
       "destinationId": "Tholatin-hub-1-2",
@@ -7564,6 +7548,38 @@
       "y": 10,
       "ship": "TIE/in Interceptor",
       "row": 8
+    },
+    {
+      "destinationId": "Dalchon-hub-1-4",
+      "system": "Dalchon",
+      "x": 8,
+      "y": 14,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 3
+    },
+    {
+      "destinationId": "Dalchon-hub-1-4",
+      "system": "Dalchon",
+      "x": 9,
+      "y": 14,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 4
+    },
+    {
+      "destinationId": "Dalchon-hub-1-4",
+      "system": "Dalchon",
+      "x": 10,
+      "y": 14,
+      "ship": "Aurek-class Tactical Strikefighter",
+      "row": 5
+    },
+    {
+      "destinationId": "Tholatin-hub-69-7",
+      "system": "Tholatin",
+      "x": 10,
+      "y": 10,
+      "ship": "Alpha-class Xg-1 Star Wing",
+      "row": 77
     }
   ]
 }
