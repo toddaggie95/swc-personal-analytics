@@ -109,6 +109,12 @@ jobs:
             "${{ runner.temp }}/overview-readiness.json" \
             "${{ runner.temp }}/overview-shadow-audit.json" \
             "${{ runner.temp }}/overview-publish-preview.json"
+      - name: Publish faction-aware Production Overview (A3:L46 only)
+        if: success() && steps.accepted_batch.outputs.verified == 'true'
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          ENABLE_OVERVIEW_WRITES: 'true'
+        run: python3 tools/production-sync/publish-overview-factions.py "${{ runner.temp }}/overview-publish-preview.json"
       - name: Publish material matrix beside dashboard (N:AI)
         if: success() && steps.accepted_batch.outputs.verified == 'true'
         env:
@@ -116,12 +122,6 @@ jobs:
           ACCEPTED_HAS_BATCH: 'true'
           ENABLE_MATERIAL_BALANCE_WRITES: 'true'
         run: python3 tools/production-sync/publish-material-matrix.py "${{ runner.temp }}/overview-readiness.json"
-      - name: Publish faction-aware Production Overview (A3:L46 only)
-        if: success() && steps.accepted_batch.outputs.verified == 'true'
-        env:
-          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
-          ENABLE_OVERVIEW_WRITES: 'true'
-        run: python3 tools/production-sync/publish-overview-factions.py "${{ runner.temp }}/overview-publish-preview.json"
       - name: Restore prior successful production snapshot
         if: success()
         env:
