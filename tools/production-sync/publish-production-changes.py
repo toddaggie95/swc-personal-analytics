@@ -26,7 +26,12 @@ def publish(report):
     sheets=call("?fields=sheets(properties(sheetId,title))")["sheets"]
     matches=[s["properties"]["sheetId"] for s in sheets if s["properties"]["title"]=="Production Changes"]
     if matches:sheet=matches[0]
-    else:sheet=call(":batchUpdate",{"requests":[{"addSheet":{"properties":{"title":"Production Changes"}}}]})["replies"][0]["addSheet"]["properties"]["sheetId"]
+    else:
+        overview=next((s["properties"] for s in sheets if s["properties"]["title"]=="Production Overview"),None)
+        properties={"title":"Production Changes"}
+        if overview is not None:
+            properties["index"]=overview.get("index",0)+1
+        sheet=call(":batchUpdate",{"requests":[{"addSheet":{"properties":properties}}]})["replies"][0]["addSheet"]["properties"]["sheetId"]
     requests=[
       {"updateCells":{"range":{"sheetId":sheet},"fields":"userEnteredValue"}},
       {"updateCells":{"start":{"sheetId":sheet,"rowIndex":0,"columnIndex":0},"rows":[{"values":[{"userEnteredValue":{"numberValue":v} if isinstance(v,(int,float)) else {"stringValue":str(v)}} for v in row]} for row in rows],"fields":"userEnteredValue"}},
