@@ -1,5 +1,8 @@
 name: SWC production overview readiness and publish
 on:
+  workflow_run:
+    workflows: ['SWC production CSV dry run']
+    types: [completed]
   workflow_dispatch:
     inputs:
       accepted_batch_run_id:
@@ -51,10 +54,10 @@ jobs:
         run: python3 tools/production-sync/download-drive-exports.py
       - name: Verify accepted HAS batch provenance
         id: accepted_batch
-        if: success() && github.event_name == 'workflow_dispatch' && inputs.accepted_batch_run_id != ''
+        if: success() && (github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.accepted_batch_run_id != ''))
         env:
           GH_TOKEN: ${{ github.token }}
-          ACCEPTED_RUN_ID: ${{ inputs.accepted_batch_run_id }}
+          ACCEPTED_RUN_ID: ${{ github.event.workflow_run.id || inputs.accepted_batch_run_id }}
         run: bash tools/production-sync/verify-accepted-batch.sh "${{ runner.temp }}"
       - name: Validate readiness implementation
         run: |
@@ -134,7 +137,7 @@ jobs:
           console.log(JSON.stringify(result));
           JS
       - name: Publish GitHub notification issue on production changes
-        if: success() && github.event_name == 'workflow_dispatch' && steps.accepted_batch.outputs.verified == 'true' && steps.production_changes.outputs.notify == 'true'
+        if: success() && (github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch') && steps.accepted_batch.outputs.verified == 'true' && steps.production_changes.outputs.notify == 'true'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
