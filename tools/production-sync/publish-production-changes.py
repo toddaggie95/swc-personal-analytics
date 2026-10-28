@@ -22,23 +22,52 @@ def verify_readback(report, changes):
     with urllib.request.urlopen(req,timeout=90) as response:
         actual=json.load(response).get("values",[])
     expected=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],
-              ["Current accepted batch",value(report.get("currentBatch"))],["Changes detected",str(len(changes))]]
+              ["Current accepted batch",value(report.get("currentBatch"))],["Stations changed",str(len(changes))]]
     # Sheets omits trailing empty cells, especially for the first baseline.
     normalize=lambda rows: [row + [""]*(2-len(row)) for row in rows]
     if normalize(actual)!=normalize(expected):
         raise RuntimeError("Production Changes readback failed: "+repr(actual))
 
+def group_station_notices(changes):
+    """One presentation row per UID; raw field-level events remain untouched."""
+    by_uid={}
+    for change in changes:
+        uid=value(change.get("uid"))
+        if not uid:raise ValueError("Missing change station UID")
+        row=by_uid.setdefault(uid,{"uid":uid,"system":"","fields":{},"types":[]})
+        system=change.get("system") or (change.get("after") or {}).get("system") if isinstance(change.get("after"),dict) else change.get("system")
+        system=system or (change.get("before") or {}).get("system") if isinstance(change.get("before"),dict) else system
+        if system and row["system"] and system!=row["system"]:raise ValueError("Conflicting station systems "+uid)
+        row["system"]=system or row["system"]
+        field=change.get("field")
+        if field:
+            if field in row["fields"]:raise ValueError("Duplicate change field "+uid+" "+field)
+            row["fields"][field]={"before":change.get("before"),"after":change.get("after")}
+        row["types"].append(change.get("type"))
+    notices=[]
+    for row in by_uid.values():
+        fields=row["fields"]
+        started=fields.get("started")
+        if started and started["before"] is False and started["after"] is True:notice="Production Started"
+        elif started and started["before"] is True and started["after"] is False:notice="Production Stopped"
+        elif "station_added" in row["types"]:notice="Station Added"
+        elif "station_removed" in row["types"]:notice="Station Removed"
+        elif "ship" in fields or "quantity" in fields:notice="Assignment Changed"
+        elif "readiness" in fields:notice="Readiness Changed"
+        else:notice="Station Updated"
+        details="; ".join(k+": "+value(v["before"])+" → "+value(v["after"]) for k,v in fields.items())
+        if not details:details="; ".join(row["types"])
+        notices.append([value(row["system"]),row["uid"],notice,details])
+    return sorted(notices,key=lambda r:(r[0],r[1]))
+
 def publish(report):
     if report.get("status") not in ("compared","baseline_created") or not isinstance(report.get("changes"),list):raise ValueError("Invalid report")
     changes=report["changes"]
-    rows=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],["Current accepted batch",value(report.get("currentBatch"))],["Changes detected",len(changes)],["System","Station UID","Change Type","Field","Previous","Current"]]
+    notices=group_station_notices(changes)
+    rows=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],["Current accepted batch",value(report.get("currentBatch"))],["Stations changed",len(notices)],["System","Station UID","Notice","Details"]]
     if report["status"]=="baseline_created":rows.append(["Baseline established","No previous accepted snapshot"])
     elif not changes:rows.append(["No production changes","No differences since previous accepted import"])
-    else:
-        for c in changes:
-            before,after=c.get("before"),c.get("after")
-            system=c.get("system") or (after.get("system") if isinstance(after,dict) else None) or (before.get("system") if isinstance(before,dict) else None)
-            rows.append([value(system),value(c.get("uid")),value(c.get("type")),value(c.get("field")),value(before),value(after)])
+    else:rows.extend(notices)
     sheets=call("?fields=sheets(properties(sheetId,title))")["sheets"]
     matches=[s["properties"]["sheetId"] for s in sheets if s["properties"]["title"]=="Production Changes"]
     if matches:sheet=matches[0]
@@ -56,8 +85,8 @@ def publish(report):
       {"updateDimensionProperties":{"range":{"sheetId":sheet,"dimension":"COLUMNS","startIndex":0,"endIndex":6},"properties":{"pixelSize":175},"fields":"pixelSize"}}
     ]
     call(":batchUpdate",{"requests":requests})
-    verify_readback(report, changes)
-    print("Published and verified Production Changes:",len(changes),"changes")
+    verify_readback(report, notices)
+    print("Published and verified Production Changes:",len(notices),"station notices from",len(changes),"field changes")
 if __name__=="__main__":
     if len(sys.argv)!=2:raise SystemExit("Usage: publish-production-changes.py report.json")
     if os.getenv("ACCEPTED_HAS_BATCH")!="true":raise SystemExit("Refusing unverified HAS publication")
