@@ -38,3 +38,12 @@ test('median thresholds deterministic and bad data fail closed',()=>{
  assert.throws(()=>calculateMaterialBalance({pools:[...pools,pools[0]],orders,materials:['meleenium','quantum']}),/duplicate inventory pool/);
  assert.throws(()=>calculateMaterialBalance({pools,orders:[...orders,orders[0]],materials:['meleenium','quantum']}),/Duplicate\/missing production order/);
 });
+
+test('inventory in untracked systems is excluded while same-system station inventory is retained',()=>{
+ const expanded=[...pools,{id:'X',system:'Untracked',materials:{meleenium:999999}},{id:'D',system:'Kashyyyk',materials:{meleenium:10}}];
+ const x=calculateMaterialBalance({pools:expanded,orders,materials:['meleenium','quantum'],excessThresholds:{meleenium:1,quantum:1}});
+ assert.equal(x.statistics.systems,2);
+ assert.equal(x.systems.some(s=>s.system==='Untracked'),false);
+ assert.equal(x.systems.find(s=>s.system==='Kashyyyk').materials.meleenium.have,130);
+ assert.equal(x.totals.have.meleenium,160);
+});
