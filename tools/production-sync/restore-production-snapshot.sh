@@ -17,7 +17,22 @@ while IFS=$'\t' read -r previous event; do
     echo "Artifact unavailable for $previous; checking earlier run."
     continue
   fi
-  if [[ "${ACCEPTED_HISTORY_ONLY:-false}" == "true" && ! -s "$history/accepted-has-verification.json" ]]; then continue; fi
+  if [[ "${ACCEPTED_HISTORY_ONLY:-false}" == "true" ]]; then
+    if [[ ! -s "$history/accepted-has-verification.json" ]]; then continue; fi
+    if ! python3 - "$history/accepted-has-verification.json" <<'PY'
+import json,sys
+try:
+    with open(sys.argv[1]) as f: marker=json.load(f)
+    assert marker.get("verified") is True
+    assert str(marker.get("hasRunId","")).isdigit()
+except (OSError,ValueError,AssertionError):
+    raise SystemExit(1)
+PY
+    then
+      echo "Invalid accepted HAS provenance in $previous; skipping."
+      continue
+    fi
+  fi
   if [[ ! -s "$history/production-change-snapshot.json" ]]; then
     echo "No station snapshot in $previous; checking earlier run."
     continue
