@@ -22,5 +22,6 @@ with open(os.path.join(folder,'export-manifest.json')) as f: original=json.load(
 with open(os.path.join(os.environ['RUNNER_TEMP'],'swc-exports','export-manifest.json')) as f: current=json.load(f)
 def identities(manifest):return {(x['id'],x['sha256']) for x in manifest['files']}
 if len(identities(original))!=4 or identities(original)!=identities(current):raise SystemExit('Current exports do not match accepted HAS batch')
+if {x['id'] for x in original['files']}!=set(acceptance['acceptedFiles']):raise SystemExit('Acceptance record does not match HAS manifest')
 PY
 echo "verified=true" >> "$GITHUB_OUTPUT"
