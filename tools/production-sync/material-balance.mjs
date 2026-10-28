@@ -5,10 +5,12 @@ const safe=(n,label)=>{if(!Number.isSafeInteger(n)||n<0)throw Error('Invalid '+l
 const median=a=>{const b=[...a].sort((x,y)=>x-y);return b.length?b[Math.floor((b.length-1)/2)]:0;};
 export function calculateMaterialBalance({pools,orders,materials=MATERIALS,excessThresholds=null}) {
  const known=new Set(materials),bySystem=new Map(),seen=new Set(),poolIds=new Set();
+ const trackedSystems=new Set(orders.map(o=>o.system));
  const init=system=>{if(!bySystem.has(system))bySystem.set(system,{system,have:Object.fromEntries(materials.map(m=>[m,0])),required:Object.fromEntries(materials.map(m=>[m,0]))});return bySystem.get(system)};
  for(const pool of pools){
   if(!pool.id||!pool.system||poolIds.has(pool.id))throw Error('Invalid/duplicate inventory pool');
   poolIds.add(pool.id);
+  if(!trackedSystems.has(pool.system))continue;
   const rec=init(pool.system);
   for(const [material,quantity] of Object.entries(pool.materials)){
    if(!known.has(material))throw Error('Unknown inventory material '+material);
