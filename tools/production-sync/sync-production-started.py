@@ -23,6 +23,7 @@ def plan(manifest,stations,rows_by_system):
   sheet=dest["system"];rows=rows_by_system[sheet]
   missing=[uid for uid in dest["memberStationUids"] if uid not in by_uid]
   if missing:raise ValueError("Tracked stations missing from exports: "+str(missing[:10]))
+  positions={}
   if dest["kind"]=="hub":
    col=dest["target"]["hasColumn"]-2
    header=dest["target"]["materialStartRow"]-11
@@ -42,7 +43,7 @@ def plan(manifest,stations,rows_by_system):
    if "shipyard" not in station.get("type_name","").lower():continue
    if uid in seen:raise ValueError("Duplicate tracked shipyard "+uid)
    seen.add(uid)
-   if location is None:raise ValueError("Shipyard missing from hub "+uid)
+   if location is None:raise ValueError("Shipyard missing from hub "+uid+" at "+str(station.get("sysX"))+","+str(station.get("sysY"))+"; header="+str(header)+" col="+str(col)+"; known="+str(sorted(positions)))
    row_idx,col=location;row=rows[row_idx] if row_idx<len(rows) else []
    coordcol=0 if dest["kind"]=="oneoff-group" else col-3
    xy=str(row[coordcol] if coordcol<len(row) else "").replace("(","").replace(")","").replace(" ","")
