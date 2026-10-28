@@ -10,7 +10,6 @@ export function calculateMaterialBalance({pools,orders,materials=MATERIALS,exces
  for(const pool of pools){
   if(!pool.id||!pool.system||poolIds.has(pool.id))throw Error('Invalid/duplicate inventory pool');
   poolIds.add(pool.id);
-  if(!trackedSystems.has(pool.system))continue;
   const rec=init(pool.system);
   for(const [material,quantity] of Object.entries(pool.materials)){
    if(!known.has(material))throw Error('Unknown inventory material '+material);
@@ -31,6 +30,8 @@ export function calculateMaterialBalance({pools,orders,materials=MATERIALS,exces
   }
  }
  const systems=[...bySystem.values()].sort((a,b)=>a.system.localeCompare(b.system));
+ const productionSystems=systems.filter(s=>trackedSystems.has(s.system));
+ const inventoryOnlySystems=systems.filter(s=>!trackedSystems.has(s.system));
  const thresholds=Object.fromEntries(materials.map(material=>{
   if(excessThresholds && material in excessThresholds)return [material,safe(excessThresholds[material],'excess threshold')];
   // Provisional: median of positive SYSTEM holdings, minimum one unit.
@@ -59,5 +60,5 @@ export function calculateMaterialBalance({pools,orders,materials=MATERIALS,exces
  // Both proposed layouts are projections of the SAME canonical records.
  const horizontal=detail.map(s=>({system:s.system,missing:Object.fromEntries(materials.map(m=>[m,s.materials[m].missing])),excess:Object.fromEntries(materials.map(m=>[m,s.materials[m].showExcess?s.materials[m].excess:null]))}));
  const belowTable=visible;
- return {schemaVersion:1,materials,thresholds,systems:detail,totals,visible,horizontal,belowTable,statistics:{systems:systems.length,missingCells:visible.filter(x=>x.kind==='Missing').length,excessCells:visible.filter(x=>x.kind==='Excess').length,thresholdMethod:excessThresholds?'explicit':'median_positive_system_holdings_provisional'}};
+ return {schemaVersion:1,materials,thresholds,systems:detail.filter(s=>trackedSystems.has(s.system)),inventoryOnlySystems:detail.filter(s=>!trackedSystems.has(s.system)),totals,visible,horizontal,belowTable,statistics:{systems:productionSystems.length,inventoryOnlySystems:inventoryOnlySystems.length,missingCells:visible.filter(x=>x.kind==='Missing').length,excessCells:visible.filter(x=>x.kind==='Excess').length,thresholdMethod:excessThresholds?'explicit':'median_positive_system_holdings_provisional'}};
 }
