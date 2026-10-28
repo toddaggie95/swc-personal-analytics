@@ -144,7 +144,6 @@ jobs:
           JS
       - name: Publish GitHub notification issue on production changes
         if: success() && (github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch') && steps.accepted_batch.outputs.verified == 'true' && steps.production_changes.outputs.notify == 'true'
-        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
           CHANGE_SUBJECT: ${{ steps.production_changes.outputs.subject }}
