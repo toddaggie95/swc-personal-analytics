@@ -6,8 +6,9 @@ current="${GITHUB_RUN_ID:?}"
 repo="${GITHUB_REPOSITORY:?}"
 history="$output/previous-overview-artifact"
 mkdir -p "$history"
-runs=$(gh api "repos/$repo/actions/runs?branch=feature%2Fproduction-overview-readiness&status=success&per_page=100" --jq '.workflow_runs[] | select(.name == "SWC production overview readiness and publish") | .id')
-while read -r previous; do
+runs=$(gh api "repos/$repo/actions/runs?branch=${GITHUB_REF_NAME:?}&status=success&per_page=100" --jq '.workflow_runs[] | select(.name == "SWC production overview readiness and publish") | [.id, .event] | @tsv')
+while IFS=$'\t' read -r previous event; do
+  if [[ "${ACCEPTED_HISTORY_ONLY:-false}" == "true" && "$event" != "workflow_run" && "$event" != "workflow_dispatch" ]]; then continue; fi
   [[ -n "$previous" ]] || continue
   [[ "$previous" -lt "$current" ]] || continue
   echo "Checking previous successful overview run: $previous"
@@ -16,6 +17,7 @@ while read -r previous; do
     echo "Artifact unavailable for $previous; checking earlier run."
     continue
   fi
+  if [[ "${ACCEPTED_HISTORY_ONLY:-false}" == "true" && ! -s "$history/accepted-has-verification.json" ]]; then continue; fi
   if [[ ! -s "$history/production-change-snapshot.json" ]]; then
     echo "No station snapshot in $previous; checking earlier run."
     continue
