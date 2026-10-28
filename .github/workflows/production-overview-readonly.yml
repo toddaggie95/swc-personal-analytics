@@ -110,25 +110,23 @@ jobs:
         id: production_changes
         if: success()
         run: |
-          python3 - <<'PY'
-          import json,os
-          with open(os.environ["RUNNER_TEMP"]+"/production-change-report.json") as f:
-              report=json.load(f)
-          changes=report.get("changes",[])
-          enabled=report.get("status")=="compared" and len(changes)>0
-          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
-              f.write("notify="+str(enabled).lower()+"\n")
-              f.write("count="+str(len(changes))+"\n")
-          print("Notification required:",enabled,"changes:",len(changes))
-          PY
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import {productionNotification} from './tools/production-sync/production-change-notification.mjs';
+          const report=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/production-change-report.json','utf8'));
+          const result=productionNotification(report);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,'notify='+result.notify+'\n');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,'subject='+((result.subject??'').replaceAll('\n',' '))+'\n');
+          console.log(JSON.stringify(result));
+          JS
       - name: Publish GitHub notification issue on production changes
         if: success() && steps.production_changes.outputs.notify == 'true'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-          CHANGE_COUNT: ${{ steps.production_changes.outputs.count }}
+          CHANGE_SUBJECT: ${{ steps.production_changes.outputs.subject }}
         run: |
-          gh issue create --title "SWC production: ${CHANGE_COUNT} station changes (run #${GITHUB_RUN_NUMBER})" --body-file "${RUNNER_TEMP}/production-change-summary.txt"
+          gh issue create --title "$CHANGE_SUBJECT" --body-file "${RUNNER_TEMP}/production-change-summary.txt"
       - name: Upload read-only readiness report
         if: always()
         uses: actions/upload-artifact@v4
