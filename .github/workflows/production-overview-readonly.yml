@@ -49,6 +49,13 @@ jobs:
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
           SWC_EXPORT_OUTPUT: ${{ runner.temp }}/swc-exports
         run: python3 tools/production-sync/download-drive-exports.py
+      - name: Verify accepted HAS batch provenance
+        id: accepted_batch
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.accepted_batch_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCEPTED_RUN_ID: ${{ inputs.accepted_batch_run_id }}
+        run: bash tools/production-sync/verify-accepted-batch.sh "${{ runner.temp }}"
       - name: Validate readiness implementation
         run: |
           node --test tools/production-sync/*.test.mjs
@@ -113,13 +120,6 @@ jobs:
       - name: Render human-readable production changes
         if: success()
         run: node tools/production-sync/write-production-change-summary.mjs "${{ runner.temp }}/production-change-report.json" "${{ runner.temp }}/production-change-summary.txt"
-      - name: Verify accepted HAS batch provenance
-        id: accepted_batch
-        if: success() && github.event_name == 'workflow_dispatch' && inputs.accepted_batch_run_id != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ACCEPTED_RUN_ID: ${{ inputs.accepted_batch_run_id }}
-        run: bash tools/production-sync/verify-accepted-batch.sh "${{ runner.temp }}"
       - name: Detect notification-worthy changes
         id: production_changes
         if: success()
