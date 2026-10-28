@@ -12,7 +12,7 @@ class StartedSyncTests(unittest.TestCase):
   manifest={"destinations":[{"id":"hub","kind":"hub","system":"Kashyyyk","center":{"x":5,"y":17},"target":{"hasColumn":10,"materialStartRow":47},"memberStationUids":["5:1","5:2","5:3"]}]}
   stations=[{"uid":"5:1","system":"Kashyyyk","sysX":"4","sysY":"16","type_name":"Shipyard I","productionStatus":"running"},{"uid":"5:2","system":"Kashyyyk","sysX":"5","sysY":"16","type_name":"Shipyard I","productionStatus":"running"},{"uid":"5:3","system":"Kashyyyk","sysX":"6","sysY":"16","type_name":"Shipyard I","productionStatus":"running"}]
   rows=[[] for _ in range(48)]
-  rows[35]=[""]*9;rows[35][8]="Hub (5,17)"
+  rows[36]=[""]*9;rows[36][8]="Hub (5,17)"
   for i,xy in enumerate(["4,16","5,16","6,16"],37):
    rows[i]=[""]*12;rows[i][8]=xy
   rows[39][11]="Yes"
@@ -28,7 +28,7 @@ class StartedSyncTests(unittest.TestCase):
   manifest={"destinations":[{"id":"hub","kind":"hub","system":"Kashyyyk","center":{"x":5,"y":17},"target":{"hasColumn":10,"materialStartRow":47},"memberStationUids":["5:1"]}]}
   station={"uid":"5:1","system":"Kashyyyk","sysX":"4","sysY":"16","type_name":"Shipyard I","productionStatus":""}
   rows=[[] for _ in range(48)]
-  rows[35]=[""]*9;rows[35][8]="Hub (5,17)"
+  rows[36]=[""]*9;rows[36][8]="Hub (5,17)"
   rows[37]=[""]*12;rows[37][8]="4,16";rows[37][11]="Yes"
   result=sync.plan(manifest,[station],{"Kashyyyk":rows})
   self.assertEqual(result["changes"][0]["proposed"],"")
