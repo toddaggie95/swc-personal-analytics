@@ -80,7 +80,7 @@ def main():
  systems=sorted({d["system"] for d in manifest["destinations"]})
  base=f"https://sheets.googleapis.com/v4/spreadsheets/{sid}/values"
  ranges=["'"+s.replace("'","''")+"'!A1:AZ200" for s in systems]
- url=base+":batchGet?"+urllib.parse.urlencode([("ranges",r) for r in ranges]+[("valueRenderOption","FORMULA")])
+ url=base+":batchGet?"+urllib.parse.urlencode([("ranges",r) for r in ranges]+[("valueRenderOption","FORMATTED_VALUE")])
  response=request(url,token)["valueRanges"]
  if len(response)!=len(systems):raise ValueError("Incomplete system read")
  rows={s:[[]]+v.get("values",[]) for s,v in zip(systems,response)}
