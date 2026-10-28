@@ -157,10 +157,7 @@ def publish(preview,token):
         "right":clear_border,"innerHorizontal":clear_border,"innerVertical":clear_border}},
       {"updateBorders":{"range":{"sheetId":SHEET,"startRowIndex":45,"endRowIndex":46,
         "startColumnIndex":0,"endColumnIndex":12},
-        "bottom":{"style":"SOLID_MEDIUM","color":color("#1F2933")}}},
-      {"repeatCell":{"range":{"sheetId":SHEET,"startRowIndex":0,"endRowIndex":100,
-        "startColumnIndex":12,"endColumnIndex":16},"cell":{},
-        "fields":"userEnteredValue,userEnteredFormat,note,dataValidation"}}
+        "bottom":{"style":"SOLID_MEDIUM","color":color("#1F2933")}}}
     ])
     # Replace the legacy A5:N25 filter (its green outline and ghost filter icons)
     # with the actual dashboard A5:L46 range.

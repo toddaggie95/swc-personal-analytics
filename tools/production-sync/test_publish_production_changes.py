@@ -47,6 +47,40 @@ class ProductionChangesPublisherTests(unittest.TestCase):
         rows = calls[-1][1]["requests"][1]["updateCells"]["rows"]
         self.assertEqual(rows[5]["values"][0]["userEnteredValue"]["stringValue"], "No production changes")
 
+    def test_three_fields_publish_one_station_notice(self):
+        changes = [
+            {"uid": "5:1", "system": "Kashyyyk", "type": "production_activity_changed", "field": "started", "before": False, "after": True},
+            {"uid": "5:1", "system": "Kashyyyk", "type": "status_changed", "field": "status", "before": "idle", "after": "running"},
+            {"uid": "5:1", "system": "Kashyyyk", "type": "readiness_changed", "field": "readiness", "before": "blocked", "after": "building"},
+            {"uid": "5:2", "system": "Kashyyyk", "type": "readiness_changed", "field": "readiness", "before": "blocked", "after": "transfer"},
+        ]
+        notices = publisher.group_station_notices(changes)
+        self.assertEqual(len(notices), 2)
+        self.assertEqual(notices[0][:3], ["Kashyyyk", "5:1", "Production Started"])
+        self.assertIn("started: No → Yes", notices[0][3])
+        self.assertIn("readiness: blocked → building", notices[0][3])
+        self.assertEqual(notices[1][2], "Readiness Changed")
+
+    def test_readback_counts_stations_not_fields(self):
+        calls = []
+        def fake_api(path, data=None):
+            calls.append((path, data))
+            if path.startswith("?"):
+                return {"sheets": [{"properties": {"title": "Production Changes", "sheetId": 55}}]}
+            return {"replies": []}
+        report = {"status": "compared", "changes": [
+            {"uid": "5:1", "system": "Kashyyyk", "type": "production_activity_changed", "field": "started", "before": False, "after": True},
+            {"uid": "5:1", "system": "Kashyyyk", "type": "readiness_changed", "field": "readiness", "before": "blocked", "after": "building"},
+        ]}
+        with patch.object(publisher, "call", side_effect=fake_api), patch.object(publisher, "verify_readback") as verify:
+            publisher.publish(report)
+        verify.assert_called_once()
+        self.assertEqual(len(verify.call_args.args[1]), 1)
+        rows = calls[-1][1]["requests"][1]["updateCells"]["rows"]
+        self.assertEqual(rows[3]["values"][0]["userEnteredValue"]["stringValue"], "Stations changed")
+        self.assertEqual(rows[3]["values"][1]["userEnteredValue"]["numberValue"], 1)
+        self.assertEqual(len(rows), 6)
+
     def test_new_tab_created_once(self):
         calls = []
         def fake_api(path, data=None):

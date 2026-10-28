@@ -17,3 +17,38 @@ export function compareProductionSnapshots(previous,current){
  }
  return {previousBatch:previous.batchId??null,currentBatch:current.batchId??null,previousCount:before.size,currentCount:after.size,changes,summary:Object.fromEntries([...new Set(changes.map(c=>c.type))].sort().map(type=>[type,changes.filter(c=>c.type===type).length]))};
 }
+
+/**
+ * Presentation projection: exactly one notice per station UID, with every
+ * underlying field change preserved. Raw events remain authoritative for
+ * notification counts and machine-readable reports.
+ */
+export function groupProductionChangesByStation(report){
+ if(!Array.isArray(report?.changes))throw Error('Change report requires changes array');
+ const grouped=new Map();
+ for(const change of report.changes){
+  const uid=String(change.uid??'').trim();
+  if(!uid)throw Error('Change missing station UID');
+  let record=grouped.get(uid);
+  if(!record){record={uid,system:change.system??change.after?.system??change.before?.system??'',changes:[],fields:{}};grouped.set(uid,record);}
+  if(change.system && record.system && change.system!==record.system)throw Error('Conflicting station systems '+uid);
+  if(!record.system&&change.system)record.system=change.system;
+  record.changes.push(change);
+  if(change.field){
+   if(record.fields[change.field])throw Error('Duplicate station field change '+uid+' '+change.field);
+   record.fields[change.field]={before:change.before,after:change.after};
+  }
+ }
+ const classify=record=>{
+  const start=record.fields.started;
+  if(start?.before===false&&start?.after===true)return 'Production Started';
+  if(start?.before===true&&start?.after===false)return 'Production Stopped';
+  if(record.changes.some(c=>c.type==='station_added'))return 'Station Added';
+  if(record.changes.some(c=>c.type==='station_removed'))return 'Station Removed';
+  if(record.fields.ship||record.fields.quantity)return 'Assignment Changed';
+  if(record.fields.readiness)return 'Readiness Changed';
+  return 'Station Updated';
+ };
+ return [...grouped.values()].map(r=>({...r,notice:classify(r),changedFields:r.changes.map(c=>c.field??c.type)}))
+  .sort((a,b)=>a.system.localeCompare(b.system)||a.uid.localeCompare(b.uid));
+}
