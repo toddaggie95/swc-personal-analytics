@@ -18,7 +18,7 @@ print('Acceptance report:',json.dumps(acceptance)[:1200])
 print('HAS write report:',json.dumps(write)[:1200])
 if acceptance.get('status')!='accepted' or write.get('status')!='verified':raise SystemExit('Batch not accepted and HAS not verified')
 if len(acceptance.get('acceptedFiles',[]))!=4:raise SystemExit('Accepted export file count is not four')
-with open(os.path.join(folder,'swc-exports','export-manifest.json')) as f: original=json.load(f)
+with open(os.path.join(folder,'export-manifest.json')) as f: original=json.load(f)
 with open(os.path.join(os.environ['RUNNER_TEMP'],'swc-exports','export-manifest.json')) as f: current=json.load(f)
 def identities(manifest):return {(x['id'],x['sha256']) for x in manifest['files']}
 if len(identities(original))!=4 or identities(original)!=identities(current):raise SystemExit('Current exports do not match accepted HAS batch')
