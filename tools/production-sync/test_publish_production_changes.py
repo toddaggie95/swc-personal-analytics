@@ -26,7 +26,7 @@ class ProductionChangesPublisherTests(unittest.TestCase):
         report = {"status": "compared", "previousBatch": "old", "currentBatch": "new",
                   "changes": [{"uid": "123", "system": "Kashyyyk", "type": "readiness_changed",
                                "field": "readiness", "before": "blocked", "after": "transfer"}]}
-        with patch.object(publisher, "call", side_effect=fake_api):
+        with patch.object(publisher, "call", side_effect=fake_api), patch.object(publisher, "verify_readback"):
             publisher.publish(report)
         requests = calls[-1][1]["requests"]
         self.assertEqual(requests[0]["updateCells"]["range"]["sheetId"], 55)
@@ -42,7 +42,7 @@ class ProductionChangesPublisherTests(unittest.TestCase):
             if path.startswith("?"):
                 return {"sheets": [{"properties": {"title": "Production Changes", "sheetId": 55}}]}
             return {"replies": []}
-        with patch.object(publisher, "call", side_effect=fake_api):
+        with patch.object(publisher, "call", side_effect=fake_api), patch.object(publisher, "verify_readback"):
             publisher.publish({"status": "compared", "changes": []})
         rows = calls[-1][1]["requests"][1]["updateCells"]["rows"]
         self.assertEqual(rows[5]["values"][0]["userEnteredValue"]["stringValue"], "No production changes")
@@ -55,7 +55,7 @@ class ProductionChangesPublisherTests(unittest.TestCase):
             if "addSheet" in data["requests"][0]:
                 return {"replies": [{"addSheet": {"properties": {"sheetId": 77}}}]}
             return {"replies": []}
-        with patch.object(publisher, "call", side_effect=fake_api):
+        with patch.object(publisher, "call", side_effect=fake_api), patch.object(publisher, "verify_readback"):
             publisher.publish({"status": "baseline_created", "changes": []})
         self.assertEqual(calls[-1][1]["requests"][0]["updateCells"]["range"]["sheetId"], 77)
         self.assertEqual(calls[1][1]["requests"][0]["addSheet"]["properties"]["index"], 4)
