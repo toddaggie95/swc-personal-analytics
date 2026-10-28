@@ -57,7 +57,8 @@ class ProductionChangesPublisherTests(unittest.TestCase):
             return {"replies": []}
         with patch.object(publisher, "call", side_effect=fake_api):
             publisher.publish({"status": "baseline_created", "changes": []})
-        self.assertEqual(calls[-1][1]["requests"][0]["updateCells"]["range"]["sheetId"], 77)\n        self.assertEqual(calls[1][1]["requests"][0]["addSheet"]["properties"]["index"], 4)
+        self.assertEqual(calls[-1][1]["requests"][0]["updateCells"]["range"]["sheetId"], 77)
+        self.assertEqual(calls[1][1]["requests"][0]["addSheet"]["properties"]["index"], 4)
 
 if __name__ == "__main__":
     unittest.main()
