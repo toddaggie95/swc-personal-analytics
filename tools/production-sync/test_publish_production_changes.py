@@ -51,13 +51,13 @@ class ProductionChangesPublisherTests(unittest.TestCase):
         calls = []
         def fake_api(path, data=None):
             calls.append((path, data))
-            if path.startswith("?"): return {"sheets": []}
+            if path.startswith("?"): return {"sheets": [{"properties": {"title": "Production Overview", "sheetId": 99, "index": 3}}]}
             if "addSheet" in data["requests"][0]:
                 return {"replies": [{"addSheet": {"properties": {"sheetId": 77}}}]}
             return {"replies": []}
         with patch.object(publisher, "call", side_effect=fake_api):
             publisher.publish({"status": "baseline_created", "changes": []})
-        self.assertEqual(calls[-1][1]["requests"][0]["updateCells"]["range"]["sheetId"], 77)
+        self.assertEqual(calls[-1][1]["requests"][0]["updateCells"]["range"]["sheetId"], 77)\n        self.assertEqual(calls[1][1]["requests"][0]["addSheet"]["properties"]["index"], 4)
 
 if __name__ == "__main__":
     unittest.main()
