@@ -21,7 +21,6 @@ permissions:
   actions: read
   contents: read
   id-token: write
-  issues: write
 
 concurrency:
   group: swc-overview-readonly
@@ -125,7 +124,7 @@ jobs:
             --overview "${{ runner.temp }}/overview-readiness.json" \
             --snapshot-out "${{ runner.temp }}/production-change-snapshot.json" \
             --report-out "${{ runner.temp }}/production-change-report.json" \
-            --batch-id "${{ github.run_id }}-${{ github.run_attempt }}"
+            --batch-id "${{ steps.accepted_batch.outputs.verified == 'true' && (github.event.workflow_run.id || inputs.accepted_batch_run_id) || format('preview-{0}-{1}', github.run_id, github.run_attempt) }}"
       - name: Render human-readable production changes
         if: success()
         run: node tools/production-sync/write-production-change-summary.mjs "${{ runner.temp }}/production-change-report.json" "${{ runner.temp }}/production-change-summary.txt"
