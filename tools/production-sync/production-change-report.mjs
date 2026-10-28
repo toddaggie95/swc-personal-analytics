@@ -32,6 +32,7 @@ export function groupProductionChangesByStation(report){
   let record=grouped.get(uid);
   if(!record){record={uid,system:change.system??change.after?.system??change.before?.system??'',changes:[],fields:{}};grouped.set(uid,record);}
   if(change.system && record.system && change.system!==record.system)throw Error('Conflicting station systems '+uid);
+  if(!record.system&&change.system)record.system=change.system;
   record.changes.push(change);
   if(change.field){
    if(record.fields[change.field])throw Error('Duplicate station field change '+uid+' '+change.field);
