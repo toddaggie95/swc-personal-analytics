@@ -28,6 +28,7 @@ concurrency:
 
 jobs:
   overview:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -102,6 +103,7 @@ jobs:
             "${{ runner.temp }}/overview-shadow-audit.json" \
             "${{ runner.temp }}/overview-publish-preview.json"
       - name: Publish faction-aware Production Overview (A3:L46 only)
+        if: success() && steps.accepted_batch.outputs.verified == 'true'
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           ENABLE_OVERVIEW_WRITES: 'true'
@@ -110,7 +112,7 @@ jobs:
         if: success()
         env:
           GH_TOKEN: ${{ github.token }}
-          ACCEPTED_HISTORY_ONLY: ${{ steps.accepted_batch.outputs.verified == 'true' }}
+          ACCEPTED_HISTORY_ONLY: 'true'
         run: bash tools/production-sync/restore-production-snapshot.sh "${{ runner.temp }}"
       - name: Generate production change snapshot (no notifications)
         if: success()
@@ -129,7 +131,7 @@ jobs:
         if: success()
         run: node tools/production-sync/write-production-change-summary.mjs "${{ runner.temp }}/production-change-report.json" "${{ runner.temp }}/production-change-summary.txt"
       - name: Replace Production Changes tab after verified HAS import
-        if: success() && (github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch') && steps.accepted_batch.outputs.verified == 'true'
+        if: success() && steps.accepted_batch.outputs.verified == 'true'
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           ACCEPTED_HAS_BATCH: 'true'
