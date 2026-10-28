@@ -23,7 +23,9 @@ def verify_readback(report, changes):
         actual=json.load(response).get("values",[])
     expected=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],
               ["Current accepted batch",value(report.get("currentBatch"))],["Changes detected",str(len(changes))]]
-    if actual!=expected:
+    # Sheets omits trailing empty cells, especially for the first baseline.
+    normalize=lambda rows: [row + [""]*(2-len(row)) for row in rows]
+    if normalize(actual)!=normalize(expected):
         raise RuntimeError("Production Changes readback failed: "+repr(actual))
 
 def publish(report):
