@@ -52,6 +52,11 @@ jobs:
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
           SWC_EXPORT_OUTPUT: ${{ runner.temp }}/swc-exports
         run: python3 tools/production-sync/download-drive-exports.py
+      - name: Skip unsuccessful HAS completions
+        if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success'
+        run: |
+          echo "HAS workflow did not succeed; no Overview publication permitted."
+          exit 1
       - name: Verify accepted HAS batch provenance
         id: accepted_batch
         if: success() && (github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.accepted_batch_run_id != ''))
