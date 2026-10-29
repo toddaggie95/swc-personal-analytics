@@ -66,3 +66,57 @@ const summary = {
   warning: 'A missing detail field is unknown, not proof of idle production. No inventory or station identities printed.'
 };
 console.log(JSON.stringify(summary, null, 2));
+
+const detailSnapshots = await Promise.all(detailFiles.map(async file => ({
+  file, entries: obj(JSON.parse(await readFile(join(root, 'checkpoints', file), 'utf8')))
+})));
+const historical = detailSnapshots.find(s => Object.keys(s.entries).length === 1346);
+const recent = detailSnapshots.find(s => Object.keys(s.entries).length === 567);
+const indexByUid = records => new Map(records.map(r => [val(r.uid), r]).filter(([id]) => id));
+const csvByUid = indexByUid(csv), apiByUid = indexByUid(api);
+const normalize = v => val(v).toLowerCase().replace(/[^a-z0-9]/g, '');
+const compareSets = (a, b) => ({
+  both: [...a].filter(x => b.has(x)).length,
+  csvOnly: [...a].filter(x => !b.has(x)).length,
+  apiOnly: [...b].filter(x => !a.has(x)).length
+});
+const csvShipyardIds = new Set(csv.filter(r => /shipyard/i.test(val(r.type_name || r.type))).map(r => val(r.uid)));
+const apiShipyardIds = new Set(api.filter(r => /shipyard/i.test(val(r.typeName))).map(r => val(r.uid)));
+const detailsFor = snapshot => new Map(Object.entries(snapshot?.entries ?? {}).map(([uid, record]) => [uid, obj(record)]));
+const oldDetails = detailsFor(historical), newDetails = detailsFor(recent);
+const csvRunningIds = new Set(csv.filter(r => key(r.productionStatus) === 'running').map(r => val(r.uid)));
+const csvToolingIds = new Set(csv.filter(r => val(r['tooled-to'])).map(r => val(r.uid)));
+const oldActionsIds = new Set([...oldDetails].filter(([, r]) => Array.isArray(r.actions) && r.actions.length).map(([uid]) => uid));
+const oldToolingIds = new Set([...oldDetails].filter(([, r]) => r.tooledTo != null && val(r.tooledTo)).map(([uid]) => uid));
+const toolingComparison = { compared: 0, matching: 0, differing: 0, uncomparable: 0 };
+for (const uid of csvToolingIds) {
+  const old = oldDetails.get(uid);
+  if (!old || old.tooledTo == null) { toolingComparison.uncomparable++; continue; }
+  const apiTool = typeof old.tooledTo === 'string' ? old.tooledTo : obj(old.tooledTo).name;
+  if (!val(apiTool)) { toolingComparison.uncomparable++; continue; }
+  toolingComparison.compared++;
+  if (normalize(apiTool) === normalize(csvByUid.get(uid)['tooled-to'])) toolingComparison.matching++;
+  else toolingComparison.differing++;
+}
+const commonDetails = [...newDetails.keys()].filter(uid => oldDetails.has(uid));
+const changes = { commonStations: commonDetails.length, tooling: 0, actionPresence: 0, queuePresence: 0, constructionStatus: 0 };
+for (const uid of commonDetails) {
+  const a = oldDetails.get(uid), b = newDetails.get(uid);
+  if (JSON.stringify(a.tooledTo ?? null) !== JSON.stringify(b.tooledTo ?? null)) changes.tooling++;
+  if (Boolean(a.actions?.length) !== Boolean(b.actions?.length)) changes.actionPresence++;
+  if (Boolean(a.queueItems?.length) !== Boolean(b.queueItems?.length)) changes.queuePresence++;
+  if (val(a.underConstruction) !== val(b.underConstruction)) changes.constructionStatus++;
+}
+const uidAudit = {
+  caveat: 'Oct 22 detail data compared to Oct 29 CSV; mismatches may be legitimate production changes.',
+  shipyards: compareSets(csvShipyardIds, apiShipyardIds),
+  runningVsHistoricalActionPresence: compareSets(csvRunningIds, oldActionsIds),
+  tooledVsHistoricalToolingPresence: compareSets(csvToolingIds, oldToolingIds),
+  toolingNameComparison: toolingComparison,
+  detailCheckpointOverlap: changes,
+  inventoryFieldSamples: {
+    locationTypes: [...new Set(api.slice(0, 100).map(r => typeof r.location))],
+    coordinateTypes: [...new Set(api.slice(0, 100).map(r => typeof r.coordinates))]
+  }
+};
+console.log('UID_RECONCILIATION ' + JSON.stringify(uidAudit, null, 2));
