@@ -92,7 +92,7 @@ const toolingComparison = { compared: 0, matching: 0, differing: 0, uncomparable
 for (const uid of csvToolingIds) {
   const old = oldDetails.get(uid);
   if (!old || old.tooledTo == null) { toolingComparison.uncomparable++; continue; }
-  const apiTool = typeof old.tooledTo === 'string' ? old.tooledTo : obj(old.tooledTo).name;
+  const apiTool = typeof old.tooledTo === 'string' ? old.tooledTo : obj(old.tooledTo).value ?? obj(old.tooledTo).name;
   if (!val(apiTool)) { toolingComparison.uncomparable++; continue; }
   toolingComparison.compared++;
   if (normalize(apiTool) === normalize(csvByUid.get(uid)['tooled-to'])) toolingComparison.matching++;
