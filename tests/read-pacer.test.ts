@@ -28,3 +28,34 @@ test('zero remaining quota stops before long reset wait', async () => {
   }));
   await assert.rejects(pacer.beforeRequest('inventory/stations'), /long wait/);
 });
+
+test('healthy documented budget permits faster serial calls without exceeding calculated window', async () => {
+  let now = 1_000_000;
+  const waits: number[] = [];
+  const pacer = new ReadPacer(async ms => { waits.push(ms); now += ms; }, () => now);
+  pacer.afterResponse('station-detail', new Headers({
+    'x-ratelimit-limit': '600', 'x-ratelimit-remaining': '598', 'x-ratelimit-reset': '1060'
+  }));
+  await pacer.beforeRequest('station-detail');
+  assert.deepEqual(waits, [1000]);
+});
+test('nearly exhausted quota schedules conservatively based on reset window', async () => {
+  let now = 1_000_000;
+  const waits: number[] = [];
+  const pacer = new ReadPacer(async ms => { waits.push(ms); now += ms; }, () => now);
+  pacer.afterResponse('station-detail', new Headers({
+    'x-ratelimit-limit': '600', 'x-ratelimit-remaining': '2', 'x-ratelimit-reset': '1060'
+  }));
+  await pacer.beforeRequest('station-detail');
+  assert.deepEqual(waits, [30000]);
+});
+test('independent resource categories do not share rate windows', async () => {
+  let now = 1_000_000;
+  const waits: number[] = [];
+  const pacer = new ReadPacer(async ms => { waits.push(ms); now += ms; }, () => now);
+  pacer.afterResponse('station-detail', new Headers({
+    'x-ratelimit-limit': '600', 'x-ratelimit-remaining': '2', 'x-ratelimit-reset': '1060'
+  }));
+  await pacer.beforeRequest('inventory/list');
+  assert.deepEqual(waits, []);
+});
