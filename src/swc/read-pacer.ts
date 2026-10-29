@@ -31,6 +31,7 @@ export class ReadPacer {
     private readonly now: () => number = Date.now,
     private readonly fallbackDelayMs = 6500,
     private readonly maxWaitMs = 60_000,
+    private readonly minGapMs = 1000,
   ) {}
   async beforeRequest(resource: string): Promise<void> {
     const now = this.now();
@@ -54,7 +55,9 @@ export class ReadPacer {
     const window = parseRateWindow(headers, now);
     this.observed.set(resource, window);
     // When headers are absent, retain conservative pacing rather than burst.
-    this.nextAllowedMs.set(resource, now + this.fallbackDelayMs);
+    // Speed up only when the server supplies a trustworthy nonexhausted budget.
+    const hasBudget = window.remaining !== null && window.remaining > 0 && window.resetAtMs !== null && window.limit !== null;
+    this.nextAllowedMs.set(resource, now + (hasBudget ? this.minGapMs : this.fallbackDelayMs));
     return window;
   }
 }
