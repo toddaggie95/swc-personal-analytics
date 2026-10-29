@@ -28,7 +28,7 @@ PY
     fi
   done
   # Legacy successful runs published all three areas, verified by their job conclusion.
-  if [[ -s "$dir/production-change-snapshot.json" && -s "$dir/accepted-has-verification.json" ]]; then
+  if [[ "$run" -le 40767219652 && -s "$dir/production-change-snapshot.json" && -s "$dir/accepted-has-verification.json" ]]; then
     conclusion=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq '.conclusion')
     if [[ "$conclusion" == success ]]; then
       for component in overview matrix changes; do touch "$output/published-$component.ok"; done
