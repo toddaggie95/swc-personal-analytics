@@ -38,6 +38,20 @@ PY
     echo "No station snapshot in $previous; checking earlier run."
     continue
   fi
+  if [[ -s "$output/swc-exports/export-manifest.json" && -s "$history/swc-exports/export-manifest.json" ]]; then
+    if python3 - "$output/swc-exports/export-manifest.json" "$history/swc-exports/export-manifest.json" <<'PY'
+import json,sys
+def identity(path):
+    with open(path) as f: files=json.load(f)["files"]
+    return sorted((x["owner"],x["kind"],x["sha256"]) for x in files)
+assert len(identity(sys.argv[1])) == 4
+assert identity(sys.argv[1]) == identity(sys.argv[2])
+PY
+    then
+      echo "Skipping snapshot from identical export batch in run $previous"
+      continue
+    fi
+  fi
   cp "$history/production-change-snapshot.json" "$output/previous-production-snapshot.json"
   echo "Restored station snapshot from $previous"
   exit 0
