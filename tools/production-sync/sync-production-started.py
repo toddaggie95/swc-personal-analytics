@@ -63,10 +63,20 @@ def plan(manifest,stations,rows_by_system):
    if status not in ("","running","paused","stopped","complete","completed","idle","none","cancelled","canceled"):
     raise ValueError("Unrecognized productionStatus "+uid+": "+status)
    desired="Yes" if status=="running" else ""
+   if status=="running":
+    ship=station.get("tooled-to","").strip()
+    qty=station.get("productionQuantity","").strip()
+    if not ship or not qty.isdigit() or int(qty)<=0:
+     raise ValueError("Running station missing ship/quantity in export "+uid)
+    for offset,proposed,field in ((col-2,ship,"ship"),(col-1,qty,"quantity")):
+     previous=str(row[offset] if offset<len(row) else "").strip()
+     if previous.startswith("="):raise ValueError("Formula in production assignment "+uid)
+     if previous!=proposed:
+      updates.append({"uid":uid,"system":sheet,"row":row_idx,"column":offset,"previous":previous,"proposed":proposed,"status":status,"field":field})
    if current!=desired:
-    updates.append({"uid":uid,"system":sheet,"row":row_idx,"column":col,"previous":current,"proposed":desired,"status":status})
+    updates.append({"uid":uid,"system":sheet,"row":row_idx,"column":col,"previous":current,"proposed":desired,"status":status,"field":"started"})
  targets=[(c["system"],c["row"],c["column"]) for c in updates]
- if len(targets)!=len(set(targets)):raise ValueError("Two station UIDs mapped to same Started cell")
+ if len(targets)!=len(set(targets)):raise ValueError("Two station UIDs mapped to same production cell")
  return {"checkedShipyards":checked,"changes":updates,"unresolved":unresolved,"statuses":dict(Counter(s.get("productionStatus","").strip().lower() for s in stations))}
 
 def column_name(index):
@@ -92,7 +102,7 @@ def main():
  if len(response)!=len(systems):raise ValueError("Incomplete system read")
  rows={s:[[]]+v.get("values",[]) for s,v in zip(systems,response)}
  result=plan(manifest,stations,rows);result["status"]="prepared"
- result["transitionCounts"]={"toYes":sum(c["proposed"]=="Yes" for c in result["changes"]),"toBlank":sum(c["proposed"]=="" for c in result["changes"])}
+ result["transitionCounts"]={"toYes":sum(c.get("field","started")=="started" and c["proposed"]=="Yes" for c in result["changes"]),"toBlank":sum(c.get("field","started")=="started" and c["proposed"]=="" for c in result["changes"])}
  def save():
   with open(sys.argv[4],"w") as f:json.dump(result,f,indent=2)
  save()
