@@ -107,6 +107,16 @@ def main():
  if len(ship_response)!=1:raise ValueError("Missing Ships master read")
  ship_names={str(r[0]).strip() for r in ship_response[0].get("values",[]) if r and str(r[0]).strip()}
  if not ship_names:raise ValueError("Empty Ships master")
+ helper_response=request(base+":batchGet?"+urllib.parse.urlencode([("ranges","'Ships'!BD5:BD400"),("valueRenderOption","FORMATTED_VALUE")]),token)["valueRanges"]
+ if len(helper_response)!=1:raise ValueError("Missing Ships dropdown helper read")
+ helper_values=[str(r[0]).strip() for r in helper_response[0].get("values",[]) if r and str(r[0]).strip()]
+ helper_names=set(helper_values)
+ missing=sorted(ship_names-helper_names)
+ extra=sorted(helper_names-ship_names-{"None"})
+ duplicate=sorted({v for v in helper_values if helper_values.count(v)>1})
+ if "None" not in helper_names or missing or extra or duplicate or any(v.startswith("#") for v in helper_values):
+  raise ValueError("Ships dropdown mismatch: missing="+repr(missing[:20])+" extra="+repr(extra[:20])+" duplicate="+repr(duplicate[:20])+" None_present="+str("None" in helper_names))
+
  result=plan(manifest,stations,rows,ship_names);result["status"]="prepared"
  result["transitionCounts"]={"toYes":sum(c.get("field","started")=="started" and c["proposed"]=="Yes" for c in result["changes"]),"toBlank":sum(c.get("field","started")=="started" and c["proposed"]=="" for c in result["changes"])}
  def save():
