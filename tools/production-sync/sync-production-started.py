@@ -12,7 +12,7 @@ def request(url,token,body=None):
  req=urllib.request.Request(url,data=data,headers={"Authorization":"Bearer "+token,**({"Content-Type":"application/json"} if data is not None else {})},method="POST" if data is not None else "GET")
  with urllib.request.urlopen(req,timeout=90) as r:return json.load(r)
 
-def plan(manifest,stations,rows_by_system):
+def plan(manifest,stations,rows_by_system,ship_names=None):
  by_uid={}
  for station in stations:
   uid=station.get("uid","").strip()
@@ -68,6 +68,8 @@ def plan(manifest,stations,rows_by_system):
     qty=station.get("productionQuantity","").strip()
     if not ship or not qty.isdigit() or int(qty)<=0:
      raise ValueError("Running station missing ship/quantity in export "+uid)
+    if ship_names is not None and ship not in ship_names:
+     raise ValueError("Running station ship absent from Ships master "+uid+": "+ship)
     for offset,proposed,field in ((col-2,ship,"ship"),(col-1,qty,"quantity")):
      previous=str(row[offset] if offset<len(row) else "").strip()
      if previous.startswith("="):raise ValueError("Formula in production assignment "+uid)
@@ -101,13 +103,17 @@ def main():
  response=request(url,token)["valueRanges"]
  if len(response)!=len(systems):raise ValueError("Incomplete system read")
  rows={s:[[]]+v.get("values",[]) for s,v in zip(systems,response)}
- result=plan(manifest,stations,rows);result["status"]="prepared"
+ ship_response=request(base+":batchGet?"+urllib.parse.urlencode([("ranges","'Ships'!A1:A1000"),("valueRenderOption","FORMATTED_VALUE")]),token)["valueRanges"]
+ if len(ship_response)!=1:raise ValueError("Missing Ships master read")
+ ship_names={str(r[0]).strip() for r in ship_response[0].get("values",[]) if r and str(r[0]).strip()}
+ if not ship_names:raise ValueError("Empty Ships master")
+ result=plan(manifest,stations,rows,ship_names);result["status"]="prepared"
  result["transitionCounts"]={"toYes":sum(c.get("field","started")=="started" and c["proposed"]=="Yes" for c in result["changes"]),"toBlank":sum(c.get("field","started")=="started" and c["proposed"]=="" for c in result["changes"])}
  def save():
   with open(sys.argv[4],"w") as f:json.dump(result,f,indent=2)
  save()
  changes=result["changes"]
- if len(changes)>max(100,result["checkedShipyards"]//4):
+ if len({c["uid"] for c in changes})>max(100,result["checkedShipyards"]//4):
   result["status"]="blocked_excessive_changes";save()
   raise ValueError("Production status change count exceeds safety threshold: "+str(len(changes)))
  if sys.argv[5]!="true":
@@ -128,7 +134,7 @@ def main():
   # Reconcile ALL tracked shipyards on a fresh full workbook read, not only changed cells.
   after=request(url,token)["valueRanges"]
   if len(after)!=len(systems):raise ValueError("Incomplete post-write workbook audit")
-  verified=plan(manifest,stations,{system:[[]]+item.get("values",[]) for system,item in zip(systems,after)})
+  verified=plan(manifest,stations,{system:[[]]+item.get("values",[]) for system,item in zip(systems,after)},ship_names)
   if verified["checkedShipyards"]!=result["checkedShipyards"] or verified["changes"]:
    raise ValueError("Full Started reconciliation failed: "+str(verified["changes"][:10]))
   result["status"]="verified";result["verifiedCells"]=len(changes);result["postAuditShipyards"]=verified["checkedShipyards"]
