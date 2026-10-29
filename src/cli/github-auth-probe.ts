@@ -19,11 +19,16 @@ async function main(): Promise<void> {
   const old = JSON.parse(await readFile(join(config.privateDir, 'tokens.json'), 'utf8')) as unknown;
   if (!validToken(old)) throw new SafeError('OAuth token JSON is invalid.');
   const initialRefresh = old.refreshToken;
+  console.log('Token expiry category: ' + (old.expiresAt <= Date.now() + 300_000 ? 'refresh-needed' : 'not-near-expiry'));
   stage = 'OAuth client initialization';
   const auth = await loadAuth(config);
   const run = new SnapshotRun(config.privateDir, 'github-auth-probe');
+  const wrapped = {
+    async accessToken() { stage = 'access token acquisition and possible refresh'; return auth.accessToken(); },
+    async refresh() { stage = 'refresh after HTTP 401'; return auth.refresh(); },
+  };
   stage = 'authenticated character request or token refresh';
-  const response = await new ReadClient(auth, run).me();
+  const response = await new ReadClient(wrapped, run).me();
   if (typeof response.uid !== 'string' || !/^1:\d+$/.test(response.uid)) {
     throw new SafeError('Authenticated SWC response did not contain a valid character UID.');
   }
