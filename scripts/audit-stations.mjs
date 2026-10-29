@@ -10,8 +10,8 @@ function parseCsv(input) {
       else cell += ch;
     } else if (ch === '"') quoted = true;
     else if (ch === ',') { row.push(cell); cell = ''; }
-    else if (ch === '\\n' || ch === '\\r') {
-      if (ch === '\\r' && input[i + 1] === '\\n') i++;
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && input[i + 1] === '\n') i++;
       row.push(cell); cell = '';
       if (row.some(x => x !== '')) table.push(row);
       row = [];
@@ -21,14 +21,13 @@ function parseCsv(input) {
   if (cell || row.length) { row.push(cell); table.push(row); }
   const [headers, ...records] = table;
   if (!headers) throw new Error('Empty CSV.');
-  return records.map(record => Object.fromEntries(headers.map((h, i) => [h.replace(/^\\uFEFF/, ''), record[i] ?? ''])));
+  return records.map(record => Object.fromEntries(headers.map((h, i) => [h.replace(/^\uFEFF/, ''), record[i] ?? ''])));
 }
 
-type Obj = Record<string, unknown>;
-const obj = (v: unknown): Obj => v && typeof v === 'object' && !Array.isArray(v) ? v as Obj : {};
-const rows = (v: unknown): Obj[] => Array.isArray(v) ? v.map(obj) : [];
-const val = (v: unknown) => v == null ? '' : String(v).trim();
-const key = (v: unknown) => val(v).toLowerCase();
+const obj = v => v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+const rows = v => Array.isArray(v) ? v.map(obj) : [];
+const val = v => v == null ? '' : String(v).trim();
+const key = v => val(v).toLowerCase();
 const root = process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA, 'SWC Personal Analytics') : '';
 const csvPath = process.argv[2];
 if (!root || !csvPath) throw new Error('Usage: npm run audit:stations -- "path-to-TFF-Stations.csv"');
