@@ -87,6 +87,7 @@ const report = { summary: { faction: snapshot.summary.ownerName, inventoryComple
 if (outputArg) await writeFile(resolve(outputArg), JSON.stringify(report, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
 console.log(JSON.stringify({ ...report.summary, counts, mismatchObservationDates: Object.fromEntries(
   [...new Set(mismatches.map(x => str(x.observedAt).slice(0, 10) || 'unknown'))].map(date => [date, mismatches.filter(x => str(x.observedAt).slice(0, 10) === date).length])),
-  productionCoverage: { compared: counts.runningAgreement + counts.runningDisagreement, unknown: counts.runningUnknown, notChecked: counts.notChecked },\n  nonShipyardProductionCount: nonShipyardProduction.length, nonShipyardToolingCount: nonShipyardTooling.length,
+  productionCoverage: { compared: counts.runningAgreement + counts.runningDisagreement, unknown: counts.runningUnknown, notChecked: counts.notChecked },
+  nonShipyardProductionCount: nonShipyardProduction.length, nonShipyardToolingCount: nonShipyardTooling.length,
   reportFile: outputArg ? resolve(outputArg) : null,
   note: outputArg ? 'UID-level details written locally; not printed.' : 'Pass a third path to save UID-level details locally.' }, null, 2));
