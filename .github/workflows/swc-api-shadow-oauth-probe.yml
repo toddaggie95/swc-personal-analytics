@@ -1,0 +1,53 @@
+name: SWC API Shadow - OAuth Probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: swc-api-shadow-oauth
+  cancel-in-progress: false
+
+jobs:
+  oauth-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: swc-api-shadow
+    steps:
+      - name: Checkout audited API implementation
+        uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: cbcb72c9a1c2cbe90741be3f523652a3bb977c1d
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Prepare private OAuth credentials
+        shell: bash
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$RUNNER_TEMP/swc-private"
+          if [ -z "$SWC_OAUTH_TOKENS_JSON" ]; then
+            echo "::error::Missing OAuth token secret"
+            exit 1
+          fi
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > "$RUNNER_TEMP/swc-private/tokens.json"
+      - name: One-request read-only OAuth probe
+        env:
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_PRIVATE_DIR: ${{ runner.temp }}/swc-private
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+        run: npx tsx src/cli/github-auth-probe.ts
+      - name: Remove temporary credentials
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/swc-private"
