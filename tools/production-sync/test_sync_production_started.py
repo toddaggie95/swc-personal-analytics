@@ -15,7 +15,7 @@ spec.loader.exec_module(sync)
 class StartedSyncTests(unittest.TestCase):
  def test_two_running_shipyards_in_same_hub(self):
   manifest={"destinations":[{"id":"hub","kind":"hub","system":"Kashyyyk","center":{"x":5,"y":17},"target":{"hasColumn":10,"materialStartRow":47},"memberStationUids":["5:1","5:2","5:3"]}]}
-  stations=[{"uid":"5:1","system":"Kashyyyk","sysX":"4","sysY":"16","type_name":"Shipyard I","productionStatus":"running","tooled-to":"Mining Barque","productionQuantity":"1"},{"uid":"5:2","system":"Kashyyyk","sysX":"5","sysY":"16","type_name":"Shipyard I","productionStatus":"running"},{"uid":"5:3","system":"Kashyyyk","sysX":"6","sysY":"16","type_name":"Shipyard I","productionStatus":"running"}]
+  stations=[{"uid":"5:1","system":"Kashyyyk","sysX":"4","sysY":"16","type_name":"Shipyard I","productionStatus":"running","tooled-to":"Mining Barque","productionQuantity":"1"},{"uid":"5:2","system":"Kashyyyk","sysX":"5","sysY":"16","type_name":"Shipyard I","productionStatus":"running","tooled-to":"Mining Barque","productionQuantity":"1"},{"uid":"5:3","system":"Kashyyyk","sysX":"6","sysY":"16","type_name":"Shipyard I","productionStatus":"running","tooled-to":"Mining Barque","productionQuantity":"1"}]
   rows=[[] for _ in range(48)]
   rows[36]=[""]*9;rows[36][8]="Hub (5,17)"
   for i,xy in enumerate(["4,16","5,16","6,16"],37):
@@ -47,7 +47,9 @@ class StartedSyncTests(unittest.TestCase):
            ("5:52608","15","4")]
   stations=[{"uid":uid,"system":"Kashyyyk","sysX":x,"sysY":y,
              "type_name":"Depot Station I" if uid=="5:52608" else "Shipyard IV",
-             "productionStatus":"running" if uid=="5:53153" else ""}
+             "productionStatus":"running" if uid=="5:53153" else "",
+             "tooled-to":"Alpha-class Xg-1 Star Wing" if uid=="5:53153" else "",
+             "productionQuantity":"48" if uid=="5:53153" else ""}
             for uid,x,y in members]
   manifest={"destinations":[{"id":"Kashyyyk-hub-1-0","kind":"hub","system":"Kashyyyk",
              "center":{"x":15,"y":4},"target":{"hasColumn":2,"materialStartRow":13},
@@ -67,7 +69,7 @@ class StartedSyncTests(unittest.TestCase):
              "center":{"x":15,"y":4},"target":{"hasColumn":2,"materialStartRow":13},
              "memberStationUids":["5:53153"]}]}
   station={"uid":"5:53153","system":"Kashyyyk","sysX":"14","sysY":"3",
-           "type_name":"Shipyard IV","productionStatus":"running"}
+           "type_name":"Shipyard IV","productionStatus":"running","tooled-to":"Mining Barque","productionQuantity":"1"}
   with tempfile.TemporaryDirectory() as tmp:
    paths=[os.path.join(tmp,n) for n in ("layout.json","tff.csv","tjo.csv","result.json")]
    with open(paths[0],"w") as f:json.dump(manifest,f)
