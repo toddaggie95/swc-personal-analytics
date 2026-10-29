@@ -24,7 +24,7 @@ export function parseRateWindow(headers: Headers, nowMs: number): RateWindow {
 }
 
 export class ReadPacer {
-  private nextAllowedMs = 0;
+  private readonly nextAllowedMs = new Map<string, number>();
   private readonly observed = new Map<string, RateWindow>();
   constructor(
     private readonly sleep: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms)),
@@ -35,8 +35,11 @@ export class ReadPacer {
   async beforeRequest(resource: string): Promise<void> {
     const now = this.now();
     const window = this.observed.get(resource);
-    let next = this.nextAllowedMs;
-    if (window?.remaining === 0 && window.resetAtMs !== null) next = Math.max(next, window.resetAtMs + 1000);
+    let next = this.nextAllowedMs.get(resource) ?? 0;
+    if (window?.remaining === 0) {
+      if (window.resetAtMs === null) throw new Error('SWC quota exhausted without a trustworthy reset; stop and resume later.');
+      next = Math.max(next, window.resetAtMs + 1000);
+    }
     if (window?.remaining !== null && window?.remaining !== undefined && window.remaining > 0 && window.resetAtMs !== null) {
       // Reserve one request; spread the remaining budget over the window.
       next = Math.max(next, now + Math.ceil((window.resetAtMs - now) / window.remaining));
@@ -44,13 +47,14 @@ export class ReadPacer {
     const delay = Math.max(0, next - now);
     if (delay > this.maxWaitMs) throw new Error('SWC request pacing requires a long wait; stop and resume later.');
     if (delay) await this.sleep(delay);
+    this.nextAllowedMs.set(resource, this.now() + this.fallbackDelayMs);
   }
   afterResponse(resource: string, headers: Headers): RateWindow {
     const now = this.now();
     const window = parseRateWindow(headers, now);
     this.observed.set(resource, window);
     // When headers are absent, retain conservative pacing rather than burst.
-    this.nextAllowedMs = now + this.fallbackDelayMs;
+    this.nextAllowedMs.set(resource, now + this.fallbackDelayMs);
     return window;
   }
 }
