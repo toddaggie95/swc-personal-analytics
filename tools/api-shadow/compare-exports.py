@@ -54,6 +54,7 @@ def compare(manual_dir, api_dir, sample_limit=15):
             missing_fields = sorted(set(mf) - set(af))
             extra_fields = sorted(set(af) - set(mf))
             missing_critical = sorted(set(critical) - set(af))
+            missing_manual_critical = sorted(set(critical) - set(mf))
             missing_uids = sorted(mr.keys() - ar.keys())
             extra_uids = sorted(ar.keys() - mr.keys())
             common = mr.keys() & ar.keys()
@@ -70,6 +71,7 @@ def compare(manual_dir, api_dir, sample_limit=15):
                 "manualRows": len(mr), "apiRows": len(ar),
                 "missingColumns": missing_fields, "extraColumns": extra_fields,
                 "missingCriticalColumns": missing_critical,
+                "missingManualCriticalColumns": missing_manual_critical,
                 "missingUidsCount": len(missing_uids), "extraUidsCount": len(extra_uids),
                 "missingUidsSample": missing_uids[:sample_limit],
                 "extraUidsSample": extra_uids[:sample_limit],
@@ -77,7 +79,7 @@ def compare(manual_dir, api_dir, sample_limit=15):
                 "criticalMismatchExamples": examples,
             })
             entry["exactMatch"] = not (missing_fields or extra_fields or missing_critical
-                                         or missing_uids or extra_uids or mismatches)
+                                         or missing_manual_critical or missing_uids or extra_uids or mismatches)
         except (OSError, ValueError, csv.Error) as exc:
             entry["error"] = str(exc)
             entry["exactMatch"] = False
