@@ -25,7 +25,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Install isolated API test dependencies
+        run: npm install --no-save --no-audit --no-fund dotenv@18.0.3 swcombine-sdk@3.5.0 tsx@4.23.15
       - name: Prepare private OAuth credentials
         shell: bash
         env:
