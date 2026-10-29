@@ -72,7 +72,18 @@ export async function loadAuth(config: Config, client = makeClient(config)): Pro
   client.setToken(token);
   async function refresh(): Promise<void> {
     if (!client.hasRefreshToken()) throw new SafeError('No refresh token available; authorize again with offline access.');
-    await client.refreshToken();
+    try {
+      await client.refreshToken();
+    } catch (error: unknown) {
+      // Emit only fixed categories; SDK messages and HTTP response bodies may contain secrets.
+      const status = error && typeof error === 'object' && 'status' in error ? error.status : undefined;
+      const code = error && typeof error === 'object' && 'code' in error ? error.code : undefined;
+      if (status === 400 || status === 401) throw new SafeError('OAuth refresh rejected by server (HTTP 400/401). Refresh token or client credentials may be invalid.');
+      if (status === 429) throw new SafeError('OAuth refresh rate-limited by server (HTTP 429).');
+      if (typeof status === 'number' && status >= 500 && status < 600) throw new SafeError('OAuth refresh failed due to server error (HTTP 5xx).');
+      if (typeof code === 'string' && ['ETIMEDOUT', 'ECONNRESET', 'ENOTFOUND', 'EAI_AGAIN'].includes(code)) throw new SafeError('OAuth refresh network or DNS failure.');
+      throw new SafeError('OAuth refresh failed inside SDK or server; cause not safely classifiable.');
+    }
     const refreshed = client.getToken();
     if (!validToken(refreshed)) throw new SafeError('Token refresh returned an invalid result.');
     // Await durability before issuing a data request (SDK persistence is not awaitable).
