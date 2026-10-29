@@ -27,6 +27,12 @@ jobs:
           node-version: '24'
       - name: Install isolated API test dependencies
         run: npm install --no-save --no-audit --no-fund dotenv@18.0.3 swcombine-sdk@3.5.0 tsx@4.23.15
+      - name: Restore API source modules from pinned implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin ea8241afadde47fd236bebdae9cb8b3b1aeef030
+          git restore --source=FETCH_HEAD -- src/config src/auth src/storage src/swc src/models src/cli/secret-input.ts
       - name: Prepare private OAuth credentials
         shell: bash
         env:
