@@ -82,13 +82,13 @@ class StartedSyncTests(unittest.TestCase):
    def fake_request(url,token,body=None):
     calls.append(url)
     self.assertIn("valueRenderOption=FORMATTED_VALUE",url)
-    return {"valueRanges":[{"values":[["Mining Barque"]]}]} if "%27Ships%27" in url else {"valueRanges":[{"values":formatted}]}
+    return {"valueRanges":[{"values":[["None"],["Mining Barque"]]}]} if "BD5%3ABD400" in url else ({"valueRanges":[{"values":[["Mining Barque"]]}]} if "%27Ships%27" in url else {"valueRanges":[{"values":formatted}]})
    with patch.object(sync,"request",fake_request),patch.dict(os.environ,{"GOOGLE_ACCESS_TOKEN":"fake","SWC_PRODUCTION_SHEET_ID":"test"}),patch.object(sync.sys,"argv",["sync",*paths,"false"]):
     sync.main()
    with open(paths[3]) as f:result=json.load(f)
    self.assertEqual(result["status"],"dry_run")
    self.assertEqual(result["transitionCounts"],{"toYes":1,"toBlank":0})
-   self.assertEqual(len(calls),2)
+   self.assertEqual(len(calls),3)
 
  def test_running_assignment_updates_even_when_started_already_yes(self):
   manifest={"destinations":[{"id":"x","kind":"oneoff-group","system":"Dalchon","memberStationUids":["5:65787"],"oneoffs":[{"stationUid":"5:65787","row":10}]}]}
