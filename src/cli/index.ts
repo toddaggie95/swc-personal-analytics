@@ -30,6 +30,7 @@ async function main(): Promise<void> {
   }
   if (!['auth:start', 'auth:finish', 'sync:stations', 'sync:ships', 'sync:faction-materials', 'sync:faction-materials:tff', 'sync:faction-materials:tjo', 'sync:faction-stations', 'sync:faction-stations:tff', 'sync:faction-stations:tjo', 'sync:faction-facilities', 'sync:faction-facilities:tff', 'sync:faction-facilities:tjo'].includes(command)) throw new SafeError('Unknown command. Run npm run cli -- help.');
   requireLive(config);
+  stage = 'local storage lock';
   await withLock(config.privateDir, async () => {
     if (command === 'auth:start') {
       console.log('Open this authorization URL yourself. It expires locally in 10 minutes.');
@@ -65,9 +66,25 @@ async function main(): Promise<void> {
         }
       }
     } else {
-      const auth = await loadAuth(config), run = new SnapshotRun(config.privateDir, exportLabel('personal', command === 'sync:ships' ? 'ships' : 'stations'));
+      stage = 'OAuth token file loading';
+      const auth = await loadAuth(config);
+      const run = new SnapshotRun(config.privateDir, exportLabel('personal', command === 'sync:ships' ? 'ships' : 'stations'));
+      const tracedAuth = {
+        async accessToken(): Promise<string> {
+          stage = 'OAuth access token acquisition or refresh';
+          const token = await auth.accessToken();
+          stage = 'SWC API collection';
+          return token;
+        },
+        async refresh(): Promise<void> {
+          stage = 'OAuth refresh after HTTP 401';
+          await auth.refresh();
+          stage = 'SWC API collection';
+        },
+      };
       const sync = command === 'sync:ships' ? syncShips : syncStations;
-      const summary = await sync(new ReadClient(auth, run), run, config.privateDir);
+      stage = 'SWC API collection';
+      const summary = await sync(new ReadClient(tracedAuth, run), run, config.privateDir);
       console.log(JSON.stringify(summary, null, 2));
     }
   });
