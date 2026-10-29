@@ -1,0 +1,17 @@
+name: API shadow comparator tests
+on:
+  pull_request:
+    paths:
+      - 'tools/api-shadow/**'
+      - '.github/workflows/api-shadow-tests.yml'
+  workflow_dispatch:
+jobs:
+  shadow-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test isolated read-only export comparator
+        run: python3 -m unittest discover -s tools/api-shadow -p 'test_*.py' -v
+# Deliberately no Google credentials, no SWC OAuth credentials, no production writes.
