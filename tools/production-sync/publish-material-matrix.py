@@ -66,6 +66,8 @@ def publish(snapshot,token):
         return {"userEnteredValue":{"numberValue":v} if type(v)==int else {"stringValue":str(v)}}
     payload=[{"values":[cell(v) for v in (row+[""]*(22-len(row)))]} for row in rows]
     actions.append({"updateCells":{"range":{"sheetId":TAB_ID,"startRowIndex":0,"endRowIndex":bottom,"startColumnIndex":START,"endColumnIndex":end},"rows":payload,"fields":"userEnteredValue"}})
+    # Remove stale legacy header and alternating row fills from the whole matrix area.
+    actions.append({"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":0,"endRowIndex":bottom,"startColumnIndex":START,"endColumnIndex":end},"cell":{"userEnteredFormat":{"backgroundColor":{"red":1,"green":1,"blue":1},"textFormat":{"bold":False,"foregroundColor":{"red":0.15,"green":0.22,"blue":0.29}}}},"fields":"userEnteredFormat.backgroundColor,userEnteredFormat.textFormat"}})
     # Reset previous highlights so changed balances cannot retain stale colors.
     actions.append({"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":1,"endRowIndex":bottom,"startColumnIndex":START+1,"endColumnIndex":end},"cell":{"userEnteredFormat":{"backgroundColor":{"red":1,"green":1,"blue":1}}},"fields":"userEnteredFormat.backgroundColor"}})
     # The legacy always-white conditional rule must not override matrix fills.
