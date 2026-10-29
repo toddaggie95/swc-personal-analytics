@@ -69,6 +69,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ACCEPTED_RUN_ID: ${{ github.event.workflow_run.id || inputs.accepted_batch_run_id }}
+          ALLOW_UNACCEPTED_NOOP: ${{ github.event_name == 'workflow_run' }}
         run: bash tools/production-sync/verify-accepted-batch.sh "${{ runner.temp }}"
       - name: Check whether accepted batch was already published
         id: publish_gate
