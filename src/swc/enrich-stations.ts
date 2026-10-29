@@ -31,6 +31,7 @@ export async function enrichFactionStations(
   wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms)),
   progress: (message: string) => void = console.log,
   suppliedSource?: Record<string, unknown>,
+  mode: 'all' | 'shipyards' = 'all',
 ) {
   const candidates: Record<string, unknown>[] = [];
   for (const file of suppliedSource ? [] : await readdir(join(root, 'normalized'))) {
@@ -53,9 +54,10 @@ export async function enrichFactionStations(
   try { cached = record(await readJson(cacheFile)); } catch (error) {
     if (record(error).code !== 'ENOENT') throw error;
   }
-  progress(`Enriching ${stations.length} stations from inventory dated ${String(sourceSummary.completedAt)}. Completed details are checkpointed; rerun this command to resume.`);
+  const selected = stations.filter(s => mode === 'all' || /shipyard/i.test(String(s.typeName ?? '')));
+  progress(`Enriching ${selected.length}/${stations.length} stations (${mode}) from inventory dated ${String(sourceSummary.completedAt)}. Completed details are checkpointed; rerun this command to resume.`);
   const enriched = [];
-  for (const station of stations) {
+  for (const station of selected) {
     const uid = String(station.uid);
     let saved = record(cached[uid]);
     if (!saved.observedAt || !('tags' in saved)) {
@@ -71,15 +73,19 @@ export async function enrichFactionStations(
       await atomicWrite(cacheFile, JSON.stringify(cached, null, 2));
     }
     enriched.push({ ...station, tags: saved.tags ?? station.tags ?? null, operations: saved });
-    progress(`Station details: ${enriched.length}/${stations.length}`);
+    progress(`Station details: ${enriched.length}/${selected.length}`);
   }
+  const fullStations = mode === 'all' ? enriched : stations.map(s => {
+    const found = enriched.find(e => e.uid === s.uid);
+    return found ?? { ...s, operations: { status: 'not-checked', interpretation: 'No detail request made; production state unknown.' } };
+  });
   const exportFile = join(root, 'normalized', `${exportLabel(faction, 'stations', filter)}__${run.id}.json`);
   const summary = { ...sourceSummary, schemaVersion: 2, runId: run.id, sourceInventoryRun: sourceSummary.runId,
     sourceInventoryCompletedAt: sourceSummary.completedAt, completedAt: new Date().toISOString(),
-    locationFilter: filter, ownedStations: enriched.length, enrichment: 'station-details', detailsFetched: enriched.length,
+    locationFilter: filter, ownedStations: fullStations.length, enrichment: mode === 'all' ? 'station-details' : 'shipyard-details', detailSelection: mode, detailsFetched: enriched.length, detailsNotChecked: fullStations.length - enriched.length,
     exportFile, rawDirectory: run.directory,
     consistency: 'Saved inventory with individually timestamped detail observations; resumed details can have earlier timestamps.' };
-  await atomicWrite(exportFile, JSON.stringify({ summary, stations: enriched }, null, 2));
+  await atomicWrite(exportFile, JSON.stringify({ summary, stations: fullStations }, null, 2));
   await run.complete(summary);
   return summary;
 }
@@ -91,6 +97,7 @@ export async function syncCompleteFactionStations(
   run: SnapshotRun, root: string, faction: 'tff' | 'tjo', filter?: LocationFilter,
   wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms)),
   progress: (message: string) => void = console.log,
+  mode: 'all' | 'shipyards' = 'all',
 ) {
   const key = createHash('sha256').update(JSON.stringify([faction, filter?.kind, filter?.name.toLowerCase()])).digest('hex');
   const pending = join(root, 'checkpoints', `station-sync-${key}.json`);
@@ -104,7 +111,7 @@ export async function syncCompleteFactionStations(
     source = record(await readJson(inventory.exportFile));
     await atomicWrite(pending, JSON.stringify(source));
   } else progress('Resuming unfinished station sync; previously fetched details will be reused.');
-  const result = await enrichFactionStations(client, run, root, faction, filter, wait, progress, source);
+  const result = await enrichFactionStations(client, run, root, faction, filter, wait, progress, source, mode);
   await rm(pending, { force: true });
   return result;
 }
