@@ -1,6 +1,6 @@
 // Pure, read-only comparison of accepted production snapshots.
 // Station identity is the exported UID, never its coordinates or row number.
-export const FIELDS=['system','owner','ship','quantity','started','status','readiness'];
+export const FIELDS=['system','coordinates','owner','ship','quantity','started','status','readiness'];
 export function compareProductionSnapshots(previous,current){
  if(!Array.isArray(previous?.stations)||!Array.isArray(current?.stations))throw Error('Both snapshots require stations arrays');
  const index=(rows,label)=>{const m=new Map();for(const s of rows){const uid=String(s.uid??'').trim();if(!uid||m.has(uid))throw Error(label+' has missing or duplicate station UID: '+uid);m.set(uid,s);}return m;};
@@ -10,7 +10,7 @@ export function compareProductionSnapshots(previous,current){
   if(!a||!b){changes.push({uid,type:a?'station_removed':'station_added',before:a??null,after:b??null,sector:b?.sector??a?.sector??null,coordinates:b?.coordinates??a?.coordinates??null});continue;}
   for(const field of FIELDS){
    const oldValue=a[field]??null,newValue=b[field]??null;
-   if(oldValue===newValue)continue;
+   if(oldValue===newValue || (field==='coordinates' && oldValue===null))continue;
    const type=field==='started'?'production_activity_changed':field==='ship'?'assignment_changed':field==='readiness'?'readiness_changed':field==='status'?'status_changed':field+'_changed';
    changes.push({uid,system:b.system??a.system,sector:b.sector??a.sector??null,coordinates:b.coordinates??a.coordinates??null,type,field,before:oldValue,after:newValue});
   }
