@@ -37,11 +37,11 @@ export class ReadPacer {
     const now = this.now();
     const window = this.observed.get(resource);
     let next = this.nextAllowedMs.get(resource) ?? 0;
-    if (window?.remaining === 0) {
+    if (window && window.remaining === 0) {
       if (window.resetAtMs === null) throw new Error('SWC quota exhausted without a trustworthy reset; stop and resume later.');
       next = Math.max(next, window.resetAtMs + 1000);
     }
-    if (window?.remaining !== null && window?.remaining !== undefined && window.remaining > 0 && window.resetAtMs !== null) {
+    if (window && window.remaining !== null && window.remaining > 0 && window.resetAtMs !== null) {
       // Reserve one request; spread the remaining budget over the window.
       next = Math.max(next, now + Math.ceil((window.resetAtMs - now) / window.remaining));
     }
