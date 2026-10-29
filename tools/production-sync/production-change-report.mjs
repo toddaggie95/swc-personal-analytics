@@ -1,6 +1,6 @@
 // Pure, read-only comparison of accepted production snapshots.
 // Station identity is the exported UID, never its coordinates or row number.
-export const FIELDS=['system','coordinates','owner','ship','quantity','started','status','readiness'];
+export const FIELDS=['system','owner','ship','quantity','started','status','readiness'];
 export function compareProductionSnapshots(previous,current){
  if(!Array.isArray(previous?.stations)||!Array.isArray(current?.stations))throw Error('Both snapshots require stations arrays');
  const index=(rows,label)=>{const m=new Map();for(const s of rows){const uid=String(s.uid??'').trim();if(!uid||m.has(uid))throw Error(label+' has missing or duplicate station UID: '+uid);m.set(uid,s);}return m;};
