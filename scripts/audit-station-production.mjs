@@ -36,8 +36,8 @@ if (!Array.isArray(snapshot.stations) || !snapshot.summary) throw new Error('Not
 const byUid = new Map(snapshot.stations.map(s => [str(s.uid), s]));
 const csvUids = new Set(csv.map(r => str(r.uid)));
 if (csvUids.size !== csv.length || byUid.size !== snapshot.stations.length || csvUids.has('') || byUid.has('')) throw new Error('Duplicate or blank station UIDs.');
-const mismatches = [], nonShipyardProduction = [], nonShipyardTooling = [], toolingMismatches = [];
-const counts = { csvStations: csv.length, apiStations: snapshot.stations.length, matchedUids: 0, csvOnly: 0, apiOnly: 0, enriched: 0, notChecked: 0, runningAgreement: 0, runningDisagreement: 0, toolingCompared: 0, toolingMatches: 0, toolingMismatches: 0 };
+const mismatches = [], unknownProduction = [], nonShipyardProduction = [], nonShipyardTooling = [], toolingMismatches = [];
+const counts = { csvStations: csv.length, apiStations: snapshot.stations.length, matchedUids: 0, csvOnly: 0, apiOnly: 0, enriched: 0, notChecked: 0, runningAgreement: 0, runningDisagreement: 0, runningUnknown: 0, csvRunningUnknown: 0, toolingCompared: 0, toolingMatches: 0, toolingMismatches: 0 };
 for (const row of csv) {
   const uid = str(row.uid), station = byUid.get(uid);
   if (!station) { counts.csvOnly++; continue; }
@@ -56,7 +56,7 @@ for (const row of csv) {
   const actions = Array.isArray(station.operations.productionActions) ? station.operations.productionActions :
     (Array.isArray(station.operations.actions) ? station.operations.actions.filter(a => a?.attributes?.type === 'EntityProductionAction') : null);
   // Null actions are unknown, not a confirmed absence of production.
-  if (actions !== null) {
+  if (actions === null) {\n    counts.runningUnknown++;\n    if (csvRunning) counts.csvRunningUnknown++;\n    unknownProduction.push({ uid, csvStatus: str(row.productionStatus), observedAt: station.operations.observedAt ?? null });\n  } else {
     const apiRunning = actions.length > 0;
     if (csvRunning === apiRunning) counts.runningAgreement++;
     else {
@@ -79,10 +79,10 @@ counts.apiOnly = byUid.size - counts.matchedUids;
 const report = { summary: { faction: snapshot.summary.ownerName, inventoryCompletedAt: snapshot.summary.sourceInventoryCompletedAt ?? snapshot.summary.completedAt,
   collectionCompletedAt: snapshot.summary.completedAt, detailSelection: snapshot.summary.detailSelection,
   caveat: 'Observations may predate snapshot completion. CSV export timestamp must be verified separately.' },
-  counts, mismatches, nonShipyardProduction, nonShipyardTooling, toolingMismatches };
+  counts, mismatches, unknownProduction, nonShipyardProduction, nonShipyardTooling, toolingMismatches };
 if (outputArg) await writeFile(resolve(outputArg), JSON.stringify(report, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
 console.log(JSON.stringify({ ...report.summary, counts, mismatchObservationDates: Object.fromEntries(
   [...new Set(mismatches.map(x => str(x.observedAt).slice(0, 10) || 'unknown'))].map(date => [date, mismatches.filter(x => str(x.observedAt).slice(0, 10) === date).length])),
-  nonShipyardProductionCount: nonShipyardProduction.length, nonShipyardToolingCount: nonShipyardTooling.length,
+  productionCoverage: { compared: counts.runningAgreement + counts.runningDisagreement, unknown: counts.runningUnknown, notChecked: counts.notChecked },\n  nonShipyardProductionCount: nonShipyardProduction.length, nonShipyardToolingCount: nonShipyardTooling.length,
   reportFile: outputArg ? resolve(outputArg) : null,
   note: outputArg ? 'UID-level details written locally; not printed.' : 'Pass a third path to save UID-level details locally.' }, null, 2));
