@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: toddaggie95/swc-personal-analytics
-          ref: cbcb72c9a1c2cbe90741be3f523652a3bb977c1d
+          ref: 3191409adbc8d829da67bd1cea3647db3ceab973
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
