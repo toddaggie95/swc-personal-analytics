@@ -15,7 +15,7 @@ spec.loader.exec_module(sync)
 class StartedSyncTests(unittest.TestCase):
  def test_two_running_shipyards_in_same_hub(self):
   manifest={"destinations":[{"id":"hub","kind":"hub","system":"Kashyyyk","center":{"x":5,"y":17},"target":{"hasColumn":10,"materialStartRow":47},"memberStationUids":["5:1","5:2","5:3"]}]}
-  stations=[{"uid":"5:1","system":"Kashyyyk","sysX":"4","sysY":"16","type_name":"Shipyard I","productionStatus":"running"},{"uid":"5:2","system":"Kashyyyk","sysX":"5","sysY":"16","type_name":"Shipyard I","productionStatus":"running"},{"uid":"5:3","system":"Kashyyyk","sysX":"6","sysY":"16","type_name":"Shipyard I","productionStatus":"running"}]
+  stations=[{"uid":"5:1","system":"Kashyyyk","sysX":"4","sysY":"16","type_name":"Shipyard I","productionStatus":"running","tooled-to":"Mining Barque","productionQuantity":"1"},{"uid":"5:2","system":"Kashyyyk","sysX":"5","sysY":"16","type_name":"Shipyard I","productionStatus":"running"},{"uid":"5:3","system":"Kashyyyk","sysX":"6","sysY":"16","type_name":"Shipyard I","productionStatus":"running"}]
   rows=[[] for _ in range(48)]
   rows[36]=[""]*9;rows[36][8]="Hub (5,17)"
   for i,xy in enumerate(["4,16","5,16","6,16"],37):
@@ -23,7 +23,7 @@ class StartedSyncTests(unittest.TestCase):
   rows[39][11]="Yes"
   result=sync.plan(manifest,stations,{"Kashyyyk":rows})
   self.assertEqual(result["checkedShipyards"],3)
-  self.assertEqual([(c["uid"],c["proposed"]) for c in result["changes"]],[("5:1","Yes"),("5:2","Yes")])
+  self.assertEqual([(c["uid"],c["proposed"]) for c in result["changes"] if c.get("field")=="started"],[("5:1","Yes"),("5:2","Yes")])
  def test_reject_coordinate_drift(self):
   manifest={"destinations":[{"id":"x","kind":"oneoff-group","system":"Kashyyyk","memberStationUids":["5:1"],"oneoffs":[{"stationUid":"5:1","row":1}]}]}
   station={"uid":"5:1","system":"Kashyyyk","sysX":"4","sysY":"16","type_name":"Shipyard I","productionStatus":"running"}
@@ -59,7 +59,7 @@ class StartedSyncTests(unittest.TestCase):
    rows[row]=[coord,"Alpha-class Xg-1 Star Wing","48",""]
   result=sync.plan(manifest,stations,{"Kashyyyk":rows})
   self.assertEqual(result["checkedShipyards"],8)
-  self.assertEqual([(c["uid"],c["row"],c["column"]) for c in result["changes"]],
+  self.assertEqual([(c["uid"],c["row"],c["column"]) for c in result["changes"] if c.get("field")=="started"],
                    [("5:53153",3,3)])
 
  def test_live_read_uses_evaluated_coordinates_not_formulas(self):
@@ -87,6 +87,22 @@ class StartedSyncTests(unittest.TestCase):
    self.assertEqual(result["status"],"dry_run")
    self.assertEqual(result["transitionCounts"],{"toYes":1,"toBlank":0})
    self.assertEqual(len(calls),1)
+
+ def test_running_assignment_updates_even_when_started_already_yes(self):
+  manifest={"destinations":[{"id":"x","kind":"oneoff-group","system":"Dalchon","memberStationUids":["5:65787"],"oneoffs":[{"stationUid":"5:65787","row":10}]}]}
+  station={"uid":"5:65787","system":"Dalchon","sysX":"10","sysY":"16","type_name":"Shipyard I","productionStatus":"running","tooled-to":"Mining Barque","productionQuantity":"1"}
+  rows=[[] for _ in range(13)]
+  rows[11]=["10,16","None","0","Yes","5:65787"]
+  changes=sync.plan(manifest,[station],{"Dalchon":rows})["changes"]
+  self.assertEqual([(c["column"],c["proposed"]) for c in changes],[(1,"Mining Barque"),(2,"1")])
+
+ def test_running_missing_assignment_fails_closed(self):
+  manifest={"destinations":[{"id":"x","kind":"oneoff-group","system":"Dalchon","memberStationUids":["5:65787"],"oneoffs":[{"stationUid":"5:65787","row":10}]}]}
+  station={"uid":"5:65787","system":"Dalchon","sysX":"10","sysY":"16","type_name":"Shipyard I","productionStatus":"running","tooled-to":"","productionQuantity":"1"}
+  rows=[[] for _ in range(13)]
+  rows[11]=["10,16","None","0","Yes","5:65787"]
+  with self.assertRaisesRegex(ValueError,"missing ship/quantity"):
+   sync.plan(manifest,[station],{"Dalchon":rows})
 
  def test_column_names(self):
   self.assertEqual(sync.column_name(11),"L")
