@@ -1,35 +1,42 @@
 #!/usr/bin/env bash
 set -euo pipefail
 output="$1"
-current="${ACCEPTED_RUN_ID:-}"
-[[ "$current" =~ ^[0-9]+$ ]] || exit 1
+current="${ACCEPTED_RUN_ID:?}"
 mkdir -p "$output/publish-history"
-runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&status=success&per_page=100" --jq '.workflow_runs[] | select(.name == "SWC production overview readiness and publish") | .id')
+runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&per_page=100" --jq '.workflow_runs[] | select(.name == "SWC production overview readiness and publish" and .status == "completed") | .id')
+for component in overview matrix changes; do
+  printf '%s=false\n' "$component" >> "$GITHUB_OUTPUT"
+done
 for run in $runs; do
   [[ "$run" != "$GITHUB_RUN_ID" ]] || continue
   dir="$output/publish-history/$run"
   mkdir -p "$dir"
   if ! gh run download "$run" -R "$GITHUB_REPOSITORY" -n swc-production-overview-readonly -D "$dir" >/dev/null 2>&1; then continue; fi
-  if [[ -s "$dir/accepted-has-verification.json" && -s "$dir/production-change-snapshot.json" ]]; then
-    previous=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("hasRunId",""))' "$dir/accepted-has-verification.json")
-    same_exports=false
-    if [[ -s "$dir/swc-exports/export-manifest.json" && -s "$output/swc-exports/export-manifest.json" ]]; then
-      if python3 - "$dir/swc-exports/export-manifest.json" "$output/swc-exports/export-manifest.json" <<'PY'
+  if [[ ! -s "$dir/swc-exports/export-manifest.json" ]]; then continue; fi
+  if ! python3 - "$dir/swc-exports/export-manifest.json" "$output/swc-exports/export-manifest.json" <<'PY'
 import json,sys
 def identity(path):
-    with open(path) as f: manifest=json.load(f)
-    return sorted((x["owner"],x["kind"],x["sha256"]) for x in manifest["files"])
+    with open(path) as f: files=json.load(f)["files"]
+    return sorted((x["owner"],x["kind"],x["sha256"]) for x in files)
 assert len(identity(sys.argv[1])) == 4
 assert identity(sys.argv[1]) == identity(sys.argv[2])
 PY
-      then same_exports=true; fi
+  then continue; fi
+  for component in overview matrix changes; do
+    if [[ -s "$dir/published-$component.ok" ]]; then
+      touch "$output/published-$component.ok"
     fi
-    if [[ "$previous" == "$current" || "$same_exports" == true ]]; then
-      echo "publish=false" >> "$GITHUB_OUTPUT"
-      echo "Already published HAS run $current"
-      exit 0
+  done
+  # Legacy successful runs published all three areas, verified by their job conclusion.
+  if [[ -s "$dir/production-change-snapshot.json" && -s "$dir/accepted-has-verification.json" ]]; then
+    conclusion=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq '.conclusion')
+    if [[ "$conclusion" == success ]]; then
+      for component in overview matrix changes; do touch "$output/published-$component.ok"; done
     fi
-    break
   fi
 done
-echo "publish=true" >> "$GITHUB_OUTPUT"
+for component in overview matrix changes; do
+  if [[ ! -e "$output/published-$component.ok" ]]; then
+    echo "$component=true" >> "$GITHUB_OUTPUT"
+  fi
+done
