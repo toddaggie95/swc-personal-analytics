@@ -59,7 +59,7 @@ export async function enrichFactionStations(
     const uid = String(station.uid);
     let saved = record(cached[uid]);
     if (!saved.observedAt || !('tags' in saved)) {
-      await wait(6500);
+      // ReadClient enforces serial rate-aware pacing; do not double-sleep here.
       const detail = await client.stationDetail(uid);
       if (detail.uid !== uid || record(record(detail.owner).attributes).uid !== ownerUid
           || (filter && record(record(record(detail.location)[filter.kind]).attributes).uid !== filter.uid)) {
