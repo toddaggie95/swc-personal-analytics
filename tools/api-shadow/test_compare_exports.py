@@ -15,9 +15,11 @@ class ShadowComparatorTests(unittest.TestCase):
         self.manual.mkdir()
         self.api.mkdir()
         for name in module.KINDS:
-            fields = ["uid", "owner_uid", "quantity", "productionStatus"]
-            self.write(self.manual / (name + ".csv"), fields, [["16:1", "20:1174", "10", "running"]])
-            self.write(self.api / (name + ".csv"), fields, [["16:1", "20:1174", "10", "running"]])
+            fields = list(dict.fromkeys(["uid", "owner_uid", "quantity", "productionStatus"] + list(module.STATION_CRITICAL if name.endswith("Stations") else module.MATERIAL_CRITICAL)))
+            values = {"uid": "16:1", "owner_uid": "20:1174", "quantity": "10", "productionStatus": "running"}
+            row = [values.get(field, "") for field in fields]
+            self.write(self.manual / (name + ".csv"), fields, [row])
+            self.write(self.api / (name + ".csv"), fields, [row])
 
     def tearDown(self):
         self.temp.cleanup()
