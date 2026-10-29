@@ -35,9 +35,11 @@ class ShadowComparatorTests(unittest.TestCase):
         self.assertTrue(module.compare(self.manual, self.api)["safeToPromote"])
 
     def test_quantity_change_fails(self):
-        self.write(self.api / "TJO-Materials.csv",
-                   ["uid", "owner_uid", "quantity", "productionStatus"],
-                   [["16:1", "20:1174", "11", "running"]])
+        fields, rows = module.load(self.api / "TJO-Materials.csv")
+        values = dict(rows["16:1"])
+        values["quantity"] = "11"
+        self.write(self.api / "TJO-Materials.csv", fields,
+                   [[values[field] for field in fields]])
         result = module.compare(self.manual, self.api)
         self.assertFalse(result["safeToPromote"])
         self.assertEqual(result["files"]["TJO-Materials"]["criticalFieldMismatchCounts"]["quantity"], 1)
