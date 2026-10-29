@@ -8,7 +8,23 @@ status=$(gh api "repos/$repo/actions/runs/$run" --jq '.conclusion')
 workflow=$(gh api "repos/$repo/actions/runs/$run" --jq '.name')
 [[ "$status" == "success" && "$workflow" == "SWC production CSV dry run" ]] || { echo "HAS run not successful or wrong workflow"; exit 1; }
 mkdir -p "$output/accepted-has"
-gh run download "$run" -R "$repo" -n swc-audited-ledger -D "$output/accepted-has"
+if ! gh run download "$run" -R "$repo" -n swc-audited-ledger -D "$output/accepted-has"; then
+  if [[ "${ALLOW_UNACCEPTED_NOOP:-false}" == "true" ]]; then
+    echo "Upstream HAS run has no accepted batch artifact; downstream publication skipped."
+    echo "verified=false" >> "$GITHUB_OUTPUT"
+    exit 0
+  fi
+  exit 1
+fi
+if [[ ! -s "$output/accepted-has/batch-acceptance-report.json" || ! -s "$output/accepted-has/has-write-report.json" ]]; then
+  if [[ "${ALLOW_UNACCEPTED_NOOP:-false}" == "true" ]]; then
+    echo "Upstream completed without accepted HAS writes; downstream publication skipped."
+    echo "verified=false" >> "$GITHUB_OUTPUT"
+    exit 0
+  fi
+  echo "Missing accepted HAS report" >&2
+  exit 1
+fi
 python3 - "$output/accepted-has" <<'PY'
 import json,os,sys
 folder=sys.argv[1]
