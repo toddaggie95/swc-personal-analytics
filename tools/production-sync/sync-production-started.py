@@ -103,7 +103,7 @@ def main():
  response=request(url,token)["valueRanges"]
  if len(response)!=len(systems):raise ValueError("Incomplete system read")
  rows={s:[[]]+v.get("values",[]) for s,v in zip(systems,response)}
- ship_response=request(base+":batchGet?"+urllib.parse.urlencode([("ranges","'Ships'!A1:A1000"),("valueRenderOption","FORMATTED_VALUE")]),token)["valueRanges"]
+ ship_response=request(base+":batchGet?"+urllib.parse.urlencode([("ranges","'Ships'!A4:A400"),("valueRenderOption","FORMATTED_VALUE")]),token)["valueRanges"]
  if len(ship_response)!=1:raise ValueError("Missing Ships master read")
  ship_names={str(r[0]).strip() for r in ship_response[0].get("values",[]) if r and str(r[0]).strip()}
  if not ship_names:raise ValueError("Empty Ships master")
