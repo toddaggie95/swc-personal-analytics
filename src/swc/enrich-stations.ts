@@ -75,10 +75,9 @@ export async function enrichFactionStations(
     enriched.push({ ...station, tags: saved.tags ?? station.tags ?? null, operations: saved });
     progress(`Station details: ${enriched.length}/${selected.length}`);
   }
-  const fullStations = mode === 'all' ? enriched : stations.map(s => {
-    const found = enriched.find(e => e.uid === s.uid);
-    return found ?? { ...s, operations: { status: 'not-checked', interpretation: 'No detail request made; production state unknown.' } };
-  });
+  const enrichedByUid = new Map(enriched.map(s => [String(s.uid), s]));
+  const fullStations = mode === 'all' ? enriched : stations.map(s =>
+    enrichedByUid.get(String(s.uid)) ?? { ...s, operations: { status: 'not-checked', interpretation: 'No detail request made; production state unknown.' } });
   const exportFile = join(root, 'normalized', `${exportLabel(faction, 'stations', filter)}__${run.id}.json`);
   const summary = { ...sourceSummary, schemaVersion: 2, runId: run.id, sourceInventoryRun: sourceSummary.runId,
     sourceInventoryCompletedAt: sourceSummary.completedAt, completedAt: new Date().toISOString(),
