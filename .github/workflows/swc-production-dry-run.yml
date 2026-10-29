@@ -8,6 +8,11 @@ on:
         type: boolean
         required: true
         default: true
+      force_republish:
+        description: 'Development override: reapply HAS and downstream reports for existing exports'
+        type: boolean
+        required: true
+        default: false
       trash_superseded_exports:
         description: 'Mark older exports trash_ and rename accepted files (default: true)'
         type: boolean
@@ -50,6 +55,12 @@ jobs:
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
           SWC_EXPORT_OUTPUT: ${{ runner.temp }}/swc-exports
         run: python3 tools/production-sync/download-drive-exports.py
+
+      - name: Detect new verified export batch
+        id: batch_gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/production-sync/check-new-batch.py "${{ runner.temp }}/swc-exports/export-manifest.json"
 
       - name: Test export auto-discovery
         run: python3 -m unittest discover -s tools/production-sync -p 'test_download_drive_exports.py' -v
@@ -149,7 +160,7 @@ jobs:
             "${{ runner.temp }}/production-started-preflight.json" false
 
       - name: Apply and verify HAS updates (opt-in only)
-        if: success() && inputs.enable_has_writes == true
+        if: success() && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
@@ -161,7 +172,7 @@ jobs:
             "${{ runner.temp }}/has-write-report.json"
 
       - name: Synchronize and verify production Started flags from station exports
-        if: success() && inputs.enable_has_writes == true
+        if: success() && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
@@ -173,7 +184,7 @@ jobs:
             "${{ runner.temp }}/production-started-write-report.json" true
 
       - name: Accept verified export batch (no cleanup)
-        if: success() && inputs.enable_has_writes == true
+        if: success() && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
@@ -184,7 +195,7 @@ jobs:
             "${{ runner.temp }}/batch-acceptance-report.json"
 
       - name: Rename superseded and accepted exports (opt-in, after verification)
-        if: success() && inputs.enable_has_writes == true && inputs.trash_superseded_exports == true
+        if: success() && inputs.enable_has_writes == true && inputs.trash_superseded_exports == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'

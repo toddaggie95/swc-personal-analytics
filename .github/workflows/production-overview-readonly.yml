@@ -5,6 +5,11 @@ on:
     types: [completed]
   workflow_dispatch:
     inputs:
+      force_republish:
+        description: 'Development override: publish an already processed accepted batch'
+        type: boolean
+        required: true
+        default: false
       accepted_batch_run_id:
         description: 'Successful HAS workflow run ID containing a verified batch acceptance artifact (blank for preview only)'
         type: string
@@ -64,7 +69,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ACCEPTED_RUN_ID: ${{ github.event.workflow_run.id || inputs.accepted_batch_run_id }}
+          ALLOW_UNACCEPTED_NOOP: ${{ github.event_name == 'workflow_run' }}
         run: bash tools/production-sync/verify-accepted-batch.sh "${{ runner.temp }}"
+      - name: Check whether accepted batch was already published
+        id: publish_gate
+        if: steps.accepted_batch.outputs.verified == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCEPTED_RUN_ID: ${{ github.event.workflow_run.id || inputs.accepted_batch_run_id }}
+        run: bash tools/production-sync/check-overview-published.sh "${{ runner.temp }}"
+
       - name: Validate readiness implementation
         run: |
           node --test tools/production-sync/*.test.mjs
@@ -110,18 +124,22 @@ jobs:
             "${{ runner.temp }}/overview-shadow-audit.json" \
             "${{ runner.temp }}/overview-publish-preview.json"
       - name: Publish faction-aware Production Overview (A3:L46 only)
-        if: success() && steps.accepted_batch.outputs.verified == 'true'
+        if: success() && steps.accepted_batch.outputs.verified == 'true' && (steps.publish_gate.outputs.overview == 'true' || inputs.force_republish == true)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           ENABLE_OVERVIEW_WRITES: 'true'
-        run: python3 tools/production-sync/publish-overview-factions.py "${{ runner.temp }}/overview-publish-preview.json"
+        run: |
+          python3 tools/production-sync/publish-overview-factions.py "${{ runner.temp }}/overview-publish-preview.json"
+          touch "${{ runner.temp }}/published-overview.ok"
       - name: Publish material matrix beside dashboard (N:AI)
-        if: success() && steps.accepted_batch.outputs.verified == 'true'
+        if: success() && steps.accepted_batch.outputs.verified == 'true' && (steps.publish_gate.outputs.matrix == 'true' || inputs.force_republish == true)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           ACCEPTED_HAS_BATCH: 'true'
           ENABLE_MATERIAL_BALANCE_WRITES: 'true'
-        run: python3 tools/production-sync/publish-material-matrix.py "${{ runner.temp }}/overview-readiness.json"
+        run: |
+          python3 tools/production-sync/publish-material-matrix.py "${{ runner.temp }}/overview-readiness.json"
+          touch "${{ runner.temp }}/published-matrix.ok"
       - name: Restore prior successful production snapshot
         if: success()
         env:
@@ -145,17 +163,22 @@ jobs:
         if: success()
         run: node tools/production-sync/write-production-change-summary.mjs "${{ runner.temp }}/production-change-report.json" "${{ runner.temp }}/production-change-summary.txt"
       - name: Replace Production Changes tab after verified HAS import
-        if: success() && steps.accepted_batch.outputs.verified == 'true'
+        if: success() && steps.accepted_batch.outputs.verified == 'true' && (steps.publish_gate.outputs.changes == 'true' || inputs.force_republish == true)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           ACCEPTED_HAS_BATCH: 'true'
-        run: python3 tools/production-sync/publish-production-changes.py "${{ runner.temp }}/production-change-report.json"
+        run: |
+          python3 tools/production-sync/publish-production-changes.py "${{ runner.temp }}/production-change-report.json"
+          touch "${{ runner.temp }}/published-changes.ok"
       - name: Upload read-only readiness report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: swc-production-overview-readonly
           path: |
+            ${{ runner.temp }}/published-overview.ok
+            ${{ runner.temp }}/published-matrix.ok
+            ${{ runner.temp }}/published-changes.ok
             ${{ runner.temp }}/overview-readiness.json
             ${{ runner.temp }}/previous-production-snapshot.json
             ${{ runner.temp }}/accepted-has-verification.json
