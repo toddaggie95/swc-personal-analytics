@@ -54,6 +54,7 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
   // Inventory hyperlinks must use the station owner's faction inventory.
   // TFF=1174, TJO=1838; never infer ownership from the station name.
   const source=stationByUid.get(station.uid);
+  const sector=String(source?.sector_name??source?.sectorName??source?.sector??'').trim();
   const ownerUid=String(source?.owner_uid??'');
   const ownerMatch=/^20:(1174|1838)$/.exec(ownerUid);
   // Legacy synthetic test fixtures omit ownership. Publication validation fails closed
@@ -70,7 +71,7 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
   if(isAssigned&&started!=='yes'&&!bom)throw Error('Unverified ship material bill '+ship);
   const bill=Object.fromEntries(Object.entries(bom??{}).map(([m,n])=>[m,n*qty]));
   if(Object.values(bill).some(x=>!Number.isSafeInteger(x)))throw Error('Material multiplication overflow '+station.uid);
-  output.push({id:station.uid,stationPoolId:station.uid,ownerFaction,ownerFactionId:ownerMatch?.[1]??null,system:entry.system,destinationId:station.destinationId,ship,quantity:qty,started:started==='yes',bill});
+  output.push({id:station.uid,stationPoolId:station.uid,ownerFaction,ownerFactionId:ownerMatch?.[1]??null,system:entry.system,sector,coordinates:entry.x+','+entry.y,destinationId:station.destinationId,ship,quantity:qty,started:started==='yes',bill});
  }
  return output;
 }

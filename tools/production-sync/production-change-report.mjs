@@ -7,12 +7,12 @@ export function compareProductionSnapshots(previous,current){
  const before=index(previous.stations,'previous'),after=index(current.stations,'current'),changes=[];
  for(const uid of [...new Set([...before.keys(),...after.keys()])].sort()){
   const a=before.get(uid),b=after.get(uid);
-  if(!a||!b){changes.push({uid,type:a?'station_removed':'station_added',before:a??null,after:b??null});continue;}
+  if(!a||!b){changes.push({uid,type:a?'station_removed':'station_added',before:a??null,after:b??null,sector:b?.sector??a?.sector??null,coordinates:b?.coordinates??a?.coordinates??null});continue;}
   for(const field of FIELDS){
    const oldValue=a[field]??null,newValue=b[field]??null;
-   if(oldValue===newValue)continue;
+   if(oldValue===newValue || (field==='coordinates' && oldValue===null))continue;
    const type=field==='started'?'production_activity_changed':field==='ship'?'assignment_changed':field==='readiness'?'readiness_changed':field==='status'?'status_changed':field+'_changed';
-   changes.push({uid,system:b.system??a.system,type,field,before:oldValue,after:newValue});
+   changes.push({uid,system:b.system??a.system,sector:b.sector??a.sector??null,coordinates:b.coordinates??a.coordinates??null,type,field,before:oldValue,after:newValue});
   }
  }
  return {previousBatch:previous.batchId??null,currentBatch:current.batchId??null,previousCount:before.size,currentCount:after.size,changes,summary:Object.fromEntries([...new Set(changes.map(c=>c.type))].sort().map(type=>[type,changes.filter(c=>c.type===type).length]))};

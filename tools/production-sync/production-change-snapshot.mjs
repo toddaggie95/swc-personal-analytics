@@ -9,7 +9,7 @@ export function snapshotFromOverview(result,{batchId=null,capturedAt=null}={}){
   if(!uid||seen.has(uid))throw Error('Missing or duplicate station UID '+uid);
   seen.add(uid);
   if(!o.system||!['building','ready_now','transfer','blocked','unassigned'].includes(o.status))throw Error('Invalid station readiness '+uid);
-  return {uid,system:o.system,coordinates:null,owner:o.ownerFaction??null,ship:o.ship??null,quantity:o.quantity??0,started:o.started===true,status:o.started?'running':'idle',readiness:o.status};
+  return {uid,system:o.system,coordinates:o.coordinates??null,sector:o.sector??null,owner:o.ownerFaction??null,ship:o.ship??null,quantity:o.quantity??0,started:o.started===true,status:o.started?'running':'idle',readiness:o.status};
  }).sort((a,b)=>a.uid.localeCompare(b.uid));
  return {schemaVersion:1,batchId,capturedAt,stations};
 }

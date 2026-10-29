@@ -34,12 +34,16 @@ def group_station_notices(changes):
     for change in changes:
         uid=value(change.get("uid"))
         if not uid:raise ValueError("Missing change station UID")
-        row=by_uid.setdefault(uid,{"uid":uid,"system":"","fields":{},"types":[]})
+        row=by_uid.setdefault(uid,{"uid":uid,"system":"","sector":"","coordinates":"","fields":{},"types":[]})
         after=change.get("after")
         before=change.get("before")
         system=change.get("system") or (after.get("system") if isinstance(after,dict) else None) or (before.get("system") if isinstance(before,dict) else None)
         if system and row["system"] and system!=row["system"]:raise ValueError("Conflicting station systems "+uid)
         row["system"]=system or row["system"]
+        for key in ("sector","coordinates"):
+            location=change.get(key) or (after.get(key) if isinstance(after,dict) else None) or (before.get(key) if isinstance(before,dict) else None)
+            if location and row[key] and location!=row[key]:raise ValueError("Conflicting station "+key+" "+uid)
+            row[key]=location or row[key]
         field=change.get("field")
         if field:
             if field in row["fields"]:raise ValueError("Duplicate change field "+uid+" "+field)
@@ -58,14 +62,21 @@ def group_station_notices(changes):
         else:notice="Station Updated"
         details="; ".join(k+": "+value(v["before"])+" → "+value(v["after"]) for k,v in fields.items())
         if not details:details="; ".join(row["types"])
-        notices.append([value(row["system"]),row["uid"],notice,details])
+        def transition(field):
+            if field not in fields:return ""
+            v=fields[field]
+            return value(v["before"])+" → "+value(v["after"])
+        others="; ".join(k+": "+value(v["before"])+" → "+value(v["after"]) for k,v in fields.items() if k not in ("ship","quantity","started","status","readiness"))
+        notices.append([value(row["system"]),value(row["sector"]),value(row["coordinates"]),row["uid"],notice,
+                        transition("ship"),transition("quantity"),transition("started"),
+                        transition("status"),transition("readiness"),others or ("; ".join(row["types"]) if not fields else "")])
     return sorted(notices,key=lambda r:(r[0],r[1]))
 
 def publish(report):
     if report.get("status") not in ("compared","baseline_created") or not isinstance(report.get("changes"),list):raise ValueError("Invalid report")
     changes=report["changes"]
     notices=group_station_notices(changes)
-    rows=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],["Current accepted batch",value(report.get("currentBatch"))],["Stations changed",len(notices)],["System","Station UID","Notice","Details"]]
+    rows=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],["Current accepted batch",value(report.get("currentBatch"))],["Stations changed",len(notices)],["System","Sector","System Coordinates","Station UID","Notice","Ship","Quantity","Started","Status","Readiness","Other Changes"]]
     if report["status"]=="baseline_created":rows.append(["Baseline established","No previous accepted snapshot"])
     elif not changes:rows.append(["No production changes","No differences since previous accepted import"])
     else:rows.extend(notices)
@@ -81,10 +92,11 @@ def publish(report):
     requests=[
       {"updateCells":{"range":{"sheetId":sheet},"fields":"userEnteredValue"}},
       {"updateCells":{"start":{"sheetId":sheet,"rowIndex":0,"columnIndex":0},"rows":[{"values":[{"userEnteredValue":{"numberValue":v} if isinstance(v,(int,float)) else {"stringValue":str(v)}} for v in row]} for row in rows],"fields":"userEnteredValue"}},
-      {"repeatCell":{"range":{"sheetId":sheet,"startRowIndex":0,"endRowIndex":1,"startColumnIndex":0,"endColumnIndex":6},"cell":{"userEnteredFormat":{"backgroundColor":{"red":0.13,"green":0.22,"blue":0.32},"textFormat":{"foregroundColor":{"red":1,"green":1,"blue":1},"bold":True,"fontSize":15}}},"fields":"userEnteredFormat"}},
+      {"repeatCell":{"range":{"sheetId":sheet,"startRowIndex":0,"endRowIndex":1,"startColumnIndex":0,"endColumnIndex":11},"cell":{"userEnteredFormat":{"backgroundColor":{"red":0.13,"green":0.22,"blue":0.32},"textFormat":{"foregroundColor":{"red":1,"green":1,"blue":1},"bold":True,"fontSize":15}}},"fields":"userEnteredFormat"}},
       {"repeatCell":{"range":{"sheetId":sheet,"startRowIndex":4,"endRowIndex":5,"startColumnIndex":0,"endColumnIndex":6},"cell":{"userEnteredFormat":{"backgroundColor":{"red":0.88,"green":0.93,"blue":0.98},"textFormat":{"bold":True}}},"fields":"userEnteredFormat"}},
-      {"updateDimensionProperties":{"range":{"sheetId":sheet,"dimension":"COLUMNS","startIndex":0,"endIndex":6},"properties":{"pixelSize":175},"fields":"pixelSize"}}
+      {"updateDimensionProperties":{"range":{"sheetId":sheet,"dimension":"COLUMNS","startIndex":0,"endIndex":6},"properties":{"pixelSize":150},"fields":"pixelSize"}}
     ]
+    requests.append({"repeatCell":{"range":{"sheetId":sheet,"startRowIndex":5,"endRowIndex":max(6,len(rows)),"startColumnIndex":0,"endColumnIndex":11},"cell":{"userEnteredFormat":{"verticalAlignment":"MIDDLE","wrapStrategy":"WRAP"}},"fields":"userEnteredFormat.verticalAlignment,userEnteredFormat.wrapStrategy"}})
     call(":batchUpdate",{"requests":requests})
     verify_readback(report, notices)
     print("Published and verified Production Changes:",len(notices),"station notices from",len(changes),"field changes")
