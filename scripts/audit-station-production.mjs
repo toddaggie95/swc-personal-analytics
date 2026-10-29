@@ -13,10 +13,8 @@ function parseCsv(input) {
       else cell += ch;
     } else if (ch === '"') quoted = true;
     else if (ch === ',') { row.push(cell); cell = ''; }
-    else if (ch === '
-' || ch === '\r') {
-      if (ch === '\r' && input[i + 1] === '
-') i++;
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && input[i + 1] === '\n') i++;
       row.push(cell); cell = '';
       if (row.some(x => x !== '')) table.push(row);
       row = [];
@@ -86,11 +84,9 @@ const report = { summary: { faction: snapshot.summary.ownerName, inventoryComple
   collectionCompletedAt: snapshot.summary.completedAt, detailSelection: snapshot.summary.detailSelection,
   caveat: 'Observations may predate snapshot completion. CSV export timestamp must be verified separately.' },
   counts, mismatches, unknownProduction, nonShipyardProduction, nonShipyardTooling, toolingMismatches };
-if (outputArg) await writeFile(resolve(outputArg), JSON.stringify(report, null, 2) + '
-', { flag: 'wx', mode: 0o600 });
+if (outputArg) await writeFile(resolve(outputArg), JSON.stringify(report, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
 console.log(JSON.stringify({ ...report.summary, counts, mismatchObservationDates: Object.fromEntries(
   [...new Set(mismatches.map(x => str(x.observedAt).slice(0, 10) || 'unknown'))].map(date => [date, mismatches.filter(x => str(x.observedAt).slice(0, 10) === date).length])),
-  productionCoverage: { compared: counts.runningAgreement + counts.runningDisagreement, unknown: counts.runningUnknown, notChecked: counts.notChecked },
-  nonShipyardProductionCount: nonShipyardProduction.length, nonShipyardToolingCount: nonShipyardTooling.length,
+  productionCoverage: { compared: counts.runningAgreement + counts.runningDisagreement, unknown: counts.runningUnknown, notChecked: counts.notChecked },\n  nonShipyardProductionCount: nonShipyardProduction.length, nonShipyardToolingCount: nonShipyardTooling.length,
   reportFile: outputArg ? resolve(outputArg) : null,
   note: outputArg ? 'UID-level details written locally; not printed.' : 'Pass a third path to save UID-level details locally.' }, null, 2));
