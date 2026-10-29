@@ -33,7 +33,7 @@ class ProductionChangesPublisherTests(unittest.TestCase):
         self.assertEqual(requests[0]["updateCells"]["fields"], "userEnteredValue")
         rows = requests[1]["updateCells"]["rows"]
         self.assertEqual(rows[5]["values"][0]["userEnteredValue"]["stringValue"], "Kashyyyk")
-        self.assertEqual(rows[5]["values"][1]["userEnteredValue"]["stringValue"], "123")
+        self.assertEqual(rows[5]["values"][3]["userEnteredValue"]["stringValue"], "123")
 
     def test_no_changes_is_explicit(self):
         calls = []
@@ -56,10 +56,10 @@ class ProductionChangesPublisherTests(unittest.TestCase):
         ]
         notices = publisher.group_station_notices(changes)
         self.assertEqual(len(notices), 2)
-        self.assertEqual(notices[0][:3], ["Kashyyyk", "5:1", "Production Started"])
-        self.assertIn("started: No → Yes", notices[0][3])
-        self.assertIn("readiness: blocked → building", notices[0][3])
-        self.assertEqual(notices[1][2], "Readiness Changed")
+        self.assertEqual([notices[0][0],notices[0][3],notices[0][4]], ["Kashyyyk", "5:1", "Production Started"])
+        self.assertIn("started: No → Yes", notices[0][7])
+        self.assertIn("readiness: blocked → building", notices[0][9])
+        self.assertEqual(notices[1][4], "Readiness Changed")
 
     def test_readback_counts_stations_not_fields(self):
         calls = []
