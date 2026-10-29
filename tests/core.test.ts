@@ -209,7 +209,11 @@ test('429 Retry-After then success, and bounded 401 refresh', async () => fixtur
     if (calls === 2) return new Response('{}', { status: 401 });
     return new Response(envelope({ uid: '1:1' }));
   }, async ms => { delays.push(ms); });
-  assert.equal((await client.me()).uid, '1:1'); assert.deepEqual(delays, [2000]); assert.equal(refreshed, 1);
+  assert.equal((await client.me()).uid, '1:1');
+  assert.equal(delays[0], 2000);
+  assert.equal(delays.length, 3);
+  assert.ok(delays.slice(1).every(ms => ms > 0 && ms <= 6500));
+  assert.equal(refreshed, 1);
   let repeats = 0;
   await assert.rejects(new ReadClient(auth, run, async () => { repeats++; return new Response('{}', { status: 401 }); }).me());
   assert.equal(repeats, 2);
