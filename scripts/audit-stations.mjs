@@ -1,6 +1,28 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { parse } from 'node:csv-parse/sync';
+function parseCsv(input) {
+  const table = []; let row = [], cell = '', quoted = false;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (quoted) {
+      if (ch === '"' && input[i + 1] === '"') { cell += '"'; i++; }
+      else if (ch === '"') quoted = false;
+      else cell += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\\n' || ch === '\\r') {
+      if (ch === '\\r' && input[i + 1] === '\\n') i++;
+      row.push(cell); cell = '';
+      if (row.some(x => x !== '')) table.push(row);
+      row = [];
+    } else cell += ch;
+  }
+  if (quoted) throw new Error('CSV has an unterminated quoted field.');
+  if (cell || row.length) { row.push(cell); table.push(row); }
+  const [headers, ...records] = table;
+  if (!headers) throw new Error('Empty CSV.');
+  return records.map(record => Object.fromEntries(headers.map((h, i) => [h.replace(/^\\uFEFF/, ''), record[i] ?? ''])));
+}
 
 type Obj = Record<string, unknown>;
 const obj = (v: unknown): Obj => v && typeof v === 'object' && !Array.isArray(v) ? v as Obj : {};
@@ -10,7 +32,7 @@ const key = (v: unknown) => val(v).toLowerCase();
 const root = process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA, 'SWC Personal Analytics') : '';
 const csvPath = process.argv[2];
 if (!root || !csvPath) throw new Error('Usage: npm run audit:stations -- "path-to-TFF-Stations.csv"');
-const csv = parse(await readFile(csvPath), { columns: true, skip_empty_lines: true, bom: true }) as Obj[];
+const csv = parseCsv(await readFile(csvPath, 'utf8'));
 const files = (await readdir(join(root, 'checkpoints'))).filter(f => f.startsWith('station-sync-') && f.endsWith('.json'));
 const snapshots = await Promise.all(files.map(async f => obj(JSON.parse(await readFile(join(root, 'checkpoints', f), 'utf8')))));
 const tff = snapshots.filter(s => val(obj(s.summary).ownerName) === 'The Faerytail Family')
