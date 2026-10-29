@@ -16,6 +16,8 @@
     "sync:faction-stations": "tsx src/cli/index.ts sync:faction-stations",
     "sync:faction-stations:tff": "tsx src/cli/index.ts sync:faction-stations:tff",
     "sync:faction-stations:tjo": "tsx src/cli/index.ts sync:faction-stations:tjo",
+    "sync:faction-stations:shipyards:tff": "tsx src/cli/index.ts sync:faction-stations:shipyards:tff",
+    "sync:faction-stations:shipyards:tjo": "tsx src/cli/index.ts sync:faction-stations:shipyards:tjo",
     "sync:faction-facilities": "tsx src/cli/index.ts sync:faction-facilities",
     "sync:faction-facilities:tff": "tsx src/cli/index.ts sync:faction-facilities:tff",
     "sync:faction-facilities:tjo": "tsx src/cli/index.ts sync:faction-facilities:tjo",
