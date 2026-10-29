@@ -75,7 +75,7 @@ export async function enrichFactionStations(
     enriched.push({ ...station, tags: saved.tags ?? station.tags ?? null, operations: saved });
     progress(`Station details: ${enriched.length}/${selected.length}`);
   }
-  const enrichedByUid = new Map(enriched.map(s => [String(s.uid), s]));
+  const enrichedByUid = new Map(enriched.map(s => [String((s as Record<string, unknown>).uid), s]));
   const fullStations = mode === 'all' ? enriched : stations.map(s =>
     enrichedByUid.get(String(s.uid)) ?? { ...s, operations: { status: 'not-checked', interpretation: 'No detail request made; production state unknown.' } });
   const exportFile = join(root, 'normalized', `${exportLabel(faction, 'stations', filter)}__${run.id}.json`);
