@@ -56,7 +56,11 @@ for (const row of csv) {
   const actions = Array.isArray(station.operations.productionActions) ? station.operations.productionActions :
     (Array.isArray(station.operations.actions) ? station.operations.actions.filter(a => a?.attributes?.type === 'EntityProductionAction') : null);
   // Null actions are unknown, not a confirmed absence of production.
-  if (actions === null) {\n    counts.runningUnknown++;\n    if (csvRunning) counts.csvRunningUnknown++;\n    unknownProduction.push({ uid, csvStatus: str(row.productionStatus), observedAt: station.operations.observedAt ?? null });\n  } else {
+  if (actions === null) {
+    counts.runningUnknown++;
+    if (csvRunning) counts.csvRunningUnknown++;
+    unknownProduction.push({ uid, csvStatus: str(row.productionStatus), observedAt: station.operations.observedAt ?? null });
+  } else {
     const apiRunning = actions.length > 0;
     if (csvRunning === apiRunning) counts.runningAgreement++;
     else {
