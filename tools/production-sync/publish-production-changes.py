@@ -15,14 +15,16 @@ def value(x):
 def verify_readback(report, changes):
     # Read back the published report. A successful write response alone is insufficient.
     import urllib.parse
-    check_range=urllib.parse.quote("'Production Changes'!A1:B4",safe="")
+    check_range=urllib.parse.quote("'Production Changes'!A1:B6",safe="")
     req=urllib.request.Request(
         "https://sheets.googleapis.com/v4/spreadsheets/"+ID+"/values/"+check_range,
         headers={"Authorization":"Bearer "+os.environ["GOOGLE_ACCESS_TOKEN"]})
     with urllib.request.urlopen(req,timeout=90) as response:
         actual=json.load(response).get("values",[])
     expected=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],
-              ["Current accepted batch",value(report.get("currentBatch"))],["Stations changed",str(len(changes))]]
+              ["Current accepted batch",value(report.get("currentBatch"))],["Stations changed",str(len(changes))],
+              ["Production started",str(sum(r[4]=="Production Started" for r in changes))],
+              ["Production finished",str(sum(r[4]=="Production Stopped" for r in changes))]]
     # Sheets omits trailing empty cells, especially for the first baseline.
     normalize=lambda rows: [row + [""]*(2-len(row)) for row in rows]
     if normalize(actual)!=normalize(expected):
@@ -67,16 +69,16 @@ def group_station_notices(changes):
             v=fields[field]
             return value(v["before"])+" → "+value(v["after"])
         others="; ".join(k+": "+value(v["before"])+" → "+value(v["after"]) for k,v in fields.items() if k not in ("ship","quantity","started","status","readiness"))
-        notices.append([value(row["system"]),value(row["sector"]),value(row["coordinates"]),row["uid"],notice,
+        notices.append([value(row["sector"]),value(row["system"]),value(row["coordinates"]),row["uid"],notice,
                         transition("ship"),transition("quantity"),transition("started"),
                         transition("status"),transition("readiness"),others or ("; ".join(row["types"]) if not fields else "")])
-    return sorted(notices,key=lambda r:(r[0],r[1]))
+    return sorted(notices,key=lambda r:(r[0],r[1],r[2],r[3]))
 
 def publish(report):
     if report.get("status") not in ("compared","baseline_created") or not isinstance(report.get("changes"),list):raise ValueError("Invalid report")
     changes=report["changes"]
     notices=group_station_notices(changes)
-    rows=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],["Current accepted batch",value(report.get("currentBatch"))],["Stations changed",len(notices)],["System","Sector","System Coordinates","Station UID","Notice","Ship","Quantity","Started","Status","Readiness","Other Changes"]]
+    rows=[["Production Changes"],["Previous accepted batch",value(report.get("previousBatch"))],["Current accepted batch",value(report.get("currentBatch"))],["Stations changed",len(notices)],["Production started",sum(r[4]=="Production Started" for r in notices)],["Production finished",sum(r[4]=="Production Stopped" for r in notices)],["Sector","System","System Coordinates","Station UID","Notice","Ship","Quantity","Started","Status","Readiness","Other Changes"]]
     if report["status"]=="baseline_created":rows.append(["Baseline established","No previous accepted snapshot"])
     elif not changes:rows.append(["No production changes","No differences since previous accepted import"])
     else:rows.extend(notices)
@@ -93,10 +95,11 @@ def publish(report):
       {"updateCells":{"range":{"sheetId":sheet},"fields":"userEnteredValue"}},
       {"updateCells":{"start":{"sheetId":sheet,"rowIndex":0,"columnIndex":0},"rows":[{"values":[{"userEnteredValue":{"numberValue":v} if isinstance(v,(int,float)) else {"stringValue":str(v)}} for v in row]} for row in rows],"fields":"userEnteredValue"}},
       {"repeatCell":{"range":{"sheetId":sheet,"startRowIndex":0,"endRowIndex":1,"startColumnIndex":0,"endColumnIndex":11},"cell":{"userEnteredFormat":{"backgroundColor":{"red":0.13,"green":0.22,"blue":0.32},"textFormat":{"foregroundColor":{"red":1,"green":1,"blue":1},"bold":True,"fontSize":15}}},"fields":"userEnteredFormat"}},
-      {"repeatCell":{"range":{"sheetId":sheet,"startRowIndex":4,"endRowIndex":5,"startColumnIndex":0,"endColumnIndex":6},"cell":{"userEnteredFormat":{"backgroundColor":{"red":0.88,"green":0.93,"blue":0.98},"textFormat":{"bold":True}}},"fields":"userEnteredFormat"}},
+      {"repeatCell":{"range":{"sheetId":sheet,"startRowIndex":6,"endRowIndex":7,"startColumnIndex":0,"endColumnIndex":11},"cell":{"userEnteredFormat":{"backgroundColor":{"red":0.88,"green":0.93,"blue":0.98},"textFormat":{"bold":True}}},"fields":"userEnteredFormat"}},
       {"updateDimensionProperties":{"range":{"sheetId":sheet,"dimension":"COLUMNS","startIndex":0,"endIndex":6},"properties":{"pixelSize":150},"fields":"pixelSize"}}
     ]
-    requests.append({"repeatCell":{"range":{"sheetId":sheet,"startRowIndex":5,"endRowIndex":max(6,len(rows)),"startColumnIndex":0,"endColumnIndex":11},"cell":{"userEnteredFormat":{"verticalAlignment":"MIDDLE","wrapStrategy":"WRAP"}},"fields":"userEnteredFormat.verticalAlignment,userEnteredFormat.wrapStrategy"}})
+    requests.append({"repeatCell":{"range":{"sheetId":sheet,"startRowIndex":7,"endRowIndex":max(8,len(rows)),"startColumnIndex":0,"endColumnIndex":11},"cell":{"userEnteredFormat":{"verticalAlignment":"MIDDLE","wrapStrategy":"WRAP"}},"fields":"userEnteredFormat.verticalAlignment,userEnteredFormat.wrapStrategy"}})
+    requests.append({"setBasicFilter":{"filter":{"range":{"sheetId":sheet,"startRowIndex":6,"endRowIndex":max(8,len(rows)),"startColumnIndex":0,"endColumnIndex":11}}}})
     call(":batchUpdate",{"requests":requests})
     verify_readback(report, notices)
     print("Published and verified Production Changes:",len(notices),"station notices from",len(changes),"field changes")
