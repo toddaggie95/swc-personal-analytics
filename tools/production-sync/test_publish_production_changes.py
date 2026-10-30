@@ -32,7 +32,7 @@ class ProductionChangesPublisherTests(unittest.TestCase):
         self.assertEqual(requests[0]["updateCells"]["range"]["sheetId"], 55)
         self.assertEqual(requests[0]["updateCells"]["fields"], "userEnteredValue")
         rows = requests[1]["updateCells"]["rows"]
-        self.assertEqual(rows[7]["values"][0]["userEnteredValue"]["stringValue"], "Kashyyyk")
+        self.assertEqual(rows[7]["values"][1]["userEnteredValue"]["stringValue"], "Kashyyyk")
         self.assertEqual(rows[7]["values"][3]["userEnteredValue"]["stringValue"], "123")
 
     def test_no_changes_is_explicit(self):
@@ -56,7 +56,7 @@ class ProductionChangesPublisherTests(unittest.TestCase):
         ]
         notices = publisher.group_station_notices(changes)
         self.assertEqual(len(notices), 2)
-        self.assertEqual([notices[0][0],notices[0][3],notices[0][4]], ["Kashyyyk", "5:1", "Production Started"])
+        self.assertEqual([notices[0][1],notices[0][3],notices[0][4]], ["Kashyyyk", "5:1", "Production Started"])
         self.assertEqual(notices[0][7], "No → Yes")
         self.assertEqual(notices[0][9], "blocked → building")
         self.assertEqual(notices[1][4], "Readiness Changed")
