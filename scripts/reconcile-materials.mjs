@@ -24,7 +24,8 @@ const definitions={
  x:['system x','system_x','system coord x','system coordinate x'],
  y:['system y','system_y','system coord y','system coordinate y']
 };
-function normalizedContainerType(v){const k=key(v);return ({'2':'ship','4':'facility','5':'station',ship:'ship',facility:'facility',station:'station'})[k]??k;}\nfunction classify(lot){const c=lot.location?.container??{};const type=key(c.type);const uid=value(c.uid);if(type==='ship'||uid.startsWith('2:'))return 'ship-excluded';if(type==='station'||uid.startsWith('5:'))return 'station-candidate';if(type==='facility'||uid.startsWith('4:'))return 'facility-requires-validation';return 'unknown-excluded-pending-review';}
+function normalizedContainerType(v){const k=key(v);return ({'2':'ship','4':'facility','5':'station',ship:'ship',facility:'facility',station:'station'})[k]??k;}
+function classify(lot){const c=lot.location?.container??{};const type=key(c.type);const uid=value(c.uid);if(type==='ship'||uid.startsWith('2:'))return 'ship-excluded';if(type==='station'||uid.startsWith('5:'))return 'station-candidate';if(type==='facility'||uid.startsWith('4:'))return 'facility-requires-validation';return 'unknown-excluded-pending-review';}
 function compare(csv,snapshot,faction){
  if(snapshot.summary?.faction!==faction||snapshot.summary?.location?.kind!=='system'||snapshot.summary?.location?.uid!=='9:104'||snapshot.summary?.complete!==true)throw Error(faction+': expected complete Kashyyyk system probe');
  if(!Array.isArray(snapshot.lots))throw Error(faction+': missing lots');
@@ -42,7 +43,8 @@ function compare(csv,snapshot,faction){
  }
  // CSV can include other systems. Only consider API-missing rows if system can be proven Kashyyyk.
  if(columns.system){for(const [uid,r] of csvByUid){if(apiByUid.has(uid))continue;if(key(r[columns.system])==='kashyyyk')missingFromApi.push({uid});else outsideKashyyykCsv.push(uid);}}
- const fieldMismatchCounts={};for(const item of mismatches)for(const d of item.differences)fieldMismatchCounts[d.field]=(fieldMismatchCounts[d.field]??0)+1;\n const classification={};for(const lot of snapshot.lots){const c=classify(lot);classification[c]=(classification[c]??0)+1;}
+ const fieldMismatchCounts={};for(const item of mismatches)for(const d of item.differences)fieldMismatchCounts[d.field]=(fieldMismatchCounts[d.field]??0)+1;
+ const classification={};for(const lot of snapshot.lots){const c=classify(lot);classification[c]=(classification[c]??0)+1;}
  return {faction,csvHeaders:csv.headers,columnMapping:columns,comparable,apiLots:snapshot.lots.length,csvRows:csvRows.length,matched:matched.length,mismatches,fieldMismatchCounts,apiOnly:missingFromCsv,csvOnlyInKashyyyk:missingFromApi,csvUnscopedOrOtherSystem:outsideKashyyykCsv.length,classification,apiObservedAtRange:[...snapshot.lots.map(l=>l.observedAt)].sort().filter((_,i,a)=>i===0||i===a.length-1),caveats:['CSV/API timestamps may differ.','Absent CSV fields are not compared.','Station and facility eligibility are candidates only; validate containers against owned inventories.','If CSV has no system column, CSV-only Kashyyyk completeness cannot be assessed.']};
 }
 const files=await Promise.all([tffCsv,tjoCsv,tffJson,tjoJson].map(p=>readFile(resolve(p),'utf8')));
