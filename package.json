@@ -24,7 +24,7 @@
     "typecheck": "tsc -p tsconfig.check.json",
     "build": "tsc",
     "test": "tsx --test tests/*.test.ts",
-    "check": "npm run typecheck && npm test && npm run build",
+    "check": "node --check scripts/reconcile-materials.mjs && npm run typecheck && npm test && npm run build",
     "refresh:stations": "tsx src/cli/refresh-stations.ts"
   },
   "keywords": [],
