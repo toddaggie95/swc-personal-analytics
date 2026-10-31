@@ -1,4 +1,5 @@
 import { API_BASE, SafeError } from '../config/index.js';
+import { ReadPacer } from './read-pacer.js';
 import type { AuthProvider } from '../auth/session.js';
 import type { SnapshotRun } from '../storage/snapshots.js';
 
@@ -40,7 +41,8 @@ export function rateLimitDelay(headers: Headers, now = Date.now()): number | nul
 export class ReadClient {
   constructor(private auth: AuthProvider, private snapshots: SnapshotRun,
     private fetcher: typeof fetch = fetch,
-    private sleep: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms))) {}
+    private sleep: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms)),
+    private pacer: ReadPacer = new ReadPacer(sleep)) {}
   stationDetail(uid: string): Promise<Record<string, unknown>> {
     if (!/^5:\d+$/.test(uid)) throw new SafeError('Invalid station UID.');
     return this.get(`inventory/stations/${uid}`, {});
@@ -87,12 +89,15 @@ export class ReadClient {
     for (const [key, value] of Object.entries(query)) url.searchParams.set(key, String(value));
     let refreshed = false;
     for (let attempt = 0; attempt < 4; attempt++) {
+      const resource = endpoint.startsWith('inventory/stations/') ? 'station-detail' : endpoint.split('/').slice(0, 2).join('/');
+      try { await this.pacer.beforeRequest(resource); } catch { throw new RateLimitError('SWC pacing requires a long wait or has no reliable reset; partial data retained.'); }
       const token = await this.auth.accessToken();
       let response: Response;
       try {
         response = await this.fetcher(url, { method: 'GET', headers: { Accept: 'application/json', Authorization: `OAuth ${token}` },
           redirect: 'error', signal: AbortSignal.timeout(30_000) });
       } catch { throw new SafeError('SWC request failed or timed out. No credentials have been logged.'); }
+      this.pacer.afterResponse(resource, response.headers);
       const body = new Uint8Array(await response.arrayBuffer());
       // Only sanctioned data endpoints are captured; OAuth responses are never snapshots.
       await this.snapshots.capture(body, { endpoint, query }, response.status, response.headers.get('content-type'));

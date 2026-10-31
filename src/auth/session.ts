@@ -72,7 +72,30 @@ export async function loadAuth(config: Config, client = makeClient(config)): Pro
   client.setToken(token);
   async function refresh(): Promise<void> {
     if (!client.hasRefreshToken()) throw new SafeError('No refresh token available; authorize again with offline access.');
-    await client.refreshToken();
+    try {
+      await client.refreshToken();
+    } catch (error: unknown) {
+      // Emit only fixed categories; SDK messages and HTTP response bodies may contain secrets.
+      const obj = error && typeof error === 'object' ? error as Record<string, unknown> : {};
+      const cause = obj.cause && typeof obj.cause === 'object' ? obj.cause as Record<string, unknown> : {};
+      const response = obj.response && typeof obj.response === 'object' ? obj.response as Record<string, unknown> : {};
+      const statuses = [obj.status, obj.statusCode, response.status, cause.status, cause.statusCode];
+      const status = statuses.find(v => typeof v === 'number' && Number.isInteger(v));
+      const codes = [obj.code, cause.code].filter(v => typeof v === 'string') as string[];
+      if (status === 400 || status === 401) throw new SafeError('OAuth refresh rejected by server (HTTP 400/401). Refresh token or client credentials may be invalid.');
+      if (status === 403) throw new SafeError('OAuth refresh forbidden by server (HTTP 403).');
+      if (status === 429) throw new SafeError('OAuth refresh rate-limited by server (HTTP 429).');
+      if (typeof status === 'number' && status >= 500 && status < 600) throw new SafeError('OAuth refresh failed due to server error (HTTP 5xx).');
+      if (codes.some(code => ['ETIMEDOUT', 'ECONNRESET', 'ENOTFOUND', 'EAI_AGAIN', 'ECONNREFUSED'].includes(code))) throw new SafeError('OAuth refresh network or DNS failure.');
+      const shape = [
+        typeof status === 'number' ? 'http-status-present' : 'no-http-status',
+        typeof obj.name === 'string' ? 'named-error' : 'unnamed-error',
+        'cause' in obj ? 'cause-present' : 'no-cause',
+        'response' in obj ? 'response-present' : 'no-response',
+        codes.length ? 'code-present' : 'no-code',
+      ].join(', ');
+      throw new SafeError('OAuth refresh error structure: ' + shape + '. Sensitive details suppressed.');
+    }
     const refreshed = client.getToken();
     if (!validToken(refreshed)) throw new SafeError('Token refresh returned an invalid result.');
     // Await durability before issuing a data request (SDK persistence is not awaitable).
