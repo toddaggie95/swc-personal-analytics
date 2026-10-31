@@ -72,7 +72,17 @@ def group_station_notices(changes):
         notices.append([value(row["sector"]),value(row["system"]),value(row["coordinates"]),row["uid"],notice,
                         transition("ship"),transition("quantity"),transition("started"),
                         transition("status"),transition("readiness"),others or ("; ".join(row["types"]) if not fields else "")])
-    return sorted(notices,key=lambda r:(r[0],r[1],r[2],r[3]))
+    def sort_key(row):
+        # Show starts, then stops, then all remaining notices.
+        priority = {"No → Yes": 0, "Yes → No": 1}.get(row[7], 2)
+        # Coordinates are numeric (e.g. 2,8 precedes 12,8).
+        try:
+            x, y = (int(part.strip()) for part in row[2].split(","))
+            coords = (0, x, y)
+        except (ValueError, TypeError):
+            coords = (1, 0, 0)
+        return (priority, row[0].casefold(), row[1].casefold(), coords, row[3])
+    return sorted(notices, key=sort_key)
 
 def publish(report):
     if report.get("status") not in ("compared","baseline_created") or not isinstance(report.get("changes"),list):raise ValueError("Invalid report")
