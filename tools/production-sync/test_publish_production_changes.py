@@ -104,7 +104,29 @@ class ProductionChangesPublisherTests(unittest.TestCase):
         notices=publisher.group_station_notices(changes)
         self.assertEqual(sum(r[4]=="Production Started" for r in notices),1)
         self.assertEqual(sum(r[4]=="Production Stopped" for r in notices),1)
-        self.assertEqual(notices[0][0:2],["Albanin","Daluuj"])
+        self.assertEqual(notices[0][0:2],["Mytaranor","Kashyyyk"])
+
+    def test_transition_priority_then_sector_system_numeric_coordinates(self):
+        def event(uid, sector, system, coords, before=None, after=None):
+            row={"uid":uid,"sector":sector,"system":system,"coordinates":coords,
+                 "type":"readiness_changed","field":"readiness","before":"blocked","after":"transfer"}
+            if before is not None:
+                row.update(type="production_activity_changed",field="started",before=before,after=after)
+            return row
+        changes=[
+            event("5:9","A","Alpha","2,1"),
+            event("5:8","Z","Zeta","12,8",True,False),
+            event("5:7","A","Alpha","12,8",False,True),
+            event("5:6","A","Alpha","2,8",False,True),
+            event("5:5","A","Alpha","2,10",False,True),
+            event("5:4","A","Alpha","2,8",True,False),
+            event("5:3","A","Alpha","1,1"),
+        ]
+        notices=publisher.group_station_notices(changes)
+        self.assertEqual([row[3] for row in notices],
+                         ["5:6","5:5","5:7","5:4","5:8","5:3","5:9"])
+        self.assertEqual([row[7] for row in notices[:5]],
+                         ["No → Yes"]*3+["Yes → No"]*2)
 
     def test_new_tab_created_once(self):
         calls = []
