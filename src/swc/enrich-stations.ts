@@ -107,7 +107,7 @@ export async function syncCompleteFactionStations(
     source = record(await readJson(inventory.exportFile));
     await atomicWrite(pending, JSON.stringify(source));
   } else progress('Resuming unfinished station sync; previously fetched details will be reused.');
-  const result = await enrichFactionStations(client, run, root, faction, filter, wait, progress, source);
+  const result = await enrichFactionStations(client, run, root, faction, filter, wait, progress, source, refreshIncompleteShipyards);
   await rm(pending, { force: true });
   return result;
 }
