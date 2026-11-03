@@ -50,3 +50,13 @@ An independent local calculation against the November 3 web and API snapshots an
 - 206 unique material piles and 276 stations in each source
 
 The independent Python result is retained in the conversation audit artifact `authoritative-has-independent-check.json`; the private captures are **not** committed to GitHub. This is supporting evidence, not a claim that the JavaScript CLI has been executed with the real captures. Full readiness and Production Changes equivalence remain pending.
+
+## Readiness and Production Changes parity gate
+
+When the existing production-readiness pipeline has generated **two read-only outputs** using identical audited assignments, ship bills, priority and prior snapshot, compare them with:
+
+```powershell
+node tools/api-parity/compare-readiness.mjs --web web-readiness.json --api api-readiness.json --previous previous-accepted-snapshot.json --out readiness-parity.json
+```
+
+Omit `--previous` to compare readiness alone. The gate invokes the production repository's `snapshotFromOverview` and `compareProductionSnapshots` functions, rather than recreating change-history logic. It reports discrepancies in station IDs, assignments, quantities, status, material bills, shortages, and change events. **This gate does not generate the two readiness outputs**; producing them from the same production configuration is a separate integration task. Do not claim production parity until that task is completed and the gate passes with real captures.
