@@ -22,5 +22,7 @@ jobs:
           python-version: '3.12'
       - name: Test production HAS adapter
         run: node --test tools/api-parity/compare-production-has.test.mjs
+      - name: Test readiness and Production Changes parity gate
+        run: node --test tools/api-parity/compare-readiness.test.mjs
       - name: Test CSV/API comparator
         run: python -m unittest discover -s tools/api-parity -p 'test_*.py' -v
