@@ -19,6 +19,28 @@ export function assessCoverage(datasets,{productionOnly=true}={}){
   const incomplete=Object.values(results).some(x=>x.unknown.productionActions>0||x.unknown.tooledTo>0);
   return {status:incomplete?'blocked_incomplete_operations':'complete',results};
 }
+export function compareIdleSemantics(webStations,apiStations){
+  const web=new Map(),api=new Map();
+  for(const row of webStations){const uid=String(row.uid??'');if(!uid||web.has(uid))throw Error('Duplicate/missing web station UID '+uid);web.set(uid,row)}
+  for(const row of apiStations){const uid=String(row.uid??'');if(!uid||api.has(uid))throw Error('Duplicate/missing API station UID '+uid);api.set(uid,row)}
+  const differences=[];let running=0,blank=0;
+  for(const uid of [...new Set([...web.keys(),...api.keys()])].sort()){
+    const w=web.get(uid),a=api.get(uid);
+    if(!w||!a){differences.push({uid,reason:'missing station in '+(!w?'web':'api')});continue}
+    if(!/shipyard/i.test(String(a.typeName??'')))continue;
+    const status=String(w.productionStatus??'').trim().toLowerCase();
+    const actions=a.operations?.productionActions;
+    if(status==='running'){
+      running++;
+      if(!Array.isArray(actions)||!actions.some(x=>x?.value?.status==='running'))differences.push({uid,reason:'web running without API running action'});
+    }else if(status===''){
+      blank++;
+      if(actions!==null && !(Array.isArray(actions)&&actions.length===0))differences.push({uid,reason:'web blank but API has production actions'});
+    }else differences.push({uid,reason:'unrecognized web status '+status});
+  }
+  return {status:differences.length?'differences':'matched',shipyardsRunning:running,shipyardsWebBlank:blank,differences,
+    interpretation:'Matching blank web status and null API actions is observational parity, not proof of idle without an external Started flag.'};
+}
 if(process.argv[1]&&process.argv[1].endsWith('operation-coverage.mjs')){
   try{
     const dir=process.argv[2];
