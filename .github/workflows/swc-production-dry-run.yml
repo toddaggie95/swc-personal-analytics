@@ -1,4 +1,4 @@
-name: SWC production CSV dry run
+name: SWC Production Sync
 
 on:
   workflow_dispatch:

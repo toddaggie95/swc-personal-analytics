@@ -1,7 +1,7 @@
 name: SWC production overview readiness and publish
 on:
   workflow_run:
-    workflows: ['SWC production CSV dry run']
+    workflows: ['SWC Production Sync']
     types: [completed]
   workflow_dispatch:
     inputs:
