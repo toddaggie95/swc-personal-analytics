@@ -19,7 +19,9 @@ export function compareCapturedReadiness(snapshot,webStations,webMaterials,apiSt
   const result=compareReadiness(web,api);
   const count=orders=>Object.fromEntries(['building','ready_now','transfer','blocked','unassigned'].map(k=>[k,orders.filter(o=>o.status===k).length]));
   const statuses={web:count(web.orders),api:count(api.orders)};
-  // Historical November 3 baseline is not a valid gate for a later workbook capture.\n  // Pass an explicit baseline only when it was captured from the SAME sheet snapshot.\n  const expected=snapshot.expectedKashyyykCounts??{};
+  // Historical November 3 baseline is not a valid gate for a later workbook capture.
+  // Pass an explicit baseline only when it was captured from the SAME sheet snapshot.
+  const expected=snapshot.expectedKashyyykCounts??{};
   const sheetCountDifferences=Object.entries(expected).filter(([k,v])=>statuses.web[k]!==v||statuses.api[k]!==v).map(([k,v])=>({status:k,expected:v,web:statuses.web[k],api:statuses.api[k]}));
   return {...result,statistics:{web:statuses.web,api:statuses.api},baselineChecked:Object.keys(expected).length>0,sheetCountDifferences,
     status:result.status==='matched'&&!sheetCountDifferences.length?'matched': 'differences',
