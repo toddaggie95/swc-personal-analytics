@@ -20,7 +20,10 @@ test('same workbook and identical source inventories yield per-order parity',()=
  assert.equal(result.webOrders,2);
  assert.equal(result.apiOrders,2);
  assert.equal(result.differences.length,0);
- // This fixture is intentionally not the 173-shipyard live baseline.
- assert.equal(result.status,'differences');
- assert.ok(result.sheetCountDifferences.length>0);
+ assert.equal(result.status,'matched');
+ assert.equal(result.baselineChecked,false);
+ const withBaseline=compareCapturedReadiness({...snapshot,expectedKashyyykCounts:{building:101,ready_now:1,transfer:2,blocked:69}},stations,materials,stations,materials);
+ assert.equal(withBaseline.status,'differences');
+ assert.equal(withBaseline.baselineChecked,true);
+ assert.ok(withBaseline.sheetCountDifferences.length>0);
 });
