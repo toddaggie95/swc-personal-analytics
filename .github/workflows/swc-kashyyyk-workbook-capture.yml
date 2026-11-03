@@ -1,6 +1,11 @@
 name: SWC Kashyyyk workbook readiness capture (read only)
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/kashyyyk-parity-readonly
+    paths:
+      - '.github/workflows/swc-kashyyyk-workbook-capture.yml'
 permissions:
   contents: read
   id-token: write
