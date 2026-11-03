@@ -7,6 +7,12 @@ on:
       - 'tools/production-sync/production-sync.mjs'
       - '.github/workflows/swc-api-parity-tests.yml'
   workflow_dispatch:
+  push:
+    branches:
+      - feature/kashyyyk-parity-readonly
+    paths:
+      - 'tools/api-parity/**'
+      - '.github/workflows/swc-api-parity-tests.yml'
 permissions:
   contents: read
 jobs:
@@ -20,6 +26,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Test API capture integrity (mocked snapshots)
+        run: node --test tools/api-parity/validate-capture-set.test.mjs
       - name: Test production HAS adapter
         run: node --test tools/api-parity/compare-production-has.test.mjs
       - name: Test readiness and Production Changes parity gate
