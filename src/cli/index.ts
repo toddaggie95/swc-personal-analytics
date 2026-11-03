@@ -16,9 +16,13 @@ dotenv({ quiet: true });
 let stage = 'configuration';
 async function main(): Promise<void> {
   const command = process.argv[2] || 'help';
-  const filter = (command.startsWith('sync:faction-facilities') || ((command.startsWith('sync:faction-materials') || command.startsWith('sync:faction-stations')) && process.argv.length > 3)) ? facilityFilter(process.argv.slice(3)) : undefined;
-  if (!filter && process.argv.length > 3) throw new SafeError('Extra arguments refused. Never pass authorization codes or tokens on the command line.');
-  if (command === 'help') { console.log('Commands: status | auth:start | auth:finish | sync:stations | sync:ships | sync:faction-materials | sync:faction-materials:tff | sync:faction-materials:tjo | sync:faction-stations | sync:faction-stations:tff | sync:faction-stations:tjo | sync:faction-facilities | sync:faction-facilities:tff | sync:faction-facilities:tjo\nFaction materials and stations optionally accept --system "Name" or --planet "Name".\nFacility commands require --system "Name" or --planet "Name".\nSee docs/oauth.md before live authorization.'); return; }
+  const refreshFlag = '--refresh-incomplete-shipyards';
+  const refreshIncomplete = process.argv.slice(3).includes(refreshFlag);
+  if (refreshIncomplete && !command.startsWith('sync:faction-stations')) throw new SafeError('Refresh flag is only supported for faction stations.');
+  const args = process.argv.slice(3).filter(arg => arg !== refreshFlag);
+  const filter = (command.startsWith('sync:faction-facilities') || ((command.startsWith('sync:faction-materials') || command.startsWith('sync:faction-stations')) && args.length > 0)) ? facilityFilter(args) : undefined;
+  if (!filter && args.length > 0) throw new SafeError('Extra arguments refused. Never pass authorization codes or tokens on the command line.');
+  if (command === 'help') { console.log('Commands: status | auth:start | auth:finish | sync:stations | sync:ships | sync:faction-materials | sync:faction-materials:tff | sync:faction-materials:tjo | sync:faction-stations | sync:faction-stations:tff | sync:faction-stations:tjo | sync:faction-facilities | sync:faction-facilities:tff | sync:faction-facilities:tjo\nFaction stations optionally accept --refresh-incomplete-shipyards to re-fetch incomplete cached shipyard operations.\nFaction materials and stations optionally accept --system "Name" or --planet "Name".\nFacility commands require --system "Name" or --planet "Name".\nSee docs/oauth.md before live authorization.'); return; }
   const config = loadConfig();
   if (command === 'status') {
     const tokenStat = await stat(join(config.privateDir, 'tokens.json')).catch(() => null);
@@ -53,7 +57,7 @@ async function main(): Promise<void> {
           const client = new ReadClient(auth, run);
           const summary = command.startsWith('sync:faction-materials')
             ? await syncFactionMaterials(client, run, config.privateDir, faction, filter)
-            : command.startsWith('sync:faction-stations') ? await syncCompleteFactionStations(client, run, config.privateDir, faction, filter)
+            : command.startsWith('sync:faction-stations') ? await syncCompleteFactionStations(client, run, config.privateDir, faction, filter, undefined, undefined, refreshIncomplete)
             : await syncFactionFacilities(client, run, config.privateDir, faction, filter!);
           console.log(JSON.stringify({ faction, status: 'complete', ...summary }, null, 2));
         } catch (error) {
