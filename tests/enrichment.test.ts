@@ -68,3 +68,36 @@ test('standard station sync resumes automatically and refreshes after completion
     assert.equal(lists, 2); assert.equal(details, 3);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('opt-in selective refresh re-fetches only incomplete shipyard operations', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'swc-selective-'));
+  try {
+    const location = { system: { uid: '9:104', name: 'Kashyyyk' } };
+    const stations = [
+      { uid: '5:1', typeName: 'Shipyard I', location },
+      { uid: '5:2', typeName: 'Shipyard II', location },
+      { uid: '5:3', typeName: 'Depot Station', location }
+    ];
+    await atomicWrite(join(root, 'normalized', 'source.json'), JSON.stringify({ summary: {
+      entityType: 'stations', ownerUid: '20:102', ownerName: MATERIAL_FACTIONS.tjo, runId: 'source', completedAt: '2026-01-01T00:00:00Z'
+    }, stations }));
+    const calls: string[] = [];
+    let enriched = false;
+    const client = {
+      resolveLocation: async () => ({ kind: 'system' as const, name: 'Kashyyyk', uid: '9:104' }),
+      stationDetail: async (uid: string) => {
+        calls.push(uid);
+        return { uid, owner: { attributes: { uid: '20:102' } }, location: { system: { attributes: { uid: '9:104' } } },
+          tags: { tag: [] }, ...(uid === '5:1' && !enriched ? {} : { actions: { action: [] }, tooledto: { value: 'TIE' } }) };
+      }
+    };
+    const filter = { kind: 'system' as const, name: 'Kashyyyk' };
+    await enrichFactionStations(client, new SnapshotRun(root), root, 'tjo', filter, async () => {}, () => {});
+    assert.deepEqual(calls, ['5:1','5:2','5:3']);
+    enriched = true;
+    await enrichFactionStations(client, new SnapshotRun(root), root, 'tjo', filter, async () => {}, () => {}, undefined, true);
+    assert.deepEqual(calls, ['5:1','5:2','5:3','5:1']);
+    await enrichFactionStations(client, new SnapshotRun(root), root, 'tjo', filter, async () => {}, () => {}, undefined, true);
+    assert.equal(calls.length, 4);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
