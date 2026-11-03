@@ -26,3 +26,15 @@ Outputs: `summary.json`, `discrepancies.csv`, `station-has-comparison.csv`.
 ## Nov 3 acceptance baseline
 
 TFF: 33 material piles, 81 stations. TJO: 173 material piles, 195 stations. All 482 UIDs matched; station HAS: 60 of 60 material cells matched. Forty-two field-level differences were blank web location fields on six TJO piles; one nonblank system Y mismatch was observed for the Mammoth material pile. These are **fixture observations**, not hard-coded exceptions.
+
+## Authoritative production HAS comparison
+
+Run this against the **same four API snapshots and four web CSVs** with the repository's audited destination manifest:
+
+```powershell
+node tools/api-parity/compare-production-has.mjs --web-dir "C:\path\to\web" --api-dir "C:\path\to\api" --manifest tools/production-sync/audited-workbook-layout.json --out "audit-results/production-has.json"
+```
+
+This path invokes `buildLedger()` from the existing production implementation and compares **all material HAS target cells for Kashyyyk**, including zero-quantity cells, rather than only populated station/material combinations. It is read-only and will fail on absent assigned stations or invalid material locations. Unknown station production status is preserved as `null` by the adapter; it is not treated as stopped. This check **does not yet establish readiness or Production Changes parity**.
+
+CI tests run on pull requests; they do not access private snapshots or write to Sheets.
