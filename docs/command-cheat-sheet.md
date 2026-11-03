@@ -210,3 +210,18 @@ Use the faction station sync commands above to retain fields supplied by the ind
 export command, though syncs retrieve character information to establish ownership and faction access.
 
 For setup details, see [the OAuth runbook](oauth.md) and [README](../README.md).
+
+## Kashyyyk selective shipyard refresh (read-only)
+
+Use the `feature/api-csv-audit` branch containing the opt-in refresh implementation. First confirm there are no uncommitted changes before switching branches. Run from the local collector repository directory:
+
+```powershell
+git status --short
+git fetch origin feature/api-csv-audit
+git switch feature/api-csv-audit
+git pull --ff-only origin feature/api-csv-audit
+npm run check
+npm run sync:faction-stations:tjo -- --system Kashyyyk --refresh-incomplete-shipyards
+```
+
+This reuses checkpointed station details, refreshing only incomplete shipyard operations when a matching checkpoint is available. The inventory stage may still list all faction stations. The SWC API can rate-limit; if interrupted, rerun the **same command** to resume. Do not delete checkpoints. An API field remaining null after a successful detail request remains **unknown** and is not coerced to idle. Capture the final normalized TJO Kashyyyk station JSON and the command's completion summary; do **not** share tokens, authorization codes, or the private checkpoint directory. This command does not write Google Sheets.
