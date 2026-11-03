@@ -60,3 +60,14 @@ node tools/api-parity/compare-readiness.mjs --web web-readiness.json --api api-r
 ```
 
 Omit `--previous` to compare readiness alone. The gate invokes the production repository's `snapshotFromOverview` and `compareProductionSnapshots` functions, rather than recreating change-history logic. It reports discrepancies in station IDs, assignments, quantities, status, material bills, shortages, and change events. **This gate does not generate the two readiness outputs**; producing them from the same production configuration is a separate integration task. Do not claim production parity until that task is completed and the gate passes with real captures.
+
+## November 3 production-operation completeness gate
+
+The normalized station API capture has incomplete operations coverage:
+
+| Source | Production actions populated | Tooling populated | Queue populated |
+| --- | ---: | ---: | ---: |
+| TFF (81 stations) | 0 | 0 | 0 |
+| TJO (195 stations) | 101 | 173 | 136 |
+
+The corresponding web CSV fields are also blank for every station where API production actions or tooling are null. **Blank is not proof of idle, stopped, or untooled.** Do not mark readiness/Production Changes parity verified solely from these snapshots. Acquire complete operation details or explicitly establish the missing-data semantics before enabling API-derived production status. Material HAS parity (462/462) is independent of this limitation.
