@@ -26,5 +26,7 @@ jobs:
         run: node --test tools/api-parity/compare-readiness.test.mjs
       - name: Test operation completeness gate
         run: node --test tools/api-parity/operation-coverage.test.mjs
+      - name: Test targeted station detail manifest
+        run: node --test tools/api-parity/missing-operation-details.test.mjs
       - name: Test CSV/API comparator
         run: python -m unittest discover -s tools/api-parity -p 'test_*.py' -v
