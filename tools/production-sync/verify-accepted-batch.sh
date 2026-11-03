@@ -6,7 +6,7 @@ repo="${GITHUB_REPOSITORY:?}"
 [[ "$run" =~ ^[0-9]+$ ]] || { echo "Invalid run ID"; exit 1; }
 status=$(gh api "repos/$repo/actions/runs/$run" --jq '.conclusion')
 workflow=$(gh api "repos/$repo/actions/runs/$run" --jq '.name')
-[[ "$status" == "success" && "$workflow" == "SWC production CSV dry run" ]] || { echo "HAS run not successful or wrong workflow"; exit 1; }
+[[ "$status" == "success" && "$workflow" == "SWC Production Sync" ]] || { echo "HAS run not successful or wrong workflow"; exit 1; }
 mkdir -p "$output/accepted-has"
 if ! gh run download "$run" -R "$repo" -n swc-audited-ledger -D "$output/accepted-has"; then
   if [[ "${ALLOW_UNACCEPTED_NOOP:-false}" == "true" ]]; then
