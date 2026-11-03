@@ -1,6 +1,7 @@
 // Read-only API-to-production contract adapter. Unknown operations stay unknown.
 import fs from 'node:fs';
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {csv} from '../production-sync/production-sync.mjs';
 import {buildLedger} from '../production-sync/audited-inventory.mjs';
 
@@ -74,5 +75,5 @@ function main(args) {
   console.log(JSON.stringify(report.statistics));
   if(report.differences.length)process.exitCode=2;
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(new URL(import.meta.url).pathname))
+if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(fileURLToPath(import.meta.url)))
   try{main(process.argv.slice(2))}catch(e){console.error(e.stack);process.exitCode=1}
