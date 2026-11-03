@@ -24,7 +24,7 @@ jobs:
         run: node --test tools/api-parity/compare-production-has.test.mjs
       - name: Test readiness and Production Changes parity gate
         run: node --test tools/api-parity/compare-readiness.test.mjs
-      - name: Test operation completeness gate
+      - name: Test same-snapshot readiness runner\n        run: node --test tools/api-parity/run-readiness-parity.test.mjs\n      - name: Test operation completeness gate
         run: node --test tools/api-parity/operation-coverage.test.mjs
       - name: Test targeted station detail manifest
         run: node --test tools/api-parity/missing-operation-details.test.mjs
