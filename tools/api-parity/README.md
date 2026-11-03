@@ -85,3 +85,13 @@ node tools/api-parity/missing-operation-details.mjs "C:\path\to\api-snapshots" "
 ```
 
 The output contains faction, station UID and missing fields. This is a **retry plan, not a live API collector**. The existing collector's `enrichFactionStations` uses persistent `station-details-*.json` checkpoints and SWC rate-aware pacing, but currently skips entries already cached with `observedAt` and `tags`. Therefore **simply rerunning the existing command will not necessarily refresh incomplete cached production actions**. The next collector change must selectively invalidate or refresh only incomplete shipyard detail entries, preserve all complete entries, and keep the API's null/empty semantics. Do not delete the entire checkpoint or bypass pacing. This collector code currently resides on the separate `feature/api-csv-audit` branch, so integration requires a deliberate branch merge/cherry-pick rather than assuming it is in PR #54.
+
+## Same-snapshot Kashyyyk readiness execution
+
+Use the **same** captured workbook snapshot for both sources. This command invokes the existing `calculateOverviewSnapshot` production calculator twice, once per source, and compares each order by UID. The snapshot must contain the audited destination manifest, one-based `rowsBySystem.Kashyyyk`, and `shipRows` from the Ships tab. The existing `capture-overview-snapshot.py` can produce the full workbook snapshot using authorized Google API credentials; do not commit snapshots or credentials.
+
+```powershell
+node tools/api-parity/run-readiness-parity.mjs --snapshot "C:\\path\\to\\workbook-snapshot.json" --web-dir "C:\\path\\to\\four-web-csvs" --api-dir "C:\\path\\to\\four-api-jsons" --out "C:\\path\\to\\readiness-parity.json"
+```
+
+The web directory needs `tff-stations.csv`, `tjo-stations.csv`, `tff-materials.csv`, `tjo-materials.csv`. The API directory needs exactly one Kashyyyk normalized JSON file per faction/kind. Do not point it at the entire normalized directory containing multiple captures. The script is read-only and fails closed on missing station UIDs, coordinate/assignment drift, invalid bills, or inventory differences. The November 3 sheet baseline is 101 building, 1 ready_now, 2 transfer, 69 blocked; 23 unassigned stations are also expected but are not part of the 72 remaining to start. **Do not report full readiness parity until this runner has been executed against the real snapshot and returns matched.**
