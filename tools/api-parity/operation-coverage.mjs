@@ -10,9 +10,12 @@ export function coverage(stations) {
   }
   return {stations:stations.length,populated,unknown:Object.fromEntries(fields.map(k=>[k,stations.length-populated[k]]))};
 }
-export function assessCoverage(datasets){
+export function assessCoverage(datasets,{productionOnly=true}={}){
   const results={};
-  for(const [name,rows] of Object.entries(datasets))results[name]=coverage(rows);
+  for(const [name,rows] of Object.entries(datasets)){
+    const scoped=productionOnly?rows.filter(s=>/shipyard/i.test(String(s.typeName??''))):rows;
+    results[name]={...coverage(scoped),excludedNonShipyards:rows.length-scoped.length};
+  }
   const incomplete=Object.values(results).some(x=>x.unknown.productionActions>0||x.unknown.tooledTo>0);
   return {status:incomplete?'blocked_incomplete_operations':'complete',results};
 }
