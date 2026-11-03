@@ -71,3 +71,7 @@ The normalized station API capture has incomplete operations coverage:
 | TJO (195 stations) | 101 | 173 | 136 |
 
 The corresponding web CSV fields are also blank for every station where API production actions or tooling are null. **Blank is not proof of idle, stopped, or untooled.** Do not mark readiness/Production Changes parity verified solely from these snapshots. Acquire complete operation details or explicitly establish the missing-data semantics before enabling API-derived production status. Material HAS parity (462/462) is independent of this limitation.
+
+### Shipyard-scoped follow-up (November 3)
+
+Readiness requires production-action coverage for **shipyards**, not unrelated station types. The Kashyyyk API captures contain 173 TJO shipyards (101 known production-action observations, **72 unknown**) and zero TFF shipyards. Tooling is populated for all 173 TJO shipyards. The 81 TFF stations and 22 TJO depots are excluded from the shipyard readiness coverage gate. Missing production actions must not be interpreted as idle; refresh or enrich those 72 station details before claiming API readiness parity. The full-station counts above remain descriptive, not readiness acceptance criteria.
