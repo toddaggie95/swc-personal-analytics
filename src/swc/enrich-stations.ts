@@ -31,6 +31,7 @@ export async function enrichFactionStations(
   wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms)),
   progress: (message: string) => void = console.log,
   suppliedSource?: Record<string, unknown>,
+  refreshIncompleteShipyards = false,
 ) {
   const candidates: Record<string, unknown>[] = [];
   for (const file of suppliedSource ? [] : await readdir(join(root, 'normalized'))) {
@@ -58,7 +59,9 @@ export async function enrichFactionStations(
   for (const station of stations) {
     const uid = String(station.uid);
     let saved = record(cached[uid]);
-    if (!saved.observedAt || !('tags' in saved)) {
+    const shipyard = /shipyard/i.test(String(station.typeName ?? station.type_name ?? ''));
+    const incomplete = saved.productionActions == null || saved.tooledTo == null;
+    if (!saved.observedAt || !('tags' in saved) || (refreshIncompleteShipyards && shipyard && incomplete)) {
       // ReadClient enforces serial rate-aware pacing; do not double-sleep here.
       const detail = await client.stationDetail(uid);
       if (detail.uid !== uid || record(record(detail.owner).attributes).uid !== ownerUid
