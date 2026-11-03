@@ -4,7 +4,12 @@ import fs from 'node:fs';
 import {snapshotFromOverview} from '../production-sync/production-change-snapshot.mjs';
 import {compareProductionSnapshots} from '../production-sync/production-change-report.mjs';
 
-const stable=v=>JSON.stringify(v,Object.keys(v??{}).sort());
+const stable=v=>JSON.stringify(canonical(v));
+function canonical(v){
+  if(Array.isArray(v))return v.map(canonical);
+  if(v&&typeof v==='object')return Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])]));
+  return v;
+}
 function keyed(rows,label){
   const m=new Map();
   for(const r of rows){
