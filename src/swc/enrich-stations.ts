@@ -94,6 +94,7 @@ export async function syncCompleteFactionStations(
   run: SnapshotRun, root: string, faction: 'tff' | 'tjo', filter?: LocationFilter,
   wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms)),
   progress: (message: string) => void = console.log,
+  refreshIncompleteShipyards = false,
 ) {
   const key = createHash('sha256').update(JSON.stringify([faction, filter?.kind, filter?.name.toLowerCase()])).digest('hex');
   const pending = join(root, 'checkpoints', `station-sync-${key}.json`);
