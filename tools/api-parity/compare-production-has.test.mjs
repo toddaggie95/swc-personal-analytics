@@ -26,3 +26,22 @@ test('existing ledger computes identical cells for normalized inputs',()=>{
   assert.equal(result.status,'matched');
   assert.equal(result.statistics.webCells,result.statistics.apiCells);
 });
+
+test('facility and ship material never become station HAS',()=>{
+  const manifest={destinations:[{id:'k',system:'Kashyyyk',target:{sheet:'Kashyyyk',hasColumn:2,materialStartRow:10},memberStationUids:['5:100']}]};
+  const station={uid:'5:100',system:'Kashyyyk',sysX:'8',sysY:'5'};
+  const stationPile={uid:'16:1',type_name:'meleenium',quantity:'100',container_uid:'5:100',container_type_name:'Stations',system:'Kashyyyk'};
+  const shipPile={uid:'16:2',type_name:'meleenium',quantity:'900',container_uid:'2:200',container_type_name:'Ships',system:'Kashyyyk'};
+  const facilityPile={uid:'16:3',type_name:'meleenium',quantity:'300',container_uid:'4:300',container_type_name:'Facilities',system:'Kashyyyk'};
+  const result=compareLedgers(manifest,[station],[stationPile,shipPile,facilityPile],[station],[stationPile]);
+  assert.equal(result.status,'matched');
+});
+test('different station quantities produce explicit mismatches',()=>{
+  const manifest={destinations:[{id:'k',system:'Kashyyyk',target:{sheet:'Kashyyyk',hasColumn:2,materialStartRow:10},memberStationUids:['5:100']}]};
+  const station={uid:'5:100',system:'Kashyyyk',sysX:'8',sysY:'5'};
+  const web={uid:'16:1',type_name:'meleenium',quantity:'100',container_uid:'5:100',container_type_name:'Stations',system:'Kashyyyk'};
+  const api={...web,quantity:'101'};
+  const result=compareLedgers(manifest,[station],[web],[station],[api]);
+  assert.equal(result.status,'differences');
+  assert.equal(result.differences.length,1);
+});
