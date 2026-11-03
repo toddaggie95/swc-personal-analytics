@@ -38,3 +38,15 @@ node tools/api-parity/compare-production-has.mjs --web-dir "C:\path\to\web" --ap
 This path invokes `buildLedger()` from the existing production implementation and compares **all material HAS target cells for Kashyyyk**, including zero-quantity cells, rather than only populated station/material combinations. It is read-only and will fail on absent assigned stations or invalid material locations. Unknown station production status is preserved as `null` by the adapter; it is not treated as stopped. This check **does not yet establish readiness or Production Changes parity**.
 
 CI tests run on pull requests; they do not access private snapshots or write to Sheets.
+
+## November 3 independent full-destination acceptance result
+
+An independent local calculation against the November 3 web and API snapshots and the repository's audited Kashyyyk membership list found:
+
+- 22 destinations, 196 distinct assigned station UIDs
+- 196/196 assigned station UIDs present in both datasets
+- 462/462 destination/material HAS target cells equal (22 destinations × 21 materials)
+- Zero station-material quantity differences and zero invalid assigned-container associations
+- 206 unique material piles and 276 stations in each source
+
+The independent Python result is retained in the conversation audit artifact `authoritative-has-independent-check.json`; the private captures are **not** committed to GitHub. This is supporting evidence, not a claim that the JavaScript CLI has been executed with the real captures. Full readiness and Production Changes equivalence remain pending.
