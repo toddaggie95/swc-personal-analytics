@@ -75,3 +75,13 @@ The corresponding web CSV fields are also blank for every station where API prod
 ### Shipyard-scoped follow-up (November 3)
 
 Readiness requires production-action coverage for **shipyards**, not unrelated station types. The Kashyyyk API captures contain 173 TJO shipyards (101 known production-action observations, **72 unknown**) and zero TFF shipyards. Tooling is populated for all 173 TJO shipyards. The 81 TFF stations and 22 TJO depots are excluded from the shipyard readiness coverage gate. Missing production actions must not be interpreted as idle; refresh or enrich those 72 station details before claiming API readiness parity. The full-station counts above remain descriptive, not readiness acceptance criteria.
+
+## Targeted missing-detail manifest
+
+Generate the list of shipyards whose production operations are still unknown:
+
+```powershell
+node tools/api-parity/missing-operation-details.mjs "C:\path\to\api-snapshots" "audit-results\shipyard-detail-retries.json"
+```
+
+The output contains faction, station UID and missing fields. This is a **retry plan, not a live API collector**. The existing collector's `enrichFactionStations` uses persistent `station-details-*.json` checkpoints and SWC rate-aware pacing, but currently skips entries already cached with `observedAt` and `tags`. Therefore **simply rerunning the existing command will not necessarily refresh incomplete cached production actions**. The next collector change must selectively invalidate or refresh only incomplete shipyard detail entries, preserve all complete entries, and keep the API's null/empty semantics. Do not delete the entire checkpoint or bypass pacing. This collector code currently resides on the separate `feature/api-csv-audit` branch, so integration requires a deliberate branch merge/cherry-pick rather than assuming it is in PR #54.
