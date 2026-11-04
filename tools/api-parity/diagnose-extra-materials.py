@@ -25,8 +25,13 @@ def diagnose(csv_dir: Path, api_dir: Path, system: str):
         return c.get("type") or "unknown"
     def planet(r):
         return (((r.get("location") or {}).get("planet") or {}).get("name") or "none")
+    csv_location_fields=sorted(k for k in (all_csv[0].keys() if all_csv else []) if any(t in k.lower() for t in ("system","planet","container","sector")))
     return {
         "system":system,
+        "csvLocationFields":csv_location_fields,
+        "extraCsvSystemValues":counts(csv_by_uid[r["uid"]].get("system","") for r in extras if r["uid"] in csv_by_uid),
+        "extraCsvContainerTypes":counts(csv_by_uid[r["uid"]].get("container_type_name","") for r in extras if r["uid"] in csv_by_uid),
+        "extraCsvContainerMatchesApi":sum(csv_by_uid[r["uid"]].get("container_uid","")==container_uid(r) for r in extras if r["uid"] in csv_by_uid),
         "csvRows":len(scoped),"apiRows":len(api),"extraCount":len(extras),
         "extraUidsFoundElsewhereInFullCsv":sum(r["uid"] in csv_by_uid for r in extras),
         "extraWithContainerAlreadyInScopedCsv":sum(container_uid(r) in known_container_uids for r in extras),
