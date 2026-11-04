@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {assessCoverage,compareIdleSemantics} from './operation-coverage.mjs';
 import {csv} from '../production-sync/production-sync.mjs';
-import {normalizeStation} from './compare-production-has.mjs';
 const [dir,webDir]=process.argv.slice(2);
 if(!dir||!webDir)throw Error('Usage: node audit-all-operation-coverage.mjs API_DIR WEB_DIR');
 const byFaction={tff:[],tjo:[]};
@@ -12,7 +11,7 @@ for(const name of fs.readdirSync(dir)){
   if(!match)continue;
   const doc=JSON.parse(fs.readFileSync(path.join(dir,name),'utf8'));
   if(!Array.isArray(doc.stations))throw Error('Invalid station capture '+name);
-  byFaction[match[1]].push(...doc.stations.map(normalizeStation));
+  byFaction[match[1]].push(...doc.stations);
 }
 const coverage=assessCoverage(byFaction);
 const semantic={};
