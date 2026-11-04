@@ -36,7 +36,7 @@ jobs:
       SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
       SWC_APP_ACTIVATED: 'true'
       SWC_SECRET_REGENERATED: 'true'
-      SWC_PRIVATE_DIR: ${{ runner.temp }}/swc-private
+      SWC_PRIVATE_DIR: /tmp/swc-private
       SYSTEM: ${{ github.event_name == 'push' && 'Chamble' || inputs.system }}
       FACTION: ${{ github.event_name == 'push' && 'tff' || inputs.faction }}
     steps:
