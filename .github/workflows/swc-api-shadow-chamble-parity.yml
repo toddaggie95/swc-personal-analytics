@@ -28,7 +28,7 @@ jobs:
       SWC_APP_ACTIVATED: 'true'
       SWC_SECRET_REGENERATED: 'true'
       SWC_PRIVATE_DIR: /tmp/swc-private
-      SWC_PARITY_SCOPE: \${{ inputs.scope || 'targeted' }}
+      SWC_PARITY_SCOPE: ${{ github.event_name == 'push' && 'all' || inputs.scope || 'targeted' }}
     steps:
       - uses: actions/checkout@v4
         with:
