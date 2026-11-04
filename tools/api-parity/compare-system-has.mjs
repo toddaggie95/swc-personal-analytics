@@ -90,6 +90,15 @@ for(const e of explanations)for(const p of e.privatePiles.extra){
   const row=locationPairs[key]??={webSystem:w?.system??'',apiSystem:a?.system??'',webContainer:w?.container_type_name??'',apiContainer:a?.container_type_name??'',piles:0,quantity:0};
   row.piles++;row.quantity+=p.quantity;
 }
+const containerReview={};
+for(const e of explanations)for(const p of e.privatePiles.extra){
+ const w=webByUid.get(p.uid),a=apiByUid.get(p.uid);
+ const uid=String(a?.container_uid??p.containerUid??'');
+ const key=String(a?.container_type_name??'')+'|'+uid;
+ const r=containerReview[key]??={containerUid:uid,webContainerUid:String(w?.container_uid??''),webContainerType:w?.container_type_name??'',apiContainerType:a?.container_type_name??'',webSystem:w?.system??'',apiSystem:a?.system??'',pileCount:0,quantity:0,materials:{}};
+ r.pileCount++;r.quantity+=p.quantity;
+ r.materials[e.material]=(r.materials[e.material]??0)+p.quantity;
+}
 const publicAttribution=explanations.map(x=>({
   system:x.system,material:x.material,delta:x.delta,missingCount:x.missingCount,
   extraCount:x.extraCount,changedCount:x.changedCount,movedCount:x.movedCount,
@@ -102,7 +111,7 @@ const report={mode:'read_only',status:differences.length?'differences':'matched'
     webErrors:web.errors.length,apiErrors:api.errors.length,
     webInvariants:web.discrepancies.length,apiInvariants:api.discrepancies.length,
     webExcluded:web.excluded,apiExcluded:api.excluded},
-  differences,explanations,publicAttribution,causeCounts,exclusionCauses,locationPairs:Object.values(locationPairs)};
+  differences,explanations,publicAttribution,causeCounts,exclusionCauses,locationPairs:Object.values(locationPairs),privateContainerReview:Object.values(containerReview)};
 fs.writeFileSync(out,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report));
 if(web.errors.length||api.errors.length||web.discrepancies.length||api.discrepancies.length)process.exitCode=1;
