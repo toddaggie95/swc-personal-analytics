@@ -3,7 +3,7 @@ set -euo pipefail
 # Read-only parity across the production system registry. Private UID-level reports
 # stay under /tmp and are removed by the workflow cleanup step.
 mapfile -t systems < <(python3 -c 'import json; d=json.load(open("../parity/tools/production-sync/systems.addresses.json")); print("\n".join(x["system"] for x in d["systems"]))')
-systems=(Eberon Clantaano Tholatin Ota)
+systems=('Uogo`cor')
 failed=0
 for system in "${systems[@]}"; do
   echo "::group::Parity: $system"
