@@ -1,4 +1,4 @@
-name: SWC API Shadow - Five-System Diagnostics Retry
+name: SWC API Shadow - Fresh CSV Four-System Parity
 on:
   push:
     branches: [feature/kashyyyk-parity-readonly]
@@ -78,7 +78,7 @@ jobs:
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
           SWC_EXPORT_OUTPUT: /tmp/swc-parity-csv
         run: python3 tools/production-sync/download-drive-exports.py > /tmp/swc-csv-download.log
-      - name: Collect all four Kashyyyk inventories and durably persist any token rotation
+      - name: Compare refreshed exports to live API and persist token rotation
         working-directory: collector
         shell: bash
         env:
