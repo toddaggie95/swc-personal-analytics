@@ -49,3 +49,11 @@ test('inventory in untracked systems is excluded while same-system station inven
  assert.equal(x.inventoryOnlySystems[0].system,'Untracked');
  assert.equal(x.totals.have.meleenium,1000159);
 });
+
+test('sector metadata follows production and inventory-only systems without changing balances',()=>{
+ const x=calculateMaterialBalance({pools,orders,materials:['meleenium','quantum'],
+   systemSectors:{Kashyyyk:'Mytaranor',Eberon:'Mytaranor'}});
+ assert.equal(x.systems.find(s=>s.system==='Kashyyyk').sector,'Mytaranor');
+ assert.equal(x.systems.find(s=>s.system==='Eberon').sector,'Mytaranor');
+ assert.equal(x.totals.missing.meleenium,30);
+});
