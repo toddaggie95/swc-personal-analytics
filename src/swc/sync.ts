@@ -32,10 +32,17 @@ export async function syncFactionMaterials(client: Pick<ReadClient, 'me' | 'fact
 export async function syncStations(client: Pick<ReadClient, 'me' | 'stations'>, run: SnapshotRun, root: string) {
   return syncInventory({ me: () => client.me(), list: (uid, start) => client.stations(uid, start) }, run, root, 'stations');
 }
-export async function syncFactionStations(client: Pick<ReadClient, 'me' | 'factionStations'>,
-  run: SnapshotRun, root: string, faction: keyof typeof MATERIAL_FACTIONS, staging = false) {
-  return syncInventory({ me: () => client.me(), list: (uid, start) => client.factionStations(uid, start) },
-    run, root, 'stations', MATERIAL_FACTIONS[faction], undefined, staging);
+export async function syncFactionStations(client: Pick<ReadClient, 'me' | 'factionStations'> & Partial<Pick<ReadClient, 'resolveLocation'>>,
+  run: SnapshotRun, root: string, faction: keyof typeof MATERIAL_FACTIONS, staging = false, filter?: LocationFilter,
+  wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms))) {
+  if (filter) {
+    if (!client.resolveLocation) throw new SafeError('Location resolution is required for a filtered station sync.');
+    filter = await client.resolveLocation(filter);
+  }
+  return syncInventory({ me: () => client.me(), list: async (uid, start) => {
+    if (filter && start > 1) await wait(6500);
+    return client.factionStations(uid, start, filter);
+  } }, run, root, 'stations', MATERIAL_FACTIONS[faction], filter, staging);
 }
 export async function syncFactionFacilities(client: Pick<ReadClient, 'me' | 'factionFacilities' | 'resolveLocation'>,
   run: SnapshotRun, root: string, faction: keyof typeof MATERIAL_FACTIONS, filter: LocationFilter,
