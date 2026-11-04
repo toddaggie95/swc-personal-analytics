@@ -83,13 +83,13 @@ function main(args) {
   const o={};for(let i=0;i<args.length;i+=2){if(!args[i]?.startsWith('--')||!args[i+1])throw Error('Expected --key value');o[args[i].slice(2)]=args[i+1]}
   for(const k of ['api-dir','web-dir','manifest','out'])if(!o[k])throw Error('Missing --'+k);
   const system=o.system??'Kashyyyk';
+  const manifest=JSON.parse(fs.readFileSync(o.manifest,'utf8'));
   const expectedSystems=[...new Set(manifest.destinations.filter(d=>system==='all'||d.system===system).map(d=>d.system))];
   const load=(f,k)=>csv(fs.readFileSync(path.join(o['web-dir'],f+'-'+k+'.csv'),'utf8'));
   const webStations=['tff','tjo'].flatMap(f=>load(f,'stations'));
   const webMaterials=['tff','tjo'].flatMap(f=>load(f,'materials'));
   const apiStations=['tff','tjo'].flatMap(f=>loadApi(o['api-dir'],f,'stations',system,expectedSystems).map(normalizeStation));
   const apiMaterials=['tff','tjo'].flatMap(f=>loadApi(o['api-dir'],f,'materials',system,expectedSystems).map(normalizeMaterial));
-  const manifest=JSON.parse(fs.readFileSync(o.manifest,'utf8'));
   const report=compareLedgers(manifest,webStations,webMaterials,apiStations,apiMaterials,system);
   fs.mkdirSync(path.dirname(o.out),{recursive:true});
   fs.writeFileSync(o.out,JSON.stringify(report,null,2)+'\n');
