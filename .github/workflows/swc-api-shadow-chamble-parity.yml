@@ -114,6 +114,20 @@ jobs:
           bash ../parity/tools/api-parity/run-all-systems.sh > /tmp/swc-inventory-summary.log 2>&1
           set -e
           grep -E '^RESULT |^SUMMARY ' /tmp/swc-inventory-summary.log || true
+          python3 - <<'PY'
+          import glob,json
+          for name in glob.glob('/tmp/swc-parity-*.json'):
+              report=json.load(open(name))
+              if report.get('totalDiscrepancies',0)==0: continue
+              print('INVENTORY DETAIL',report['system'],'total',report['totalDiscrepancies'])
+              for key,d in report['datasets'].items():
+                  missing=len(d['missingApi']); extra=len(d['extraApi']); fields=d['fieldMismatches']
+                  if not (missing or extra or fields): continue
+                  detail=report['diagnostics'][key]
+                  print('  ',key,'CSV',d['csv'],'API',d['api'],'missing',missing,'extra',extra,'field mismatches',fields)
+                  print('   material types missing:',detail['missingMaterialTypes'],'extra:',detail['extraMaterialTypes'])
+                  print('   mismatched fields:',detail['mismatchFields'],'quantity delta:',detail['quantityDeltaTotal'])
+          PY
           python3 -c "import os,re,pathlib,sys; log=pathlib.Path('/tmp/swc-inventory-summary.log').read_text(); results=re.findall(r'^RESULT (.+) (PASS|DISCREPANCY|COLLECTION_ERROR)',log,re.M); expected=20 if os.environ.get('SWC_PARITY_SCOPE')=='all' else 1; errors=sum(status=='COLLECTION_ERROR' for _,status in results); discrepancies=sum(status=='DISCREPANCY' for _,status in results); print('Inventory coverage',len(results),'/',expected,'collection errors',errors,'discrepant systems',discrepancies); open(os.environ['GITHUB_OUTPUT'],'a').write('discrepant_systems='+str(discrepancies)+'\\n'); sys.exit(1 if len(results)!=expected or errors else 0)"
       - name: Capture one immutable read-only workbook input
         if: success() && env.SWC_PARITY_SCOPE == 'all'
