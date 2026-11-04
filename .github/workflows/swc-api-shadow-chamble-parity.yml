@@ -1,4 +1,5 @@
 name: SWC API Shadow - Inventory and Calculated Output Parity
+# Read-only full-system parity rerun after 38 confirmed inaccessible-container exclusions.
 on:
   push:
     branches: [feature/kashyyyk-parity-readonly]
