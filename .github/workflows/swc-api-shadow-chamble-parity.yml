@@ -93,6 +93,9 @@ jobs:
             npx tsx src/cli/index.ts "sync:faction-materials:$faction" --system Chamble > "/tmp/swc-${faction}-materials.log" 2>&1
             npx tsx src/cli/index.ts "sync:faction-station-inventory:$faction" --system Chamble > "/tmp/swc-${faction}-stations.log" 2>&1
           done
+      - name: Diagnose API-only material piles using aggregate counts only
+        working-directory: parity
+        run: python3 tools/api-parity/diagnose-extra-materials.py --csv-dir /tmp/swc-parity-csv --api-dir /tmp/swc-private/normalized --system Chamble
       - name: Compare UID, ownership, system and quantity against CSV
         working-directory: parity
         run: python3 tools/api-parity/compare-scoped-inventory.py --csv-dir /tmp/swc-parity-csv --api-dir /tmp/swc-private/normalized --system Chamble --out /tmp/swc-parity-report.json
