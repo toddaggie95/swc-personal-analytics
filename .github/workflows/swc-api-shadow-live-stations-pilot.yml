@@ -38,7 +38,7 @@ jobs:
       SWC_SECRET_REGENERATED: 'true'
       SWC_PRIVATE_DIR: /tmp/swc-private
       SYSTEM: ${{ github.event_name == 'push' && 'Chamble' || inputs.system }}
-      FACTION: ${{ github.event_name == 'push' && 'tff' || inputs.faction }}
+      FACTION: ${{ github.event_name == 'push' && 'tjo' || inputs.faction }}
     steps:
       - name: Checkout isolated existing API collector
         uses: actions/checkout@v4
