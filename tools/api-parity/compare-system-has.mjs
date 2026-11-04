@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {csv} from '../production-sync/production-sync.mjs';
 import {systemInventory} from '../production-sync/system-has-audit.mjs';
+const inaccessibleContainers=new Set(JSON.parse(fs.readFileSync(new URL('../production-sync/inaccessible-containers.json',import.meta.url),'utf8')).containerUids);
 import {loadApi,normalizeMaterial,normalizeStation} from './compare-production-has.mjs';
 const [webDir,apiDir,manifestPath,out]=process.argv.slice(2);
 if(!out)throw Error('Usage: node compare-system-has.mjs WEB_DIR API_DIR MANIFEST OUT');
@@ -26,6 +27,7 @@ const included=(stations,materials)=>{
   const stationMap=new Map(stations.map(x=>[String(x.uid),x]));
   const map=new Map();
   for(const p of materials){
+    if(p.container_type_name==='Facilities'&&inaccessibleContainers.has(String(p.container_uid)))continue;
     const container=String(p.container_type_name??'');
     const station=container==='Stations'?stationMap.get(String(p.container_uid)):null;
     const system=container==='Facilities'?(p.system&&p.container_uid&&p.sysX!==''&&p.sysY!==''?p.system:null):station?.system;
@@ -113,5 +115,5 @@ const report={mode:'read_only',status:differences.length?'differences':'matched'
     webExcluded:web.excluded,apiExcluded:api.excluded},
   differences,explanations,publicAttribution,causeCounts,exclusionCauses,locationPairs:Object.values(locationPairs),privateContainerReview:Object.values(containerReview)};
 fs.writeFileSync(out,JSON.stringify(report,null,2)+'\n');
-console.log(JSON.stringify(report));
+console.log(JSON.stringify({status:report.status,statistics:report.statistics,publicAttribution:report.publicAttribution,causeCounts:report.causeCounts,exclusionCauses:report.exclusionCauses,locationPairs:report.locationPairs}));
 if(web.errors.length||api.errors.length||web.discrepancies.length||api.discrepancies.length)process.exitCode=1;
