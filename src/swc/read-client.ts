@@ -62,9 +62,11 @@ export class ReadClient {
     return this.get(`inventory/${uid}/materials/owner`, { start_index: start, item_count: 200,
       ...(filter ? { 'filter_type[0]': filter.kind, 'filter_value[0]': filter.uid!, 'filter_inclusion[0]': 'includes' } : {}) });
   }
-  factionStations(uid: string, start: number): Promise<Record<string, unknown>> {
+  factionStations(uid: string, start: number, filter?: LocationFilter): Promise<Record<string, unknown>> {
     if (!/^20:\d+$/.test(uid) || !Number.isSafeInteger(start) || start < 1) throw new SafeError('Invalid faction UID or page index.');
-    return this.get(`inventory/${uid}/stations/owner`, { start_index: start, item_count: 200 });
+    if (filter && (!filter.uid || !(filter.kind === 'planet' ? /^8:\d+$/ : /^9:\d+$/).test(filter.uid))) throw new SafeError('Resolve location to a UID before collecting stations.');
+    return this.get(`inventory/${uid}/stations/owner`, { start_index: start, item_count: 200,
+      ...(filter ? { 'filter_type[0]': filter.kind, 'filter_value[0]': filter.uid!, 'filter_inclusion[0]': 'includes' } : {}) });
   }
   async resolveLocation(filter: LocationFilter): Promise<LocationFilter> {
     const kind = filter.kind;
