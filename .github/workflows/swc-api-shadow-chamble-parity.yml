@@ -93,6 +93,7 @@ jobs:
             npx tsx src/cli/index.ts "sync:faction-materials:$faction" --system Chamble > "/tmp/swc-${faction}-materials.log" 2>&1
             npx tsx src/cli/index.ts "sync:faction-station-inventory:$faction" --system Chamble > "/tmp/swc-${faction}-stations.log" 2>&1
           done
+      # Shadow parity permits verified CSV location gaps; production HAS remains unchanged.
       - name: Diagnose API-only material piles and CSV location classification
         working-directory: parity
         run: python3 tools/api-parity/diagnose-extra-materials.py --csv-dir /tmp/swc-parity-csv --api-dir /tmp/swc-private/normalized --system Chamble
