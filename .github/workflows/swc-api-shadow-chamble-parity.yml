@@ -1,4 +1,4 @@
-name: SWC API Shadow - Chamble CSV Parity
+name: SWC API Shadow - Kashyyyk CSV Parity
 on:
   push:
     branches: [feature/kashyyyk-parity-readonly]
@@ -13,7 +13,7 @@ concurrency:
 jobs:
   compare:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     environment: swc-api-shadow
     env:
       SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
@@ -78,7 +78,7 @@ jobs:
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
           SWC_EXPORT_OUTPUT: /tmp/swc-parity-csv
         run: python3 tools/production-sync/download-drive-exports.py > /tmp/swc-csv-download.log
-      - name: Collect all four Chamble inventories and durably persist any token rotation
+      - name: Collect all four Kashyyyk inventories and durably persist any token rotation
         working-directory: collector
         shell: bash
         env:
@@ -90,16 +90,16 @@ jobs:
           }
           trap persist EXIT
           for faction in tff tjo; do
-            npx tsx src/cli/index.ts "sync:faction-materials:$faction" --system Chamble > "/tmp/swc-${faction}-materials.log" 2>&1
-            npx tsx src/cli/index.ts "sync:faction-station-inventory:$faction" --system Chamble > "/tmp/swc-${faction}-stations.log" 2>&1
+            npx tsx src/cli/index.ts "sync:faction-materials:$faction" --system Kashyyyk > "/tmp/swc-${faction}-materials.log" 2>&1
+            npx tsx src/cli/index.ts "sync:faction-station-inventory:$faction" --system Kashyyyk > "/tmp/swc-${faction}-stations.log" 2>&1
           done
       # Shadow parity permits verified CSV location gaps; production HAS remains unchanged.
       - name: Diagnose API-only material piles and CSV location classification
         working-directory: parity
-        run: python3 tools/api-parity/diagnose-extra-materials.py --csv-dir /tmp/swc-parity-csv --api-dir /tmp/swc-private/normalized --system Chamble
+        run: python3 tools/api-parity/diagnose-extra-materials.py --csv-dir /tmp/swc-parity-csv --api-dir /tmp/swc-private/normalized --system Kashyyyk
       - name: Compare UID, ownership, system and quantity against CSV
         working-directory: parity
-        run: python3 tools/api-parity/compare-scoped-inventory.py --csv-dir /tmp/swc-parity-csv --api-dir /tmp/swc-private/normalized --system Chamble --out /tmp/swc-parity-report.json
+        run: python3 tools/api-parity/compare-scoped-inventory.py --csv-dir /tmp/swc-parity-csv --api-dir /tmp/swc-private/normalized --system Kashyyyk --out /tmp/swc-parity-report.json
       # Repository is public: keep UID-level comparison data off public artifacts.
       - name: Remove private snapshots and credentials
         if: always()
