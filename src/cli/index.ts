@@ -20,9 +20,9 @@ async function main(): Promise<void> {
   const refreshIncomplete = process.argv.slice(3).includes(refreshFlag);
   if (refreshIncomplete && !command.startsWith('sync:faction-stations')) throw new SafeError('Refresh flag is only supported for faction stations.');
   const args = process.argv.slice(3).filter(arg => arg !== refreshFlag);
-  const filter = (command.startsWith('sync:faction-facilities') || ((command.startsWith('sync:faction-materials') || command.startsWith('sync:faction-stations')) && args.length > 0)) ? facilityFilter(args) : undefined;
+  const filter = (command.startsWith('sync:faction-facilities') || ((command.startsWith('sync:faction-materials') || command.startsWith('sync:faction-stations') || command.startsWith('sync:faction-station-inventory')) && args.length > 0)) ? facilityFilter(args) : undefined;
   if (!filter && args.length > 0) throw new SafeError('Extra arguments refused. Never pass authorization codes or tokens on the command line.');
-  if (command === 'help') { console.log('Commands: status | auth:start | auth:finish | sync:stations | sync:ships | sync:faction-materials | sync:faction-materials:tff | sync:faction-materials:tjo | sync:faction-stations | sync:faction-stations:tff | sync:faction-stations:tjo | sync:faction-facilities | sync:faction-facilities:tff | sync:faction-facilities:tjo\nFaction stations optionally accept --refresh-incomplete-shipyards to re-fetch incomplete cached shipyard operations.\nFaction materials and stations optionally accept --system "Name" or --planet "Name".\nFacility commands require --system "Name" or --planet "Name".\nSee docs/oauth.md before live authorization.'); return; }
+  if (command === 'help') { console.log('Commands: status | auth:start | auth:finish | sync:stations | sync:ships | sync:faction-materials | sync:faction-materials:tff | sync:faction-materials:tjo | sync:faction-stations | sync:faction-stations:tff | sync:faction-stations:tjo | sync:faction-station-inventory:tff | sync:faction-station-inventory:tjo | sync:faction-facilities | sync:faction-facilities:tff | sync:faction-facilities:tjo\nFaction stations optionally accept --refresh-incomplete-shipyards to re-fetch incomplete cached shipyard operations.\nFaction materials and stations optionally accept --system "Name" or --planet "Name".\nFacility commands require --system "Name" or --planet "Name".\nSee docs/oauth.md before live authorization.'); return; }
   const config = loadConfig();
   if (command === 'status') {
     const tokenStat = await stat(join(config.privateDir, 'tokens.json')).catch(() => null);
@@ -32,7 +32,7 @@ async function main(): Promise<void> {
       tokenFileModifiedAt: tokenStat?.mtime.toISOString() ?? null,
       oobMode: config.oobMode, pkce: config.pkce, liveProof: 'Not established by configuration; requires a successful live sync.' }, null, 2)); return;
   }
-  if (!['auth:start', 'auth:finish', 'sync:stations', 'sync:ships', 'sync:faction-materials', 'sync:faction-materials:tff', 'sync:faction-materials:tjo', 'sync:faction-stations', 'sync:faction-stations:tff', 'sync:faction-stations:tjo', 'sync:faction-facilities', 'sync:faction-facilities:tff', 'sync:faction-facilities:tjo'].includes(command)) throw new SafeError('Unknown command. Run npm run cli -- help.');
+  if (!['auth:start', 'auth:finish', 'sync:stations', 'sync:ships', 'sync:faction-materials', 'sync:faction-materials:tff', 'sync:faction-materials:tjo', 'sync:faction-stations', 'sync:faction-stations:tff', 'sync:faction-stations:tjo', 'sync:faction-station-inventory:tff', 'sync:faction-station-inventory:tjo', 'sync:faction-facilities', 'sync:faction-facilities:tff', 'sync:faction-facilities:tjo'].includes(command)) throw new SafeError('Unknown command. Run npm run cli -- help.');
   requireLive(config);
   stage = 'local storage lock';
   await withLock(config.privateDir, async () => {
@@ -47,7 +47,7 @@ async function main(): Promise<void> {
       stage = 'authorization session completion';
       const offline = await finishAuth(config, code, state);
       console.log(offline ? 'Authorization saved locally; refresh token available.' : 'Authorization saved; no refresh token returned. Offline access is not yet proven.');
-    } else if (command.startsWith('sync:faction-materials') || command.startsWith('sync:faction-stations') || command.startsWith('sync:faction-facilities')) {
+    } else if (command.startsWith('sync:faction-materials') || command.startsWith('sync:faction-stations') || command.startsWith('sync:faction-station-inventory') || command.startsWith('sync:faction-facilities')) {
       const auth = await loadAuth(config);
       const factions: Array<'tff' | 'tjo'> = command.endsWith(':tff') ? ['tff'] : command.endsWith(':tjo') ? ['tjo'] : ['tff', 'tjo'];
       for (const faction of factions) {
@@ -57,6 +57,7 @@ async function main(): Promise<void> {
           const client = new ReadClient(auth, run);
           const summary = command.startsWith('sync:faction-materials')
             ? await syncFactionMaterials(client, run, config.privateDir, faction, filter)
+            : command.startsWith('sync:faction-station-inventory') ? await syncFactionStations(client, run, config.privateDir, faction, false, filter)
             : command.startsWith('sync:faction-stations') ? await syncCompleteFactionStations(client, run, config.privateDir, faction, filter, undefined, undefined, refreshIncomplete)
             : await syncFactionFacilities(client, run, config.privateDir, faction, filter!);
           console.log(JSON.stringify({ faction, status: 'complete', ...summary }, null, 2));
