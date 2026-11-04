@@ -38,9 +38,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Prepare short-lived credentials without refresh rotation
+      - name: Validate renewable OAuth credentials and durable secret writer
         env:
           SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
@@ -50,11 +51,15 @@ jobs:
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
             const t=JSON.parse(readFileSync(process.env.SWC_PRIVATE_DIR+"/tokens.json","utf8"));
-            if(!Number.isFinite(t.expiresAt)||t.expiresAt-Date.now()<30*60*1000) {
-              console.error("SWC OAuth access token is expired or has under 30 minutes remaining. Reauthorize and update the swc-api-shadow environment secret SWC_OAUTH_TOKENS_JSON; no API calls or parity comparison were attempted.");
+            if(typeof t.accessToken!=="string" || !Number.isFinite(t.expiresAt) || typeof t.refreshToken!=="string" || !t.refreshToken) {
+              console.error("SWC OAuth credentials missing or cannot refresh. No live calls attempted.");
               process.exit(1);
             }
           '
+          if [[ -z "${SWC_SECRET_WRITER_TOKEN:-}" ]]; then
+            echo "Configure SWC_SECRET_WRITER_TOKEN in the swc-api-shadow environment with permission to update environment secrets; refusing rotating refresh without durable storage." >&2
+            exit 1
+          fi
       - name: Install and test scoped collector
         working-directory: collector
         run: npm ci --ignore-scripts --no-audit --no-fund && npm run typecheck && npm test
@@ -73,11 +78,17 @@ jobs:
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
           SWC_EXPORT_OUTPUT: /tmp/swc-parity-csv
         run: python3 tools/production-sync/download-drive-exports.py > /tmp/swc-csv-download.log
-      - name: Collect all four Chamble scoped inventories without station detail requests
+      - name: Collect all four Chamble inventories and durably persist any token rotation
         working-directory: collector
         shell: bash
+        env:
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
         run: |
           set -euo pipefail
+          persist() {
+            bash ../parity/tools/api-parity/persist-swc-token.sh
+          }
+          trap persist EXIT
           for faction in tff tjo; do
             npx tsx src/cli/index.ts "sync:faction-materials:$faction" --system Chamble > "/tmp/swc-${faction}-materials.log" 2>&1
             npx tsx src/cli/index.ts "sync:faction-station-inventory:$faction" --system Chamble > "/tmp/swc-${faction}-stations.log" 2>&1
