@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "description": "User-confirmed inaccessible facility container UIDs; shared by CSV and API System HAS",
+  "containerUids": [
+    "4:723655",
+    "4:745420",
+    "4:1309730"
+  ]
+}
