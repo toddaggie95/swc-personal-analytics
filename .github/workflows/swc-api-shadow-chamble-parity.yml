@@ -114,7 +114,8 @@ jobs:
           bash ../parity/tools/api-parity/run-all-systems.sh > /tmp/swc-inventory-summary.log 2>&1
           set -e
           grep -E '^RESULT |^SUMMARY ' /tmp/swc-inventory-summary.log || true
-          python3 -c "import os,re,pathlib,sys; log=pathlib.Path('/tmp/swc-inventory-summary.log').read_text(); results=re.findall(r'^RESULT (.+) (PASS|DISCREPANCY|COLLECTION_ERROR)      - name: Capture one immutable read-only workbook input
+          python3 -c "import os,re,pathlib,sys; log=pathlib.Path('/tmp/swc-inventory-summary.log').read_text(); results=re.findall(r'^RESULT (.+) (PASS|DISCREPANCY|COLLECTION_ERROR)',log,re.M); expected=20 if os.environ.get('SWC_PARITY_SCOPE')=='all' else 1; errors=sum(status=='COLLECTION_ERROR' for _,status in results); discrepancies=sum(status=='DISCREPANCY' for _,status in results); print('Inventory coverage',len(results),'/',expected,'collection errors',errors,'discrepant systems',discrepancies); open(os.environ['GITHUB_OUTPUT'],'a').write('discrepant_systems='+str(discrepancies)+'\\n'); sys.exit(1 if len(results)!=expected or errors else 0)"
+      - name: Capture one immutable read-only workbook input
         if: success() && env.SWC_PARITY_SCOPE == 'all'
         working-directory: parity
         env:
@@ -154,39 +155,6 @@ jobs:
         run: |
           echo "Inventory-discrepant systems: $DISCREPANT_SYSTEMS"
           [[ "$DISCREPANT_SYSTEMS" == '0' ]]
-      # Repository is public: keep UID-level comparison data off public artifacts.
-      - name: Remove private snapshots and credentials
-        if: always()
-        run: rm -rf /tmp/swc-private /tmp/swc-parity-csv /tmp/swc-parity-*.json /tmp/swc-*.log
-,log,re.M); expected=20 if os.environ.get('SWC_PARITY_SCOPE')=='all' else 1; errors=sum(status=='COLLECTION_ERROR' for _,status in results); discrepancies=sum(status=='DISCREPANCY' for _,status in results); print('Inventory coverage',len(results),'/',expected,'collection errors',errors,'discrepant systems',discrepancies); open(os.environ['GITHUB_OUTPUT'],'a').write('discrepant_systems='+str(discrepancies)+'\\n'); sys.exit(1 if len(results)!=expected or errors else 0)"
-      - name: Capture one immutable read-only workbook input
-        if: success() && env.SWC_PARITY_SCOPE == 'all'
-        working-directory: parity
-        env:
-          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
-          SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
-        run: |
-          python3 tools/production-sync/capture-overview-snapshot.py \
-            tools/production-sync/audited-workbook-layout.json \
-            tools/production-sync/audited-production-orders.json \
-            /tmp/swc-private/workbook.json
-      - name: Compare all production HAS and readiness calculations (no writes)
-        if: success() && env.SWC_PARITY_SCOPE == 'all'
-        working-directory: parity
-        run: |
-          set -euo pipefail
-          node tools/api-parity/compare-production-has.mjs \
-            --manifest tools/production-sync/audited-workbook-layout.json \
-            --web-dir /tmp/swc-parity-csv \
-            --api-dir /tmp/swc-private/normalized \
-            --system all \
-            --out /tmp/swc-private/production-has-parity.json
-          node tools/api-parity/run-readiness-parity.mjs \
-            --snapshot /tmp/swc-private/workbook.json \
-            --web-dir /tmp/swc-parity-csv \
-            --api-dir /tmp/swc-private/normalized \
-            --system all \
-            --out /tmp/swc-private/readiness-parity.json
       # Repository is public: keep UID-level comparison data off public artifacts.
       - name: Remove private snapshots and credentials
         if: always()
