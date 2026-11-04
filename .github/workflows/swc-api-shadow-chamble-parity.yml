@@ -1,4 +1,4 @@
-name: SWC API Shadow - Kashyyyk CSV Parity
+name: SWC API Shadow - All Systems CSV Parity
 on:
   push:
     branches: [feature/kashyyyk-parity-readonly]
@@ -8,12 +8,12 @@ permissions:
   contents: read
   id-token: write
 concurrency:
-  group: swc-chamble-live-parity
+  group: swc-all-systems-live-parity
   cancel-in-progress: false
 jobs:
   compare:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 180
     environment: swc-api-shadow
     env:
       SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
@@ -89,18 +89,8 @@ jobs:
             bash ../parity/tools/api-parity/persist-swc-token.sh
           }
           trap persist EXIT
-          for faction in tff tjo; do
-            npx tsx src/cli/index.ts "sync:faction-materials:$faction" --system Kashyyyk > "/tmp/swc-${faction}-materials.log" 2>&1
-            npx tsx src/cli/index.ts "sync:faction-station-inventory:$faction" --system Kashyyyk > "/tmp/swc-${faction}-stations.log" 2>&1
-          done
-      # Shadow parity permits verified CSV location gaps; production HAS remains unchanged.
-      - name: Diagnose API-only material piles and CSV location classification
-        working-directory: parity
-        run: python3 tools/api-parity/diagnose-extra-materials.py --csv-dir /tmp/swc-parity-csv --api-dir /tmp/swc-private/normalized --system Kashyyyk
-      - name: Compare UID, ownership, system and quantity against CSV
-        working-directory: parity
-        run: python3 tools/api-parity/compare-scoped-inventory.py --csv-dir /tmp/swc-parity-csv --api-dir /tmp/swc-private/normalized --system Kashyyyk --out /tmp/swc-parity-report.json
+          bash ../parity/tools/api-parity/run-all-systems.sh
       # Repository is public: keep UID-level comparison data off public artifacts.
       - name: Remove private snapshots and credentials
         if: always()
-        run: rm -rf /tmp/swc-private /tmp/swc-parity-csv /tmp/swc-parity-report.json /tmp/swc-*.log
+        run: rm -rf /tmp/swc-private /tmp/swc-parity-csv /tmp/swc-parity-*.json /tmp/swc-*.log
