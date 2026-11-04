@@ -38,7 +38,7 @@ export function normalizeStation(s) {
     productionStatus:actions===null||actions===undefined?null:(action?'running':''),
     productionQuantity:actions===null||actions===undefined?null:(action?.quantity??'')};
 }
-function loadApi(dir,faction,kind,system='Kashyyyk') {
+function loadApi(dir,faction,kind,system='Kashyyyk',expectedSystems=[system]) {
   const files=fs.readdirSync(dir).filter(n=>n.startsWith(faction+'__'+kind+'__system-')&&n.endsWith('.json'));
   const matched=[];
   for(const name of files){
@@ -60,6 +60,8 @@ function loadApi(dir,faction,kind,system='Kashyyyk') {
       out.push(row);
     }
   }
+  const found=new Set(matched.map(c=>c.scope.name));
+  for(const expected of expectedSystems)if(!found.has(expected))throw Error('Missing '+faction+' '+kind+' scoped API capture for '+expected);
   return out;
 }
 const key=r=>r.sheet+'|'+r.columnIndex+'|'+r.rowIndex+'|'+r.material;
@@ -81,11 +83,12 @@ function main(args) {
   const o={};for(let i=0;i<args.length;i+=2){if(!args[i]?.startsWith('--')||!args[i+1])throw Error('Expected --key value');o[args[i].slice(2)]=args[i+1]}
   for(const k of ['api-dir','web-dir','manifest','out'])if(!o[k])throw Error('Missing --'+k);
   const system=o.system??'Kashyyyk';
+  const expectedSystems=[...new Set(manifest.destinations.filter(d=>system==='all'||d.system===system).map(d=>d.system))];
   const load=(f,k)=>csv(fs.readFileSync(path.join(o['web-dir'],f+'-'+k+'.csv'),'utf8'));
   const webStations=['tff','tjo'].flatMap(f=>load(f,'stations'));
   const webMaterials=['tff','tjo'].flatMap(f=>load(f,'materials'));
-  const apiStations=['tff','tjo'].flatMap(f=>loadApi(o['api-dir'],f,'stations',system).map(normalizeStation));
-  const apiMaterials=['tff','tjo'].flatMap(f=>loadApi(o['api-dir'],f,'materials',system).map(normalizeMaterial));
+  const apiStations=['tff','tjo'].flatMap(f=>loadApi(o['api-dir'],f,'stations',system,expectedSystems).map(normalizeStation));
+  const apiMaterials=['tff','tjo'].flatMap(f=>loadApi(o['api-dir'],f,'materials',system,expectedSystems).map(normalizeMaterial));
   const manifest=JSON.parse(fs.readFileSync(o.manifest,'utf8'));
   const report=compareLedgers(manifest,webStations,webMaterials,apiStations,apiMaterials,system);
   fs.mkdirSync(path.dirname(o.out),{recursive:true});
