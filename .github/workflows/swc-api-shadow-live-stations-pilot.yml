@@ -20,7 +20,7 @@ on:
         options: [tff, tjo]
   push:
     branches: [feature/kashyyyk-parity-readonly]
-    paths: ['.github/workflows/swc-api-shadow-live-system-pilot.yml']
+    paths: ['.github/workflows/swc-api-shadow-live-stations-pilot.yml']
 permissions:
   contents: read
 concurrency:
