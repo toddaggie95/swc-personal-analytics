@@ -83,6 +83,13 @@ for(const e of explanations)for(const p of e.privatePiles.extra){
   else reason='other';
   exclusionCauses[reason]=(exclusionCauses[reason]??0)+1;
 }
+const locationPairs={};
+for(const e of explanations)for(const p of e.privatePiles.extra){
+  const w=webByUid.get(p.uid),a=apiByUid.get(p.uid);
+  const key=JSON.stringify({webSystem:w?.system??'',apiSystem:a?.system??'',webContainer:w?.container_type_name??'',apiContainer:a?.container_type_name??''});
+  const row=locationPairs[key]??={webSystem:w?.system??'',apiSystem:a?.system??'',webContainer:w?.container_type_name??'',apiContainer:a?.container_type_name??'',piles:0,quantity:0};
+  row.piles++;row.quantity+=p.quantity;
+}
 const publicAttribution=explanations.map(x=>({
   system:x.system,material:x.material,delta:x.delta,missingCount:x.missingCount,
   extraCount:x.extraCount,changedCount:x.changedCount,movedCount:x.movedCount,
@@ -95,7 +102,7 @@ const report={mode:'read_only',status:differences.length?'differences':'matched'
     webErrors:web.errors.length,apiErrors:api.errors.length,
     webInvariants:web.discrepancies.length,apiInvariants:api.discrepancies.length,
     webExcluded:web.excluded,apiExcluded:api.excluded},
-  differences,explanations,publicAttribution,causeCounts,exclusionCauses};
+  differences,explanations,publicAttribution,causeCounts,exclusionCauses,locationPairs:Object.values(locationPairs)};
 fs.writeFileSync(out,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report));
 if(web.errors.length||api.errors.length||web.discrepancies.length||api.discrepancies.length)process.exitCode=1;
