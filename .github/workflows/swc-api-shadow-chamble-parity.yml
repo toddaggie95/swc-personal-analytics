@@ -169,6 +169,7 @@ jobs:
         run: |
           echo "Inventory-discrepant systems: $DISCREPANT_SYSTEMS"
           [[ "$DISCREPANT_SYSTEMS" == '0' ]]
+      # Shadow publisher comparison remains read-only; keep UID-level data private.
       # Repository is public: keep UID-level comparison data off public artifacts.
       - name: Remove private snapshots and credentials
         if: always()
