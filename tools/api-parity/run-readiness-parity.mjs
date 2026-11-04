@@ -31,7 +31,7 @@ export function compareCapturedReadiness(snapshot,webStations,webMaterials,apiSt
     source:'same captured workbook assignments, ship bills and priority; independent web and API station/material inputs'};
 }
 function args(argv){const o={};for(let i=0;i<argv.length;i+=2){if(!argv[i]?.startsWith('--')||!argv[i+1])throw Error('Expected --key value');o[argv[i].slice(2)]=argv[i+1]}for(const k of ['snapshot','web-dir','api-dir','out'])if(!o[k])throw Error('Missing --'+k);return o}
-function apiFile(dir,faction,kind,system){
+function apiFile(dir,faction,kind,system,expectedSystems){
  const files=fs.readdirSync(dir).filter(n=>n.startsWith(faction+'__'+kind+'__system-')&&n.endsWith('.json'));
  const matches=[];
  for(const name of files){
@@ -51,13 +51,17 @@ function apiFile(dir,faction,kind,system){
    uids.add(row.uid);out.push(row);
   }
  }
+ const found=new Set(matches.map(c=>c.scope.name));
+ for(const expected of expectedSystems)if(!found.has(expected))throw Error('Missing '+faction+' '+kind+' API capture for '+expected);
  return out;
 }
 function main(argv){const o=args(argv),read=p=>JSON.parse(fs.readFileSync(p,'utf8'));
  const system=o.system??'Kashyyyk';
+ const snapshot=read(o.snapshot);
+ const expectedSystems=[...new Set(snapshot.manifest.destinations.filter(d=>system==='all'||d.system===system).map(d=>d.system))];
  const web=(kind)=>['tff','tjo'].flatMap(f=>csv(fs.readFileSync(path.join(o['web-dir'],f+'-'+kind+'.csv'),'utf8')));
- const api=(kind,normalize)=>['tff','tjo'].flatMap(f=>apiFile(o['api-dir'],f,kind,system).map(normalize));
- const result=compareCapturedReadiness(read(o.snapshot),web('stations'),web('materials'),api('stations',normalizeStation),api('materials',normalizeMaterial),system,o.previous?read(o.previous):null);
+ const api=(kind,normalize)=>['tff','tjo'].flatMap(f=>apiFile(o['api-dir'],f,kind,system,expectedSystems).map(normalize));
+ const result=compareCapturedReadiness(snapshot,web('stations'),web('materials'),api('stations',normalizeStation),api('materials',normalizeMaterial),system,o.previous?read(o.previous):null);
  fs.mkdirSync(path.dirname(o.out),{recursive:true});fs.writeFileSync(o.out,JSON.stringify(result,null,2)+'\n');
  console.log(JSON.stringify({status:result.status,statistics:result.statistics,orderDifferences:result.differences.length,sheetCountDifferences:result.sheetCountDifferences.length},null,2));
  if(result.status!=='matched')process.exitCode=2;
