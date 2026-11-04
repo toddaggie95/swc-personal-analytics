@@ -3,7 +3,7 @@
 import {MATERIALS} from './production-sync.mjs';
 const safe=(n,label)=>{if(!Number.isSafeInteger(n)||n<0)throw Error('Invalid '+label);return n;};
 const median=a=>{const b=[...a].sort((x,y)=>x-y);return b.length?b[Math.floor((b.length-1)/2)]:0;};
-export function calculateMaterialBalance({pools,orders,materials=MATERIALS,excessThresholds=null}) {
+export function calculateMaterialBalance({pools,orders,materials=MATERIALS,excessThresholds=null,systemSectors={}}) {
  const known=new Set(materials),bySystem=new Map(),seen=new Set(),poolIds=new Set();
  const trackedSystems=new Set(orders.map(o=>o.system));
  const init=system=>{if(!bySystem.has(system))bySystem.set(system,{system,have:Object.fromEntries(materials.map(m=>[m,0])),required:Object.fromEntries(materials.map(m=>[m,0]))});return bySystem.get(system)};
@@ -46,7 +46,7 @@ export function calculateMaterialBalance({pools,orders,materials=MATERIALS,exces
    values[material]={have,required,net,missing,excess,showExcess:excess>=thresholds[material]&&excess>0};
    for(const [field,value] of Object.entries({have,required,missing,excess,net}))totals[field][material]=(totals[field][material]??0)+value;
   }
-  return {system:system.system,materials:values};
+  return {system:system.system,sector:systemSectors[system.system]??'',materials:values};
  });
  // Net is additive, but positive/negative balances are intentionally summed
  // separately: do not net one system's shortage against another's surplus.
