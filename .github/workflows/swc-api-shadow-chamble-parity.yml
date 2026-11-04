@@ -184,6 +184,7 @@ jobs:
           print(dict(Counter(x['system'] for x in r['differences'])))
           print('Attribution counts:',dict(Counter(x['category'] for x in r['explanations'])))
           print('CSV exclusion diagnostics:',r['causeCounts'])
+          print('Container metadata mismatch causes:',r['exclusionCauses'])
           print('Reconciled deltas:',sum(x['delta']==x['explainedDelta'] for x in r['explanations']))
           print('Per-material differences (UID-free):')
           for x in r['publicAttribution']: print(x)
