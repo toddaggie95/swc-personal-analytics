@@ -45,3 +45,23 @@ test('different station quantities produce explicit mismatches',()=>{
   assert.equal(result.status,'differences');
   assert.equal(result.differences.length,1);
 });
+
+test('selected system and full registry include appropriate HAS destinations',()=>{
+  const manifest={destinations:[
+    {id:'k',system:'Kashyyyk',target:{sheet:'Kashyyyk',hasColumn:2,materialStartRow:10},memberStationUids:['5:100']},
+    {id:'u',system:'Uogo`cor',target:{sheet:'Uogo`cor',hasColumn:3,materialStartRow:10},memberStationUids:['5:200']}
+  ]};
+  const stations=[{uid:'5:100',system:'Kashyyyk',sysX:'8',sysY:'5'},{uid:'5:200',system:'Uogo`cor',sysX:'2',sysY:'3'}];
+  const piles=[
+    {uid:'16:1',type_name:'meleenium',quantity:'100',container_uid:'5:100',container_type_name:'Stations',system:'Kashyyyk'},
+    {uid:'16:2',type_name:'meleenium',quantity:'200',container_uid:'5:200',container_type_name:'Stations',system:'Uogo`cor'}
+  ];
+  const one=compareLedgers(manifest,stations,piles,stations,piles,'Uogo`cor');
+  const all=compareLedgers(manifest,stations,piles,stations,piles,'all');
+  assert.equal(one.status,'matched');
+  assert.equal(one.statistics.destinations,1);
+  assert.equal(all.status,'matched');
+  assert.equal(all.statistics.destinations,2);
+  assert.equal(all.statistics.webCells,2*one.statistics.webCells);
+  assert.throws(()=>compareLedgers(manifest,stations,piles,stations,piles,'Unknown'),/No destinations/);
+});
