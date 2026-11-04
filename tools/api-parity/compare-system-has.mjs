@@ -61,13 +61,19 @@ for(const d of differences){
     // Private output only. Never publish these identities to public Actions logs.
     privatePiles:{missing,extra,changed,moved}});
 }
+const publicAttribution=explanations.map(x=>({
+  system:x.system,material:x.material,delta:x.delta,missingCount:x.missingCount,
+  extraCount:x.extraCount,changedCount:x.changedCount,movedCount:x.movedCount,
+  missingQuantity:x.missingQuantity,extraQuantity:x.extraQuantity,
+  changedDelta:x.changedDelta,reconciled:x.delta===x.explainedDelta
+}));
 const report={mode:'read_only',status:differences.length?'differences':'matched',
   statistics:{systems:web.systems.length,cells:web.systems.length*web.materials.length,
     differences:differences.length,webPiles:web.statistics.uniquePiles,apiPiles:api.statistics.uniquePiles,
     webErrors:web.errors.length,apiErrors:api.errors.length,
     webInvariants:web.discrepancies.length,apiInvariants:api.discrepancies.length,
     webExcluded:web.excluded,apiExcluded:api.excluded},
-  differences,explanations};
+  differences,explanations,publicAttribution};
 fs.writeFileSync(out,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report));
 if(web.errors.length||api.errors.length||web.discrepancies.length||api.discrepancies.length)process.exitCode=1;
