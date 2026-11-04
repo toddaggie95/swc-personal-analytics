@@ -1,0 +1,100 @@
+name: SWC API Shadow - System-Scoped Station Inventory Pilot
+on:
+  workflow_dispatch:
+    inputs:
+      system:
+        description: 'Exact SWC system name (start with a small system)'
+        required: true
+        default: Chamble
+        type: choice
+        options:
+          - Chamble
+          - Lannik
+          - Saki
+          - Kashyyyk
+      faction:
+        description: 'One faction per run to bound API calls'
+        required: true
+        default: tff
+        type: choice
+        options: [tff, tjo]
+  push:
+    branches: [feature/kashyyyk-parity-readonly]
+    paths: ['.github/workflows/swc-api-shadow-live-system-pilot.yml']
+permissions:
+  contents: read
+concurrency:
+  group: swc-api-shadow-stations-pilot
+  cancel-in-progress: false
+jobs:
+  bounded-stations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: swc-api-shadow
+    env:
+      SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+      SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+      SWC_APP_ACTIVATED: 'true'
+      SWC_SECRET_REGENERATED: 'true'
+      SWC_PRIVATE_DIR: /tmp/swc-private
+      SYSTEM: ${{ github.event_name == 'push' && 'Chamble' || inputs.system }}
+      FACTION: ${{ github.event_name == 'push' && 'tff' || inputs.faction }}
+    steps:
+      - name: Checkout isolated existing API collector
+        uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned collector dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Validate scoped collector code
+        run: npm run typecheck && npm test
+      - name: Prepare private credentials and refuse expiring access token
+        shell: bash
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$SWC_PRIVATE_DIR"
+          test -n "$SWC_OAUTH_TOKENS_JSON"
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > "$SWC_PRIVATE_DIR/tokens.json"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const t=JSON.parse(readFileSync(process.env.SWC_PRIVATE_DIR+"/tokens.json","utf8"));
+            if(!Number.isFinite(t.expiresAt)||t.expiresAt-Date.now()<20*60*1000){
+              console.error("Access token expires within pilot safety window; stop before refresh can rotate credentials.");
+              process.exit(1);
+            }
+          '
+      - name: Collect one faction, one system, station inventory only
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$SYSTEM" in Chamble|Lannik|Saki|Kashyyyk) ;; *) exit 2;; esac
+          case "$FACTION" in tff|tjo) ;; *) exit 2;; esac
+          npx tsx src/cli/index.ts "sync:faction-station-inventory:$FACTION" --system "$SYSTEM" > "$RUNNER_TEMP/collector-output.log" 2>&1 || {
+            echo "::error::Read-only API materials collection failed; private log and snapshots will not be uploaded."
+            exit 1
+          }
+          echo "One-system, one-faction station inventory collected; raw records retained only on ephemeral runner." >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish non-sensitive count only
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readdirSync,readFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          const dir=join(process.env.SWC_PRIVATE_DIR,'normalized');
+          const files=readdirSync(dir).filter(f=>f.endsWith('.json'));
+          if(files.length!==1) throw Error('Expected exactly one normalized capture');
+          const obj=JSON.parse(readFileSync(join(dir,files[0]),'utf8'));
+          if(obj.summary?.entityType!=='stations'||obj.summary?.locationFilter?.name!==process.env.SYSTEM||!Array.isArray(obj.stations)) throw Error('Capture validation failed');
+          console.log(JSON.stringify({system:process.env.SYSTEM,faction:process.env.FACTION,stations:obj.stations.length,pages:obj.summary.pages,completedAt:obj.summary.completedAt}));
+          NODE
+      - name: Remove private data
+        if: always()
+        run: rm -rf "$SWC_PRIVATE_DIR" "$RUNNER_TEMP/collector-output.log"
