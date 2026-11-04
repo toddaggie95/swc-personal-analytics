@@ -19,7 +19,14 @@ export function calculateOverviewSnapshot({manifest,stations,materials,auditedOr
  const priority=o=>/behemoth|endurance/i.test(o.ship)?0:1;
  const allocation=allocateReadiness({pools,orders,priority});
  const summary=summarizeReadiness(allocation.orders);
- const materialBalance=calculateMaterialBalance({pools,orders});
+ const systemSectors={};
+ for(const station of stations){
+  const system=String(station.system??'').trim(),sector=String(station.sector??'').trim();
+  if(!system||!sector)continue;
+  if(systemSectors[system]&&systemSectors[system]!==sector)throw Error('Conflicting sector for system '+system);
+  systemSectors[system]=sector;
+ }
+ const materialBalance=calculateMaterialBalance({pools,orders,systemSectors});
  const coverageAudit=auditOverviewCoverage({manifest,orders:allocation.orders,stations});
  const bySystem={};
  for(const o of allocation.orders){
