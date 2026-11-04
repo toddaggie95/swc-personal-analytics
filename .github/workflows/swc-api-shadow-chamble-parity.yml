@@ -96,14 +96,7 @@ jobs:
       - name: Compare UID, ownership, system and quantity against CSV
         working-directory: parity
         run: python3 tools/api-parity/compare-scoped-inventory.py --csv-dir /tmp/swc-parity-csv --api-dir /tmp/swc-private/normalized --system Chamble --out /tmp/swc-parity-report.json
-      - name: Upload parity summary
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: swc-chamble-parity-report
-          path: /tmp/swc-parity-report.json
-          if-no-files-found: warn
-          retention-days: 7
+      # Repository is public: keep UID-level comparison data off public artifacts.
       - name: Remove private snapshots and credentials
         if: always()
-        run: rm -rf /tmp/swc-private /tmp/swc-parity-csv /tmp/swc-*.log
+        run: rm -rf /tmp/swc-private /tmp/swc-parity-csv /tmp/swc-parity-report.json /tmp/swc-*.log
