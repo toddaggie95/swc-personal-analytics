@@ -112,13 +112,9 @@ jobs:
           trap persist EXIT
           set +e
           bash ../parity/tools/api-parity/run-all-systems.sh > /tmp/swc-inventory-summary.log 2>&1
-          collection_exit=$?
           set -e
           grep -E '^RESULT |^SUMMARY ' /tmp/swc-inventory-summary.log || true
-          python3 - <<'PY'
-          import os,re,pathlib,sys
-          log=pathlib.Path('/tmp/swc-inventory-summary.log').read_text()
-          results=re.findall(r'^RESULT (.+) (PASS|DISCREPANCY|COLLECTION_ERROR)      - name: Capture one immutable read-only workbook input
+          python3 -c "import os,re,pathlib,sys; log=pathlib.Path('/tmp/swc-inventory-summary.log').read_text(); results=re.findall(r'^RESULT (.+) (PASS|DISCREPANCY|COLLECTION_ERROR)      - name: Capture one immutable read-only workbook input
         if: success() && env.SWC_PARITY_SCOPE == 'all'
         working-directory: parity
         env:
@@ -162,16 +158,7 @@ jobs:
       - name: Remove private snapshots and credentials
         if: always()
         run: rm -rf /tmp/swc-private /tmp/swc-parity-csv /tmp/swc-parity-*.json /tmp/swc-*.log
-,log,re.M)
-          expected=20 if os.environ.get('SWC_PARITY_SCOPE')=='all' else 1
-          if len(results)!=expected or any(status=='COLLECTION_ERROR' for _,status in results):
-              print('Incomplete API collection:',len(results),'of',expected)
-              sys.exit(1)
-          discrepancies=sum(status=='DISCREPANCY' for _,status in results)
-          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
-              f.write('discrepant_systems='+str(discrepancies)+'\n')
-          print('Inventory-discrepant systems:',discrepancies)
-          PY
+,log,re.M); expected=20 if os.environ.get('SWC_PARITY_SCOPE')=='all' else 1; errors=sum(status=='COLLECTION_ERROR' for _,status in results); discrepancies=sum(status=='DISCREPANCY' for _,status in results); print('Inventory coverage',len(results),'/',expected,'collection errors',errors,'discrepant systems',discrepancies); open(os.environ['GITHUB_OUTPUT'],'a').write('discrepant_systems='+str(discrepancies)+'\\n'); sys.exit(1 if len(results)!=expected or errors else 0)"
       - name: Capture one immutable read-only workbook input
         if: success() && env.SWC_PARITY_SCOPE == 'all'
         working-directory: parity
