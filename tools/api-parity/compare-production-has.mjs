@@ -48,9 +48,10 @@ function loadApi(dir,faction,kind) {
 }
 const key=r=>r.sheet+'|'+r.columnIndex+'|'+r.rowIndex+'|'+r.material;
 const index=(arr)=>{const out=new Map();for(const x of arr){const k=key(x);if(out.has(k))throw Error('Duplicate HAS cell '+k);out.set(k,x.quantity)}return out};
-export function compareLedgers(manifest,webStations,webMaterials,apiStations,apiMaterials) {
-  const selected={...manifest,destinations:manifest.destinations.filter(d=>d.system==='Kashyyyk')};
-  if(!selected.destinations.length)throw Error('No Kashyyyk destinations in manifest');
+export function compareLedgers(manifest,webStations,webMaterials,apiStations,apiMaterials,system='Kashyyyk') {
+  if(!Array.isArray(manifest?.destinations))throw Error('Missing destination manifest');
+  const selected={...manifest,destinations:system==='all'?manifest.destinations:manifest.destinations.filter(d=>d.system===system)};
+  if(!selected.destinations.length)throw Error('No destinations in manifest for '+system);
   const web=buildLedger(selected,webStations,webMaterials);
   const api=buildLedger(selected,apiStations,apiMaterials);
   const w=index(web.cells),a=index(api.cells),differences=[];
