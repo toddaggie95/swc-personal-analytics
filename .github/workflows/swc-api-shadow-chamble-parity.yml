@@ -1,4 +1,4 @@
-name: SWC API Shadow - Five-System Diagnostics
+name: SWC API Shadow - Five-System Diagnostics Retry
 on:
   push:
     branches: [feature/kashyyyk-parity-readonly]
