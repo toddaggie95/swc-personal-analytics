@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publish a signed 21-material matrix beside Production Overview, never over A:L."""
+"""Publish sector, system and 21-material matrix beside Production Overview, never over A:L."""
 import json,os,sys,urllib.request,urllib.parse
 SHEET_ID="1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8"
 TAB_ID=1565113984
@@ -19,11 +19,11 @@ def matrix(snapshot):
     mats=sorted(mats,key=lambda m:(-demand[m],-usage[m],m))
     # Mirror the dashboard: row 5 header; production systems at rows 6,8,...44.
     rows=[[""] for _ in range(57)]
-    rows[4]=["System",*[m.title() for m in mats]]
+    rows[4]=["Sector","System",*[m.title() for m in mats]]
     totals={k:{m:0 for m in mats} for k in ("missing","excess","net")}
     colors=[]
     for index,s in enumerate(all_systems):
-        row=[s["system"]]; shades=[None]
+        row=[s.get("sector",""),s["system"]]; shades=[None,None]
         for m in mats:
             v=s["materials"][m]
             if v["have"]-v["required"]!=v["net"] or v["excess"]-v["missing"]!=v["net"]:
@@ -40,7 +40,7 @@ def matrix(snapshot):
         rows[target]=row
         colors.append((target,shades))
     for key,label,sign in (("missing","TOTAL MISSING",-1),("excess","TOTAL EXCESS",1),("net","NET BALANCE",1)):
-        rows[54+("missing","excess","net").index(key)]=[label,*[sign*totals[key][m] for m in mats]]
+        rows[54+("missing","excess","net").index(key)]=["",label,*[sign*totals[key][m] for m in mats]]
     if any(b["totals"][k]!=totals[k] for k in totals):
         raise ValueError("Balance summary mismatch")
     return rows,colors
@@ -54,7 +54,7 @@ def request(token,path,payload=None):
     with urllib.request.urlopen(req,timeout=90) as r:return json.load(r)
 def publish(snapshot,token):
     rows,colors=matrix(snapshot)
-    end=START+22;bottom=len(rows)
+    end=START+23;bottom=len(rows)
     meta=request(token,"?fields=sheets(properties(sheetId,gridProperties),conditionalFormats)")
     prop=next(s["properties"] for s in meta["sheets"] if s["properties"]["sheetId"]==TAB_ID)
     grid=prop["gridProperties"];actions=[]
@@ -64,12 +64,12 @@ def publish(snapshot,token):
         actions.append({"updateSheetProperties":{"properties":{"sheetId":TAB_ID,"gridProperties":{"rowCount":bottom}},"fields":"gridProperties.rowCount"}})
     def cell(v):
         return {"userEnteredValue":{"numberValue":v} if type(v)==int else {"stringValue":str(v)}}
-    payload=[{"values":[cell(v) for v in (row+[""]*(22-len(row)))]} for row in rows]
+    payload=[{"values":[cell(v) for v in (row+[""]*(23-len(row)))]} for row in rows]
     actions.append({"updateCells":{"range":{"sheetId":TAB_ID,"startRowIndex":0,"endRowIndex":bottom,"startColumnIndex":START,"endColumnIndex":end},"rows":payload,"fields":"userEnteredValue"}})
     # Remove stale legacy header and alternating row fills from the whole matrix area.
     actions.append({"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":0,"endRowIndex":bottom,"startColumnIndex":START,"endColumnIndex":end},"cell":{"userEnteredFormat":{"backgroundColor":{"red":1,"green":1,"blue":1},"textFormat":{"bold":False,"foregroundColor":{"red":0.15,"green":0.22,"blue":0.29}}}},"fields":"userEnteredFormat.backgroundColor,userEnteredFormat.textFormat"}})
     # Reset previous highlights so changed balances cannot retain stale colors.
-    actions.append({"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":1,"endRowIndex":bottom,"startColumnIndex":START+1,"endColumnIndex":end},"cell":{"userEnteredFormat":{"backgroundColor":{"red":1,"green":1,"blue":1}}},"fields":"userEnteredFormat.backgroundColor"}})
+    actions.append({"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":1,"endRowIndex":bottom,"startColumnIndex":START+2,"endColumnIndex":end},"cell":{"userEnteredFormat":{"backgroundColor":{"red":1,"green":1,"blue":1}}},"fields":"userEnteredFormat.backgroundColor"}})
     # The legacy always-white conditional rule must not override matrix fills.
     sheet=next(s for s in meta["sheets"] if s["properties"]["sheetId"]==TAB_ID)
     for idx,rule in enumerate(sheet.get("conditionalFormats",[])):
@@ -87,14 +87,14 @@ def publish(snapshot,token):
     # Consistent readable headings, widths, numeric grouping, and summary emphasis.
     actions.extend([
       {"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":4,"endRowIndex":5,"startColumnIndex":START,"endColumnIndex":end},"cell":{"userEnteredFormat":{"backgroundColor":{"red":0.12,"green":0.20,"blue":0.30},"textFormat":{"foregroundColor":{"red":1,"green":1,"blue":1},"bold":True},"horizontalAlignment":"CENTER","verticalAlignment":"MIDDLE"}},"fields":"userEnteredFormat.backgroundColor,userEnteredFormat.textFormat,userEnteredFormat.horizontalAlignment,userEnteredFormat.verticalAlignment"}},
-      {"updateDimensionProperties":{"range":{"sheetId":TAB_ID,"dimension":"COLUMNS","startIndex":START,"endIndex":START+1},"properties":{"pixelSize":172},"fields":"pixelSize"}},
-      {"updateDimensionProperties":{"range":{"sheetId":TAB_ID,"dimension":"COLUMNS","startIndex":START+1,"endIndex":end},"properties":{"pixelSize":116},"fields":"pixelSize"}},
-      {"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":1,"endRowIndex":bottom,"startColumnIndex":START+1,"endColumnIndex":end},"cell":{"userEnteredFormat":{"numberFormat":{"type":"NUMBER","pattern":"#,##0;-#,##0;–"},"horizontalAlignment":"RIGHT"}},"fields":"userEnteredFormat.numberFormat,userEnteredFormat.horizontalAlignment"}},
+      {"updateDimensionProperties":{"range":{"sheetId":TAB_ID,"dimension":"COLUMNS","startIndex":START,"endIndex":START+2},"properties":{"pixelSize":172},"fields":"pixelSize"}},
+      {"updateDimensionProperties":{"range":{"sheetId":TAB_ID,"dimension":"COLUMNS","startIndex":START+2,"endIndex":end},"properties":{"pixelSize":116},"fields":"pixelSize"}},
+      {"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":1,"endRowIndex":bottom,"startColumnIndex":START+2,"endColumnIndex":end},"cell":{"userEnteredFormat":{"numberFormat":{"type":"NUMBER","pattern":"#,##0;-#,##0;–"},"horizontalAlignment":"RIGHT"}},"fields":"userEnteredFormat.numberFormat,userEnteredFormat.horizontalAlignment"}},
       {"repeatCell":{"range":{"sheetId":TAB_ID,"startRowIndex":bottom-3,"endRowIndex":bottom,"startColumnIndex":START,"endColumnIndex":end},"cell":{"userEnteredFormat":{"textFormat":{"bold":True},"backgroundColor":{"red":0.90,"green":0.94,"blue":0.98}}},"fields":"userEnteredFormat.textFormat.bold,userEnteredFormat.backgroundColor"}},
       {"updateDimensionProperties":{"range":{"sheetId":TAB_ID,"dimension":"ROWS","startIndex":4,"endIndex":5},"properties":{"pixelSize":34},"fields":"pixelSize"}}
     ])
     request(token,":batchUpdate",{"requests":actions})
-    rng=urllib.parse.quote("'Production Overview'!N1:AI"+str(bottom),safe="")
+    rng=urllib.parse.quote("'Production Overview'!N1:AJ"+str(bottom),safe="")
     actual=request(token,"/values/"+rng+"?valueRenderOption=UNFORMATTED_VALUE").get("values",[])
     for i,row in enumerate(rows):
         got=actual[i] if i<len(actual) else []
