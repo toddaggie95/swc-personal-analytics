@@ -1,0 +1,98 @@
+name: SWC API Shadow - Chamble CSV Parity
+on:
+  push:
+    branches: [feature/kashyyyk-parity-readonly]
+    paths: ['.github/workflows/swc-api-shadow-chamble-parity.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: swc-chamble-live-parity
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: swc-api-shadow
+    env:
+      SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+      SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+      SWC_APP_ACTIVATED: 'true'
+      SWC_SECRET_REGENERATED: 'true'
+      SWC_PRIVATE_DIR: /tmp/swc-private
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: parity
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install and test scoped collector
+        working-directory: collector
+        run: npm ci --ignore-scripts --no-audit --no-fund && npm run typecheck && npm test
+      - name: Read current four CSV exports without modifying Drive
+        id: google
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/772242617730/locations/global/workloadIdentityPools/github-actions/providers/github'
+          service_account: 'swc-production-sync@swc-analytics-512519.iam.gserviceaccount.com'
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly
+      - name: Download verified CSV baseline
+        working-directory: parity
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
+          SWC_EXPORT_OUTPUT: /tmp/swc-parity-csv
+        run: python3 tools/production-sync/download-drive-exports.py > /tmp/swc-csv-download.log
+      - name: Prepare short-lived credentials without refresh rotation
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$SWC_PRIVATE_DIR"
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > "$SWC_PRIVATE_DIR/tokens.json"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const t=JSON.parse(readFileSync(process.env.SWC_PRIVATE_DIR+"/tokens.json","utf8"));
+            if(!Number.isFinite(t.expiresAt)||t.expiresAt-Date.now()<30*60*1000) {
+              console.error("Access token near expiry: refusing live collection without durable token rotation.");
+              process.exit(1);
+            }
+          '
+      - name: Collect all four Chamble scoped inventories without station detail requests
+        working-directory: collector
+        shell: bash
+        run: |
+          set -euo pipefail
+          for faction in tff tjo; do
+            npx tsx src/cli/index.ts "sync:faction-materials:$faction" --system Chamble > "/tmp/swc-${faction}-materials.log" 2>&1
+            npx tsx src/cli/index.ts "sync:faction-station-inventory:$faction" --system Chamble > "/tmp/swc-${faction}-stations.log" 2>&1
+          done
+      - name: Compare UID, ownership, system and quantity against CSV
+        working-directory: parity
+        run: python3 tools/api-parity/compare-scoped-inventory.py --csv-dir /tmp/swc-parity-csv --api-dir /tmp/swc-private/normalized --system Chamble --out /tmp/swc-parity-report.json
+      - name: Upload parity summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swc-chamble-parity-report
+          path: /tmp/swc-parity-report.json
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Remove private snapshots and credentials
+        if: always()
+        run: rm -rf /tmp/swc-private /tmp/swc-parity-csv /tmp/swc-*.log
