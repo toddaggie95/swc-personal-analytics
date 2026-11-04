@@ -20,13 +20,32 @@ export function compareCapturedReadiness(snapshot,webStations,webMaterials,apiSt
   const web=calculateOverviewSnapshot({...input,stations:webStations,materials:webMaterials});
   const api=calculateOverviewSnapshot({...input,stations:apiStations,materials:apiMaterials});
   const result=compareReadiness(web,api,previous);
+  // Shadow the publisher's system/status grid and station membership, never a live write.
+  const publication=orders=>{
+    const statuses=['building','ready_now','transfer','blocked','unassigned'];
+    const grouped=new Map();
+    for(const order of orders){
+      const system=String(order.system??''),id=String(order.id??''),status=order.status;
+      if(!system||!id||!statuses.includes(status))throw Error('Invalid shadow publication order');
+      if(!grouped.has(system))grouped.set(system,Object.fromEntries(statuses.map(k=>[k,[]])));
+      grouped.get(system)[status].push(id);
+    }
+    return [...grouped.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([system,groups])=>({
+      system,counts:statuses.map(k=>groups[k].length),
+      stationIds:statuses.map(k=>groups[k].sort())
+    }));
+  };
+  const webPayload=publication(web.orders),apiPayload=publication(api.orders);
+  const publicationShadow={mode:'dry_run',writeAuthorized:false,targetSheet:'Production Overview',
+    webRows:webPayload.length,apiRows:apiPayload.length,matched:JSON.stringify(webPayload)===JSON.stringify(apiPayload),
+    differences:webPayload.filter((row,i)=>JSON.stringify(row)!==JSON.stringify(apiPayload[i])).map(row=>row.system)};
   const count=orders=>Object.fromEntries(['building','ready_now','transfer','blocked','unassigned'].map(k=>[k,orders.filter(o=>o.status===k).length]));
   const statuses={web:count(web.orders),api:count(api.orders)};
   // Historical November 3 baseline is not a valid gate for a later workbook capture.
   // Pass an explicit baseline only when it was captured from the SAME sheet snapshot.
   const expected=system==='Kashyyyk'?(snapshot.expectedKashyyykCounts??{}):(snapshot.expectedCounts??{});
   const sheetCountDifferences=Object.entries(expected).filter(([k,v])=>statuses.web[k]!==v||statuses.api[k]!==v).map(([k,v])=>({status:k,expected:v,web:statuses.web[k],api:statuses.api[k]}));
-  return {...result,statistics:{web:statuses.web,api:statuses.api},baselineChecked:Object.keys(expected).length>0,sheetCountDifferences,
+  return {...result,publicationShadow,statistics:{web:statuses.web,api:statuses.api},baselineChecked:Object.keys(expected).length>0,sheetCountDifferences,
     status:result.status==='matched'&&!sheetCountDifferences.length?'matched': 'differences',
     source:'same captured workbook assignments, ship bills and priority; independent web and API station/material inputs'};
 }
@@ -63,7 +82,7 @@ function main(argv){const o=args(argv),read=p=>JSON.parse(fs.readFileSync(p,'utf
  const api=(kind,normalize)=>['tff','tjo'].flatMap(f=>apiFile(o['api-dir'],f,kind,system,expectedSystems).map(normalize));
  const result=compareCapturedReadiness(snapshot,web('stations'),web('materials'),api('stations',normalizeStation),api('materials',normalizeMaterial),system,o.previous?read(o.previous):null);
  fs.mkdirSync(path.dirname(o.out),{recursive:true});fs.writeFileSync(o.out,JSON.stringify(result,null,2)+'\n');
- console.log(JSON.stringify({status:result.status,statistics:result.statistics,orderDifferences:result.differences.length,sheetCountDifferences:result.sheetCountDifferences.length},null,2));
- if(result.status!=='matched')process.exitCode=2;
+ console.log(JSON.stringify({status:result.status,statistics:result.statistics,orderDifferences:result.differences.length,sheetCountDifferences:result.sheetCountDifferences.length,publicationShadow:result.publicationShadow},null,2));
+ if(result.status!=='matched'||!result.publicationShadow.matched)process.exitCode=2;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(fileURLToPath(import.meta.url)))try{main(process.argv.slice(2))}catch(e){console.error(e.stack);process.exitCode=1}
