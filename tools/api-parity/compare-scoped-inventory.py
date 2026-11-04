@@ -10,7 +10,7 @@ def audit(csv_dir, api_dir, system):
             with (csv_dir/f"{key}.csv").open(encoding="utf-8-sig",newline="") as f:
                 web=list(csv.DictReader(f))
             web=[r for r in web if r.get("system","").casefold()==system.casefold()]
-            matches=list(api_dir.glob(f"{faction}__{kind}__system-{system.lower()}__*.json"))
+            matches=[p for p in api_dir.glob(f"{faction}__{kind}__system-*.json") if (lambda d: d.get("summary",{}).get("locationFilter",{}).get("name","").casefold()==system.casefold())(json.loads(p.read_text()))]
             if len(matches)!=1: raise ValueError(f"{key}: expected one scoped API capture, found {len(matches)}")
             doc=json.loads(matches[0].read_text())
             summary=doc["summary"]
@@ -49,6 +49,18 @@ def audit(csv_dir, api_dir, system):
                 for field,(wv,av) in checks.items():
                     if str(wv or "").strip().casefold()!=str(av or "").strip().casefold():
                         issues.append({"uid":uid,"field":field,"csv":wv,"api":av})
+            # Public-safe aggregate diagnostics; never print pile identifiers or individual values.
+            def kind_of(uid, source):
+                row=source[uid]
+                return str(row.get("typeName") or row.get("type_name") or row.get("material_name") or "unknown")
+            field_counts=dict(collections.Counter(i["field"] for i in issues))
+            report.setdefault("diagnostics",{})[key]={
+                "missingMaterialTypes":dict(collections.Counter(kind_of(uid,w) for uid in missing)) if kind=="materials" else {},
+                "extraMaterialTypes":dict(collections.Counter(kind_of(uid,a) for uid in extra)) if kind=="materials" else {},
+                "mismatchFields":field_counts,
+                "quantityMismatchCount":field_counts.get("quantity",0),
+                "quantityDeltaTotal":sum(int(a[i["uid"]].get("quantity") or 0)-int(w[i["uid"]].get("quantity") or 0) for i in issues if i["field"]=="quantity"),
+            }
             report["datasets"][key]={"csv":len(w),"api":len(a),"missingApi":missing,"extraApi":extra,"apiResolvedCsvLocationGaps":len(resolved),"fieldMismatches":len(issues)}
             report["discrepancies"] += [{"dataset":key,**i} for i in issues]
     report["totalDiscrepancies"]=sum(len(x["missingApi"])+len(x["extraApi"])+x["fieldMismatches"] for x in report["datasets"].values())
@@ -64,5 +76,5 @@ if __name__=="__main__":
     result=audit(a.csv_dir,a.api_dir,a.system)
     a.out.parent.mkdir(parents=True,exist_ok=True)
     a.out.write_text(json.dumps(result,indent=2)+"\n")
-    print(json.dumps({"system":a.system,"datasets":{key:{"csv":v["csv"],"api":v["api"],"missingApiCount":len(v["missingApi"]),"extraApiCount":len(v["extraApi"]),"apiResolvedCsvLocationGaps":v["apiResolvedCsvLocationGaps"],"fieldMismatches":v["fieldMismatches"]} for key,v in result["datasets"].items()},"totalDiscrepancies":result["totalDiscrepancies"]},indent=2))
+    print(json.dumps({"system":a.system,"datasets":{key:{"csv":v["csv"],"api":v["api"],"missingApiCount":len(v["missingApi"]),"extraApiCount":len(v["extraApi"]),"apiResolvedCsvLocationGaps":v["apiResolvedCsvLocationGaps"],"fieldMismatches":v["fieldMismatches"]} for key,v in result["datasets"].items()},"totalDiscrepancies":result["totalDiscrepancies"],"diagnostics":result["diagnostics"]},indent=2))
     raise SystemExit(1 if result["totalDiscrepancies"] else 0)
