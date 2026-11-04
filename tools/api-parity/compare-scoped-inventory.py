@@ -47,5 +47,5 @@ if __name__=="__main__":
     result=audit(a.csv_dir,a.api_dir,a.system)
     a.out.parent.mkdir(parents=True,exist_ok=True)
     a.out.write_text(json.dumps(result,indent=2)+"\n")
-    print(json.dumps({"system":a.system,"datasets":result["datasets"],"totalDiscrepancies":result["totalDiscrepancies"]},indent=2))
+    print(json.dumps({"system":a.system,"datasets":{key:{"csv":v["csv"],"api":v["api"],"missingApiCount":len(v["missingApi"]),"extraApiCount":len(v["extraApi"]),"fieldMismatches":v["fieldMismatches"]} for key,v in result["datasets"].items()},"totalDiscrepancies":result["totalDiscrepancies"]},indent=2))
     raise SystemExit(1 if result["totalDiscrepancies"] else 0)
