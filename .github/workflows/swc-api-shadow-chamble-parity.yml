@@ -1,4 +1,4 @@
-name: SWC API Shadow - All Systems CSV Parity
+name: SWC API Shadow - Five-System Diagnostics
 on:
   push:
     branches: [feature/kashyyyk-parity-readonly]
