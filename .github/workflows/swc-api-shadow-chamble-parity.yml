@@ -184,6 +184,8 @@ jobs:
           print(dict(Counter(x['system'] for x in r['differences'])))
           print('Attribution counts:',dict(Counter(x['category'] for x in r['explanations'])))
           print('Reconciled deltas:',sum(x['delta']==x['explainedDelta'] for x in r['explanations']))
+          print('Per-material differences (UID-free):')
+          for x in r['publicAttribution']: print(x)
           PY
       - name: Enforce inventory parity separately after calculated comparisons
         if: always() && steps.inventory.outcome == 'success'
