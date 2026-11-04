@@ -99,6 +99,7 @@ jobs:
             exit 1
           fi
       - name: Compare refreshed exports to live API and persist token rotation
+        id: inventory
         working-directory: collector
         shell: bash
         env:
@@ -109,7 +110,68 @@ jobs:
             bash ../parity/tools/api-parity/persist-swc-token.sh
           }
           trap persist EXIT
-          bash ../parity/tools/api-parity/run-all-systems.sh
+          set +e
+          bash ../parity/tools/api-parity/run-all-systems.sh > /tmp/swc-inventory-summary.log 2>&1
+          collection_exit=$?
+          set -e
+          grep -E '^RESULT |^SUMMARY ' /tmp/swc-inventory-summary.log || true
+          python3 - <<'PY'
+          import os,re,pathlib,sys
+          log=pathlib.Path('/tmp/swc-inventory-summary.log').read_text()
+          results=re.findall(r'^RESULT (.+) (PASS|DISCREPANCY|COLLECTION_ERROR)      - name: Capture one immutable read-only workbook input
+        if: success() && env.SWC_PARITY_SCOPE == 'all'
+        working-directory: parity
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
+        run: |
+          python3 tools/production-sync/capture-overview-snapshot.py \
+            tools/production-sync/audited-workbook-layout.json \
+            tools/production-sync/audited-production-orders.json \
+            /tmp/swc-private/workbook.json
+      - name: Compare all production HAS and readiness calculations (no writes)
+        if: success() && env.SWC_PARITY_SCOPE == 'all'
+        working-directory: parity
+        run: |
+          set -euo pipefail
+          set +e
+          node tools/api-parity/compare-production-has.mjs \
+            --manifest tools/production-sync/audited-workbook-layout.json \
+            --web-dir /tmp/swc-parity-csv \
+            --api-dir /tmp/swc-private/normalized \
+            --system all \
+            --out /tmp/swc-private/production-has-parity.json
+          has_exit=$?
+          node tools/api-parity/run-readiness-parity.mjs \
+            --snapshot /tmp/swc-private/workbook.json \
+            --web-dir /tmp/swc-parity-csv \
+            --api-dir /tmp/swc-private/normalized \
+            --system all \
+            --out /tmp/swc-private/readiness-parity.json
+          readiness_exit=$?
+          echo "Calculated parity exit codes: HAS=$has_exit readiness=$readiness_exit"
+          [[ "$has_exit" -eq 0 && "$readiness_exit" -eq 0 ]]
+      - name: Enforce inventory parity separately after calculated comparisons
+        if: always() && steps.inventory.outcome == 'success'
+        env:
+          DISCREPANT_SYSTEMS: ${{ steps.inventory.outputs.discrepant_systems }}
+        run: |
+          echo "Inventory-discrepant systems: $DISCREPANT_SYSTEMS"
+          [[ "$DISCREPANT_SYSTEMS" == '0' ]]
+      # Repository is public: keep UID-level comparison data off public artifacts.
+      - name: Remove private snapshots and credentials
+        if: always()
+        run: rm -rf /tmp/swc-private /tmp/swc-parity-csv /tmp/swc-parity-*.json /tmp/swc-*.log
+,log,re.M)
+          expected=20 if os.environ.get('SWC_PARITY_SCOPE')=='all' else 1
+          if len(results)!=expected or any(status=='COLLECTION_ERROR' for _,status in results):
+              print('Incomplete API collection:',len(results),'of',expected)
+              sys.exit(1)
+          discrepancies=sum(status=='DISCREPANCY' for _,status in results)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('discrepant_systems='+str(discrepancies)+'\n')
+          print('Inventory-discrepant systems:',discrepancies)
+          PY
       - name: Capture one immutable read-only workbook input
         if: success() && env.SWC_PARITY_SCOPE == 'all'
         working-directory: parity
