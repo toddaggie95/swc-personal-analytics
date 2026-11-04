@@ -27,3 +27,12 @@ test('same workbook and identical source inventories yield per-order parity',()=
  assert.equal(withBaseline.baselineChecked,true);
  assert.ok(withBaseline.sheetCountDifferences.length>0);
 });
+
+test('selected non-Kashyyyk system requires its own captured rows',()=>{
+ const snapshot={manifest:{destinations:[{system:'Uogo`cor'}]},rowsBySystem:{Kashyyyk:[]},shipRows:[]};
+ assert.throws(()=>compareCapturedReadiness(snapshot,[],[],[],[],'Uogo`cor'),/Snapshot requires workbook rows for Uogo/);
+});
+test('all-system mode requires rows for every destination system',()=>{
+ const snapshot={manifest:{destinations:[{system:'Kashyyyk'},{system:'Uogo`cor'}]},rowsBySystem:{Kashyyyk:[]},shipRows:[]};
+ assert.throws(()=>compareCapturedReadiness(snapshot,[],[],[],[],'all'),/Snapshot requires workbook rows for Uogo/);
+});
