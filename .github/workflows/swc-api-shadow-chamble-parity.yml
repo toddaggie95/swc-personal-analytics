@@ -1,4 +1,4 @@
-name: SWC API Shadow - Fresh CSV Four-System Parity
+name: SWC API Shadow - Fresh CSV Diagnostic Retry
 on:
   push:
     branches: [feature/kashyyyk-parity-readonly]
