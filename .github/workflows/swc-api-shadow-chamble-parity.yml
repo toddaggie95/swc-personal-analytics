@@ -183,6 +183,7 @@ jobs:
           from collections import Counter
           print(dict(Counter(x['system'] for x in r['differences'])))
           print('Attribution counts:',dict(Counter(x['category'] for x in r['explanations'])))
+          print('CSV exclusion diagnostics:',r['causeCounts'])
           print('Reconciled deltas:',sum(x['delta']==x['explainedDelta'] for x in r['explanations']))
           print('Per-material differences (UID-free):')
           for x in r['publicAttribution']: print(x)
