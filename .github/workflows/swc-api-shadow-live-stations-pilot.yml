@@ -95,6 +95,14 @@ jobs:
           if(obj.summary?.entityType!=='stations'||obj.summary?.locationFilter?.name!==process.env.SYSTEM||!Array.isArray(obj.stations)) throw Error('Capture validation failed');
           console.log(JSON.stringify({system:process.env.SYSTEM,faction:process.env.FACTION,stations:obj.stations.length,pages:obj.summary.pages,completedAt:obj.summary.completedAt}));
           NODE
+      - name: Preserve normalized station snapshot for read-only parity
+        uses: actions/upload-artifact@v4
+        with:
+          name: swc-stations-${{ env.SYSTEM }}-${{ env.FACTION }}-${{ github.run_id }}
+          path: /tmp/swc-private/normalized/*.json
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: false
       - name: Remove private data
         if: always()
         run: rm -rf "$SWC_PRIVATE_DIR" "$RUNNER_TEMP/collector-output.log"
