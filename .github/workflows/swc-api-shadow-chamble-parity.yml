@@ -182,6 +182,8 @@ jobs:
           print('System HAS difference counts by system/material (no private pile IDs):')
           from collections import Counter
           print(dict(Counter(x['system'] for x in r['differences'])))
+          print('Attribution counts:',dict(Counter(x['category'] for x in r['explanations'])))
+          print('Reconciled deltas:',sum(x['delta']==x['explainedDelta'] for x in r['explanations']))
           PY
       - name: Enforce inventory parity separately after calculated comparisons
         if: always() && steps.inventory.outcome == 'success'
