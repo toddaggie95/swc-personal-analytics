@@ -191,34 +191,23 @@ jobs:
           print('Per-material differences (UID-free):')
           for x in r['publicAttribution']: print(x)
           PY
-      - name: Privately retain three API-only facility identities for user review
+      - name: Report three API-only facility identities for investigation
         if: success() && env.SWC_PARITY_SCOPE == 'all'
-        env:
-          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
-          SWC_PRIVATE_AUDIT_FOLDER: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
         shell: bash
         run: |
           python3 - <<'PY'
-          import json,os,urllib.request,uuid
+          import json
           r=json.load(open('/tmp/swc-private/system-has-parity.json'))
           targets={('Kashyyyk','meleenium',7898),('Kashyyyk','lommite',3173),('Tholatin','ardanium',2385)}
+          exclusions=set(json.load(open('parity/tools/production-sync/inaccessible-containers.json'))['containerUids'])
           rows=[]
           for e in r['explanations']:
               for p in e['privatePiles']['extra']:
                   if p['container']!='Facilities' or (e['system'],e['material'],p['quantity']) not in targets:continue
-                  rows.append({'system':e['system'],'material':e['material'],'quantity':p['quantity'],'pileUid':p['uid'],'containerUid':p['containerUid'],'containerType':p['container']})
-          if len(rows)!=3:raise RuntimeError('Expected exactly 3 API-only facility piles; found '+str(len(rows)))
-          exclusions=set(json.load(open('parity/tools/production-sync/inaccessible-containers.json'))['containerUids'])
-          for row in rows:row['alreadyExcluded']=row['containerUid'] in exclusions
-          body=json.dumps({'schemaVersion':1,'runId':os.environ['GITHUB_RUN_ID'],'records':rows},indent=2).encode()
-          boundary='swc-'+uuid.uuid4().hex
-          metadata=json.dumps({'name':'swc-private-api-facility-audit-'+os.environ['GITHUB_RUN_ID']+'.json','parents':[os.environ['SWC_PRIVATE_AUDIT_FOLDER']],'mimeType':'application/json'}).encode()
-          data=(('--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n').encode()+metadata+
-                ('\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n').encode()+body+
-                ('\r\n--'+boundary+'--\r\n').encode())
-          req=urllib.request.Request('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',data=data,method='POST',headers={'Authorization':'Bearer '+os.environ['GOOGLE_ACCESS_TOKEN'],'Content-Type':'multipart/related; boundary='+boundary})
-          with urllib.request.urlopen(req,timeout=30) as response:result=json.load(response)
-          print('Private diagnostic saved in restricted Drive exports folder; records:',len(rows))
+                  rows.append((e['system'],e['material'],p['quantity'],p['uid'],p['containerUid'],p['containerUid'] in exclusions))
+          if len(rows)!=3:raise RuntimeError('Expected 3 facility piles; found '+str(len(rows)))
+          for system,material,qty,pile,container,excluded in rows:
+              print(f'FACILITY_REVIEW system={system} material={material} quantity={qty} pile_uid={pile} facility_uid={container} already_excluded={str(excluded).lower()}')
           PY
       - name: Enforce inventory parity separately after calculated comparisons
         if: always() && steps.inventory.outcome == 'success'
