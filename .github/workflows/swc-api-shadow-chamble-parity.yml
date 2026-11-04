@@ -129,6 +129,10 @@ jobs:
                   print('   mismatched fields:',detail['mismatchFields'],'quantity delta:',detail['quantityDeltaTotal'])
           PY
           python3 -c "import os,re,pathlib,sys; log=pathlib.Path('/tmp/swc-inventory-summary.log').read_text(); results=re.findall(r'^RESULT (.+) (PASS|DISCREPANCY|COLLECTION_ERROR)',log,re.M); expected=20 if os.environ.get('SWC_PARITY_SCOPE')=='all' else 1; errors=sum(status=='COLLECTION_ERROR' for _,status in results); discrepancies=sum(status=='DISCREPANCY' for _,status in results); print('Inventory coverage',len(results),'/',expected,'collection errors',errors,'discrepant systems',discrepancies); open(os.environ['GITHUB_OUTPUT'],'a').write('discrepant_systems='+str(discrepancies)+'\\n'); sys.exit(1 if len(results)!=expected or errors else 0)"
+      - name: Audit shipyard operation coverage (read-only)
+        if: success() && env.SWC_PARITY_SCOPE == 'all'
+        working-directory: parity
+        run: node tools/api-parity/audit-all-operation-coverage.mjs /tmp/swc-private/normalized /tmp/swc-parity-csv
       - name: Capture one immutable read-only workbook input
         if: success() && env.SWC_PARITY_SCOPE == 'all'
         working-directory: parity
