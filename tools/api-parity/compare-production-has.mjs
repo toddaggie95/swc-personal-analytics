@@ -38,7 +38,7 @@ export function normalizeStation(s) {
     productionStatus:actions===null||actions===undefined?null:(action?'running':''),
     productionQuantity:actions===null||actions===undefined?null:(action?.quantity??'')};
 }
-function loadApi(dir,faction,kind,system='Kashyyyk',expectedSystems=[system]) {
+export function loadApi(dir,faction,kind,system='Kashyyyk',expectedSystems=[system]) {
   const files=fs.readdirSync(dir).filter(n=>n.startsWith(faction+'__'+kind+'__system-')&&n.endsWith('.json'));
   const matched=[];
   for(const name of files){
