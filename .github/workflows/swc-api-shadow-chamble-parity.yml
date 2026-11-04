@@ -1,4 +1,4 @@
-name: SWC API Shadow - Fresh CSV Diagnostic Retry
+name: SWC API Shadow - Uogocor Verification
 on:
   push:
     branches: [feature/kashyyyk-parity-readonly]
