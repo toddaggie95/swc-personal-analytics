@@ -31,11 +31,33 @@ export function compareCapturedReadiness(snapshot,webStations,webMaterials,apiSt
     source:'same captured workbook assignments, ship bills and priority; independent web and API station/material inputs'};
 }
 function args(argv){const o={};for(let i=0;i<argv.length;i+=2){if(!argv[i]?.startsWith('--')||!argv[i+1])throw Error('Expected --key value');o[argv[i].slice(2)]=argv[i+1]}for(const k of ['snapshot','web-dir','api-dir','out'])if(!o[k])throw Error('Missing --'+k);return o}
-function apiFile(dir,faction,kind){const names=fs.readdirSync(dir).filter(n=>n.startsWith(faction+'__'+kind+'__system-kashyyyk__')&&n.endsWith('.json'));if(names.length!==1)throw Error('Expected exactly one '+faction+' '+kind+' API snapshot; found '+names.length);const doc=JSON.parse(fs.readFileSync(path.join(dir,names[0]),'utf8'));if(doc.summary?.locationFilter?.uid!=='9:104')throw Error('Wrong API system');return doc[kind]}
+function apiFile(dir,faction,kind,system){
+ const files=fs.readdirSync(dir).filter(n=>n.startsWith(faction+'__'+kind+'__system-')&&n.endsWith('.json'));
+ const matches=[];
+ for(const name of files){
+  const doc=JSON.parse(fs.readFileSync(path.join(dir,name),'utf8'));
+  const scope=doc.summary?.locationFilter;
+  if(system!=='all'&&scope?.name!==system)continue;
+  if(!scope?.uid||!scope?.name||!Array.isArray(doc[kind]))throw Error('Invalid API capture '+name);
+  matches.push({name,scope,rows:doc[kind]});
+ }
+ if(!matches.length)throw Error('No '+faction+' '+kind+' API captures for '+system);
+ const scopes=new Set(),uids=new Set(),out=[];
+ for(const capture of matches){
+  if(scopes.has(capture.scope.uid))throw Error('Duplicate scoped capture '+capture.scope.uid);
+  scopes.add(capture.scope.uid);
+  for(const row of capture.rows){
+   if(!row.uid||uids.has(row.uid)||row.location?.system?.uid!==capture.scope.uid)throw Error('Invalid API entity '+row.uid);
+   uids.add(row.uid);out.push(row);
+  }
+ }
+ return out;
+}
 function main(argv){const o=args(argv),read=p=>JSON.parse(fs.readFileSync(p,'utf8'));
+ const system=o.system??'Kashyyyk';
  const web=(kind)=>['tff','tjo'].flatMap(f=>csv(fs.readFileSync(path.join(o['web-dir'],f+'-'+kind+'.csv'),'utf8')));
- const api=(kind,normalize)=>['tff','tjo'].flatMap(f=>apiFile(o['api-dir'],f,kind).map(normalize));
- const result=compareCapturedReadiness(read(o.snapshot),web('stations'),web('materials'),api('stations',normalizeStation),api('materials',normalizeMaterial));
+ const api=(kind,normalize)=>['tff','tjo'].flatMap(f=>apiFile(o['api-dir'],f,kind,system).map(normalize));
+ const result=compareCapturedReadiness(read(o.snapshot),web('stations'),web('materials'),api('stations',normalizeStation),api('materials',normalizeMaterial),system,o.previous?read(o.previous):null);
  fs.mkdirSync(path.dirname(o.out),{recursive:true});fs.writeFileSync(o.out,JSON.stringify(result,null,2)+'\n');
  console.log(JSON.stringify({status:result.status,statistics:result.statistics,orderDifferences:result.differences.length,sheetCountDifferences:result.sheetCountDifferences.length},null,2));
  if(result.status!=='matched')process.exitCode=2;
