@@ -61,6 +61,13 @@ for(const d of differences){
     // Private output only. Never publish these identities to public Actions logs.
     privatePiles:{missing,extra,changed,moved}});
 }
+const webStationIds=new Set(webS.map(x=>String(x.uid)));
+const webPileIds=new Set(webM.map(x=>String(x.uid)));
+const causeCounts={};
+for(const e of explanations)for(const p of e.privatePiles.extra){
+  const cause=!webPileIds.has(p.uid)?'absent_web_pile':p.container==='Stations'&&!webStationIds.has(p.containerUid)?'absent_web_station':'other';
+  causeCounts[cause]=(causeCounts[cause]??0)+1;
+}
 const publicAttribution=explanations.map(x=>({
   system:x.system,material:x.material,delta:x.delta,missingCount:x.missingCount,
   extraCount:x.extraCount,changedCount:x.changedCount,movedCount:x.movedCount,
@@ -73,7 +80,7 @@ const report={mode:'read_only',status:differences.length?'differences':'matched'
     webErrors:web.errors.length,apiErrors:api.errors.length,
     webInvariants:web.discrepancies.length,apiInvariants:api.discrepancies.length,
     webExcluded:web.excluded,apiExcluded:api.excluded},
-  differences,explanations,publicAttribution};
+  differences,explanations,publicAttribution,causeCounts};
 fs.writeFileSync(out,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report));
 if(web.errors.length||api.errors.length||web.discrepancies.length||api.discrepancies.length)process.exitCode=1;
