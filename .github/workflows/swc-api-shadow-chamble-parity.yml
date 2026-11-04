@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       scope:
-        description: 'Inventory collection scope (targeted is quick; all runs the full registry)'
+        description: 'Inventory collection scope (push beta runs all; dispatch can target one)'
         type: choice
         options: [targeted, all]
         required: true
