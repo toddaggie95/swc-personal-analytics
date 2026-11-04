@@ -9,19 +9,22 @@ import {calculateOverviewSnapshot} from '../production-sync/overview-snapshot.mj
 import {normalizeStation,normalizeMaterial} from './compare-production-has.mjs';
 import {compareReadiness} from './compare-readiness.mjs';
 
-export function compareCapturedReadiness(snapshot,webStations,webMaterials,apiStations,apiMaterials){
-  if(!snapshot?.manifest?.destinations||!snapshot?.rowsBySystem?.Kashyyyk||!snapshot?.shipRows)throw Error('Snapshot requires manifest, Kashyyyk rows and shipRows');
-  const manifest={...snapshot.manifest,destinations:snapshot.manifest.destinations.filter(d=>d.system==='Kashyyyk')};
-  if(!manifest.destinations.length)throw Error('No Kashyyyk destinations');
-  const input={...snapshot,manifest,rowsBySystem:{Kashyyyk:snapshot.rowsBySystem.Kashyyyk}};
+export function compareCapturedReadiness(snapshot,webStations,webMaterials,apiStations,apiMaterials,system='Kashyyyk',previous=null){
+  if(!Array.isArray(snapshot?.manifest?.destinations)||!snapshot?.rowsBySystem||!Array.isArray(snapshot?.shipRows))throw Error('Snapshot requires manifest, workbook rows and shipRows');
+  const destinations=system==='all'?snapshot.manifest.destinations:snapshot.manifest.destinations.filter(d=>d.system===system);
+  if(!destinations.length)throw Error('No '+system+' destinations');
+  const systems=[...new Set(destinations.map(d=>d.system))];
+  for(const name of systems)if(!Array.isArray(snapshot.rowsBySystem[name]))throw Error('Snapshot requires workbook rows for '+name);
+  const manifest={...snapshot.manifest,destinations};
+  const input={...snapshot,manifest,rowsBySystem:Object.fromEntries(systems.map(name=>[name,snapshot.rowsBySystem[name]]))};
   const web=calculateOverviewSnapshot({...input,stations:webStations,materials:webMaterials});
   const api=calculateOverviewSnapshot({...input,stations:apiStations,materials:apiMaterials});
-  const result=compareReadiness(web,api);
+  const result=compareReadiness(web,api,previous);
   const count=orders=>Object.fromEntries(['building','ready_now','transfer','blocked','unassigned'].map(k=>[k,orders.filter(o=>o.status===k).length]));
   const statuses={web:count(web.orders),api:count(api.orders)};
   // Historical November 3 baseline is not a valid gate for a later workbook capture.
   // Pass an explicit baseline only when it was captured from the SAME sheet snapshot.
-  const expected=snapshot.expectedKashyyykCounts??{};
+  const expected=system==='Kashyyyk'?(snapshot.expectedKashyyykCounts??{}):(snapshot.expectedCounts??{});
   const sheetCountDifferences=Object.entries(expected).filter(([k,v])=>statuses.web[k]!==v||statuses.api[k]!==v).map(([k,v])=>({status:k,expected:v,web:statuses.web[k],api:statuses.api[k]}));
   return {...result,statistics:{web:statuses.web,api:statuses.api},baselineChecked:Object.keys(expected).length>0,sheetCountDifferences,
     status:result.status==='matched'&&!sheetCountDifferences.length?'matched': 'differences',
