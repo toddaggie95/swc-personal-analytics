@@ -166,6 +166,23 @@ jobs:
           readiness_exit=$?
           echo "Calculated parity exit codes: HAS=$has_exit readiness=$readiness_exit"
           [[ "$has_exit" -eq 0 && "$readiness_exit" -eq 0 ]]
+      - name: Compare System HAS totals independently (read-only)
+        if: success() && env.SWC_PARITY_SCOPE == 'all'
+        working-directory: parity
+        run: |
+          node tools/api-parity/compare-system-has.mjs \
+            /tmp/swc-parity-csv \
+            /tmp/swc-private/normalized \
+            tools/production-sync/audited-workbook-layout.json \
+            /tmp/swc-private/system-has-parity.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open('/tmp/swc-private/system-has-parity.json'))
+          print('System HAS:',r['status'],r['statistics'])
+          print('System HAS difference counts by system/material (no private pile IDs):')
+          from collections import Counter
+          print(dict(Counter(x['system'] for x in r['differences'])))
+          PY
       - name: Enforce inventory parity separately after calculated comparisons
         if: always() && steps.inventory.outcome == 'success'
         env:
