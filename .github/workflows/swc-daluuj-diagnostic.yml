@@ -1,4 +1,4 @@
-name: SWC Daluuj API diagnostic (manual)
+name: SWC API Station Diagnostics
 on:
   workflow_dispatch:
 permissions:
@@ -28,7 +28,7 @@ jobs:
           umask 077
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
-      - name: Run three read-only station details
+      - name: Run targeted read-only station diagnostics
         working-directory: api-collector
         env:
           SWC_PRIVATE_DIR: /tmp/swc-private
@@ -39,7 +39,7 @@ jobs:
           SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
           GH_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          TARGET_SYSTEM: Daluuj
+          TARGET_SYSTEM: Kashyyyk
         run: |
           set -euo pipefail
           trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
