@@ -25,8 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: toddaggie95/swc-personal-analytics
-          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
-          path: api-collector
+          ref: feature/kashyyyk-parity-readonly
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -40,7 +39,7 @@ jobs:
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
       - name: Compare inventory and enriched collection on one system
-        working-directory: api-collector
+        working-directory: .
         env:
           SWC_PRIVATE_DIR: /tmp/swc-private
           SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
@@ -75,6 +74,8 @@ jobs:
           fi
           grep -E 'Enriching [0-9]+ stations|Station details: [0-9]+/[0-9]+' /tmp/swc-perf-enriched.log | head -n 1 || true
           grep -E 'Station details: [0-9]+/[0-9]+' /tmp/swc-perf-enriched.log | tail -n 1 || true
+          echo 'Starting targeted shipyard-only comparison'
+          npx tsx tools/api-parity/benchmark-targeted.ts
       - name: Remove private snapshots and credentials
         if: always()
         run: rm -rf /tmp/swc-private /tmp/swc-perf-inventory.log /tmp/swc-perf-enriched.log
