@@ -1,0 +1,25 @@
+name: SWC API Canonical Adapter Tests
+on:
+  push:
+    branches: [feature/kashyyyk-parity-readonly]
+    paths:
+      - 'tools/api-parity/export-canonical-csv.mjs'
+      - 'tools/api-parity/export-canonical-csv.test.mjs'
+      - '.github/workflows/swc-api-canonical-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate adapter and regression tests
+        run: |
+          node --check tools/api-parity/export-canonical-csv.mjs
+          node --test tools/api-parity/export-canonical-csv.test.mjs
+          node --test tools/production-sync/system-has-audit.test.mjs tools/production-sync/audited-inventory.test.mjs
