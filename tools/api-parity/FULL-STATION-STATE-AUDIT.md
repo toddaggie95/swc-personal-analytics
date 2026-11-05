@@ -45,3 +45,9 @@ Establish correct classification from SWC API inventory, station detail, and exi
 - Producing examples: `5:53035` EntityProductionAction with queue statuses `producing,queued,queued`; `5:53036` same action with `producing,queued,queued,queued`. Mixed queue statuses within a producing station are expected, not contradictory.
 - Cumulative TJO Kashyyyk first 75: 22 producing, 29 queued-idle, 24 unknown-no-operation-data; zero detail-read errors. No retooling cases yet in these 75.
 - Next offset 75, limit 50; after that offset 125, limit 50, then offset 175, limit 20, assuming inventory UID order remains stable. Note offset batching can skip or duplicate UIDs if inventory changes between runs; compare saved UIDs at aggregation.
+
+## Web UI validation — Kashyyyk station 5:52955 (2026-11-05)
+- User inspected station `5:52955` directly in SWC web interface: **Idle**, tooled to **TIE/in Interceptor**, and production queue appears **empty**.
+- API audit had `actions` absent, `queueitems` absent, and `tooledto` present. This is a confirmed example that missing action/queue fields can represent **idle** rather than an API read failure, and that tooling does not mean active production.
+- Working rule: operational status should derive from explicit active action; queue describes queued/producing items and should be retained independently. Before globally treating absent action fields as idle, verify a second case (prefer a depot and/or shipyard of a different class), and continue flagging inconsistent action/queue combinations.
+- Current reports retain `unknown-no-operation-data` for historical batches pending cross-check; do not silently rewrite prior observed evidence.
