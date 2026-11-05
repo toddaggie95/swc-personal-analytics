@@ -3,6 +3,12 @@ name: SWC Production Sync
 on:
   workflow_dispatch:
     inputs:
+      export_source:
+        description: 'Input source (API primary; CSV fallback)'
+        type: choice
+        options: [api, csv]
+        required: true
+        default: api
       enable_has_writes:
         description: 'Write validated HAS changes to Google Sheets (default: true)'
         type: boolean
@@ -30,7 +36,8 @@ concurrency:
 jobs:
   dry-run:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 180
+    environment: swc-api-shadow
     steps:
       - name: Check out audited branch
         uses: actions/checkout@v4
@@ -38,7 +45,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: Authenticate Google Drive and Sheets
         id: google
@@ -49,7 +56,54 @@ jobs:
           token_format: access_token
           access_token_scopes: https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/spreadsheets
 
+      - name: Check out pinned SWC API collector
+        if: inputs.export_source == 'api'
+        uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: api-collector
+          persist-credentials: false
+
+      - name: Initialize private SWC API credentials
+        if: inputs.export_source == 'api'
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private
+          test -n "$SWC_SECRET_WRITER_TOKEN"
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          node --input-type=module -e 'import fs from "node:fs"; const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json"));if(!t.accessToken||!t.refreshToken||!Number.isFinite(t.expiresAt))process.exit(1)'
+
+      - name: Collect full API inventory and persist OAuth rotation
+        if: inputs.export_source == 'api'
+        working-directory: api-collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          GH_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+        run: |
+          set -euo pipefail
+          trap 'bash ../tools/api-parity/persist-swc-token.sh' EXIT
+          npm ci --ignore-scripts --no-audit --no-fund
+          bash ../tools/api-parity/collect-production-systems.sh
+
+      - name: Convert API inventory to canonical production inputs
+        if: inputs.export_source == 'api'
+        run: |
+          set -euo pipefail
+          umask 077
+          node tools/api-parity/export-canonical-csv.mjs /tmp/swc-private/normalized - "${{ runner.temp }}/swc-exports" tools/production-sync/systems.addresses.json
+
       - name: Download four exports from private Drive folder
+        if: inputs.export_source == 'csv'
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
@@ -195,7 +249,7 @@ jobs:
             "${{ runner.temp }}/batch-acceptance-report.json"
 
       - name: Rename superseded and accepted exports (opt-in, after verification)
-        if: success() && inputs.enable_has_writes == true && inputs.trash_superseded_exports == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
+        if: success() && inputs.enable_has_writes == true && inputs.export_source == 'csv' && inputs.trash_superseded_exports == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
@@ -206,6 +260,10 @@ jobs:
             "${{ runner.temp }}/swc-exports/export-manifest.json" \
             "${{ runner.temp }}/batch-acceptance-report.json" \
             "${{ runner.temp }}/trash-report.json"
+
+      - name: Remove private SWC API snapshots and credentials
+        if: always() && inputs.export_source == 'api'
+        run: rm -rf /tmp/swc-private
 
       - name: Upload dry-run ledger or diagnostics
         if: always()

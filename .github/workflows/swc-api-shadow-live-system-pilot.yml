@@ -1,0 +1,112 @@
+name: SWC API Shadow - System-Scoped Live Materials Pilot
+on:
+  workflow_dispatch:
+    inputs:
+      system:
+        description: 'Exact SWC system name (start with a small system)'
+        required: true
+        default: Chamble
+        type: choice
+        options:
+          - Chamble
+          - Lannik
+          - Saki
+          - Kashyyyk
+      faction:
+        description: 'One faction per run to bound API calls'
+        required: true
+        default: tff
+        type: choice
+        options: [tff, tjo]
+  push:
+    branches: [feature/kashyyyk-parity-readonly]
+    paths: ['.github/workflows/swc-api-shadow-live-system-pilot.yml']
+permissions:
+  contents: read
+concurrency:
+  group: swc-api-shadow-live-pilot
+  cancel-in-progress: false
+jobs:
+  bounded-materials:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: swc-api-shadow
+    env:
+      SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+      SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+      SWC_APP_ACTIVATED: 'true'
+      SWC_SECRET_REGENERATED: 'true'
+      SWC_PRIVATE_DIR: /tmp/swc-private
+      SYSTEM: ${{ github.event_name == 'push' && 'Chamble' || inputs.system }}
+      FACTION: ${{ github.event_name == 'push' && 'tjo' || inputs.faction }}
+    steps:
+      - name: Checkout isolated existing API collector
+        uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: ea8241afadde47fd236bebdae9cb8b3b1aeef030
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned collector dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Restore audited collector modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin ea8241afadde47fd236bebdae9cb8b3b1aeef030
+          git restore --source=FETCH_HEAD -- src/config src/auth src/storage src/swc src/models src/cli
+      - name: Prepare private credentials and refuse expiring access token
+        shell: bash
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$SWC_PRIVATE_DIR"
+          test -n "$SWC_OAUTH_TOKENS_JSON"
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > "$SWC_PRIVATE_DIR/tokens.json"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const t=JSON.parse(readFileSync(process.env.SWC_PRIVATE_DIR+"/tokens.json","utf8"));
+            if(!Number.isFinite(t.expiresAt)||t.expiresAt-Date.now()<20*60*1000){
+              console.error("Access token expires within pilot safety window; stop before refresh can rotate credentials.");
+              process.exit(1);
+            }
+          '
+      - name: Collect one faction, one system, materials only
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$SYSTEM" in Chamble|Lannik|Saki|Kashyyyk) ;; *) exit 2;; esac
+          case "$FACTION" in tff|tjo) ;; *) exit 2;; esac
+          npx tsx src/cli/index.ts "sync:faction-materials:$FACTION" --system "$SYSTEM" > "$RUNNER_TEMP/collector-output.log" 2>&1 || {
+            echo "::error::Read-only API materials collection failed; private log and snapshots will not be uploaded."
+            exit 1
+          }
+          echo "One-system, one-faction material inventory collected; raw records retained only on ephemeral runner." >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish non-sensitive count only
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readdirSync,readFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          const dir=join(process.env.SWC_PRIVATE_DIR,'normalized');
+          const files=readdirSync(dir).filter(f=>f.endsWith('.json'));
+          if(files.length!==1) throw Error('Expected exactly one normalized capture');
+          const obj=JSON.parse(readFileSync(join(dir,files[0]),'utf8'));
+          if(obj.summary?.entityType!=='materials'||obj.summary?.locationFilter?.name!==process.env.SYSTEM||!Array.isArray(obj.materials)) throw Error('Capture validation failed');
+          console.log(JSON.stringify({system:process.env.SYSTEM,faction:process.env.FACTION,materialLots:obj.materials.length,pages:obj.summary.pages,completedAt:obj.summary.completedAt}));
+          NODE
+      - name: Preserve normalized materials snapshot for read-only parity
+        uses: actions/upload-artifact@v4
+        with:
+          name: swc-materials-${{ env.SYSTEM }}-${{ env.FACTION }}-${{ github.run_id }}
+          path: /tmp/swc-private/normalized/*.json
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: false
+      - name: Remove private data
+        if: always()
+        run: rm -rf "$SWC_PRIVATE_DIR" "$RUNNER_TEMP/collector-output.log"

@@ -1,0 +1,36 @@
+name: SWC API Shadow - Offline Collector Beta
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/kashyyyk-parity-readonly
+    paths:
+      - '.github/workflows/swc-api-shadow-offline-beta.yml'
+permissions:
+  contents: read
+jobs:
+  collector-mock-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout existing isolated API collector
+        uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: feature/api-csv-audit
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install collector dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Exercise mock station detail resume and selective refresh
+        run: npx tsx --test tests/enrichment.test.ts
+      - name: Exercise mock API rate-limit pacing
+        run: npx tsx --test tests/read-pacer.test.ts
+      - name: Summarize offline-only result
+        if: success()
+        run: |
+          echo '## Offline collector beta passed' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Mocked station-detail resume, incomplete shipyard refresh, and request pacing tested.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No SWC credentials, live API calls, Google access, or production writes.' >> "$GITHUB_STEP_SUMMARY"

@@ -1,7 +1,13 @@
 name: SWC API Shadow - OAuth Probe
+# Recheck after operator updated the OAuth environment secret (2026-11-03).
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/kashyyyk-parity-readonly
+    paths:
+      - '.github/workflows/swc-api-shadow-oauth-probe.yml'
 
 permissions:
   contents: read

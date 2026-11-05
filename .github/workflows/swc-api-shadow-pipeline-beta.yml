@@ -1,0 +1,62 @@
+name: SWC API Shadow - Download to Parity Beta
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/kashyyyk-parity-readonly
+    paths:
+      - '.github/workflows/swc-api-shadow-pipeline-beta.yml'
+permissions:
+  contents: read
+jobs:
+  offline-shadow-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout isolated comparison implementation
+        uses: actions/checkout@v4
+        with:
+          path: parity
+          persist-credentials: false
+      - name: Checkout existing resumable API collector
+        uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: feature/api-csv-audit
+          path: collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated collector dependencies
+        working-directory: collector
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test mocked API inventory, resumable details and rate limits
+        working-directory: collector
+        run: |
+          npx tsx --test tests/enrichment.test.ts
+          npx tsx --test tests/read-pacer.test.ts
+      - name: Test fail-closed capture validation and real production-calculator parity logic
+        working-directory: parity
+        run: |
+          node --test tools/api-parity/validate-capture-set.test.mjs
+          node --test tools/api-parity/compare-production-has.test.mjs
+          node --test tools/api-parity/run-readiness-parity.test.mjs
+          node --test tools/api-parity/compare-readiness.test.mjs
+          node --test tools/api-parity/missing-operation-details.test.mjs
+          node --test tools/api-parity/operation-coverage.test.mjs
+      - name: Record offline gate outcome
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p evidence
+          printf '%s\n' 'mode=offline_mock_only' 'live_swc_api_download=false' 'google_sheet_writes=false' 'real_data_parity_not_yet_verified=true' > evidence/scope.txt
+          echo 'Offline shadow pipeline: collector tests + capture validation + production calculator parity tests.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No live SWC API download or spreadsheet writes. Live authorization remains pending.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload offline scope evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swc-api-shadow-offline-gate
+          path: evidence/scope.txt
+          retention-days: 7

@@ -1,0 +1,42 @@
+name: SWC API parity tests (read only)
+on:
+  pull_request:
+    paths:
+      - 'tools/api-parity/**'
+      - 'tools/production-sync/audited-inventory.mjs'
+      - 'tools/production-sync/production-sync.mjs'
+      - '.github/workflows/swc-api-parity-tests.yml'
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/kashyyyk-parity-readonly
+    paths:
+      - 'tools/api-parity/**'
+      - '.github/workflows/swc-api-parity-tests.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test API capture integrity (mocked snapshots)
+        run: node --test tools/api-parity/validate-capture-set.test.mjs
+      - name: Test production HAS adapter
+        run: node --test tools/api-parity/compare-production-has.test.mjs
+      - name: Test readiness and Production Changes parity gate
+        run: node --test tools/api-parity/compare-readiness.test.mjs
+      - name: Test same-snapshot readiness runner
+        run: node --test tools/api-parity/run-readiness-parity.test.mjs
+      - name: Test operation completeness gate
+        run: node --test tools/api-parity/operation-coverage.test.mjs
+      - name: Test targeted station detail manifest
+        run: node --test tools/api-parity/missing-operation-details.test.mjs
+      - name: Test CSV/API comparator
+        run: python -m unittest discover -s tools/api-parity -p 'test_*.py' -v
