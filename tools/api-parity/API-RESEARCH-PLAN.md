@@ -118,3 +118,8 @@ Read-only, bounded, documented calls; no production sheet writes; no cookies/ses
 - Do NOT use working=1 as Producing=Yes in HAS, Production Overview, or Production Changes.
 - Do NOT use changes to working bit as a complete production-transition feed: retooling -> producing can remain working=1, and other transitions can also be invisible.
 - Continue investigating bulk discriminators for production vs retooling, particularly documented actions/events and individual details, and validate UID-by-UID against web CSV.
+
+## Known retooling control (Daluuj)
+- User verified TJO station UID `5:37746` is retooling: https://www.swcombine.com/members/inventory2/jump.php?entity%5B%5D=5%3A37746
+- Compare this exact UID with Daluuj producing controls `5:19046` and `5:19047`, whose detail API exposed `EntityProductionAction` in completed run 42071518653.
+- Targeted read-only diagnostic should report only action type names, field presence, queue length, and tooling presence; avoid dumping private station payloads or secrets.
