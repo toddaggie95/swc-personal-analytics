@@ -29,7 +29,6 @@ jobs:
           ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
           path: api-collector
           persist-credentials: false
-          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -58,25 +57,6 @@ jobs:
           trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then GH_TOKEN="$SWC_SECRET_WRITER_TOKEN" gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           echo "Experiment system: $TARGET_SYSTEM; faction: TFF; no sheet writes"
-          start=$SECONDS
-          if npx tsx src/cli/index.ts sync:faction-station-inventory:tff --system "$TARGET_SYSTEM" >/tmp/swc-perf-inventory.log 2>&1; then
-            echo "INVENTORY_SECONDS=$((SECONDS-start))"
-          else
-            echo "::error::Inventory collection failed"
-            tail -n 8 /tmp/swc-perf-inventory.log | sed -E 's/[0-9]+:[0-9]+/[UID]/g'
-            exit 1
-          fi
-          start=$SECONDS
-          if npx tsx src/cli/index.ts sync:faction-stations:tff --system "$TARGET_SYSTEM" >/tmp/swc-perf-enriched.log 2>&1; then
-            echo "ENRICHED_SECONDS=$((SECONDS-start))"
-          else
-            echo "::error::Enriched collection failed after $((SECONDS-start)) seconds"
-            grep -E 'Enriching [0-9]+ stations|Station details: [0-9]+/[0-9]+' /tmp/swc-perf-enriched.log | tail -n 3 || true
-            tail -n 6 /tmp/swc-perf-enriched.log | sed -E 's/[0-9]+:[0-9]+/[UID]/g'
-            exit 1
-          fi
-          grep -E 'Enriching [0-9]+ stations|Station details: [0-9]+/[0-9]+' /tmp/swc-perf-enriched.log | head -n 1 || true
-          grep -E 'Station details: [0-9]+/[0-9]+' /tmp/swc-perf-enriched.log | tail -n 1 || true
           echo 'Starting targeted shipyard-only comparison'
           mkdir -p tools/api-parity
           cp ../tools/api-parity/benchmark-targeted.ts tools/api-parity/benchmark-targeted.ts
