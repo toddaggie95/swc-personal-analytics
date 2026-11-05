@@ -26,7 +26,7 @@ def main():
         if error.code != 404:
             raise
         previous = None
-    changed = previous is None or identity(current["files"]) != identity(previous["files"])
+    changed = previous is None or (current.get("source", "csv"), identity(current["files"])) != (previous.get("source", "csv"), identity(previous["files"]))
     with open(os.environ["GITHUB_OUTPUT"], "a") as f:
         f.write("new_batch=" + str(changed).lower() + "\n")
     print("New export batch:", changed)
