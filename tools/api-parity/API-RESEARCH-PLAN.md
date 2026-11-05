@@ -111,3 +111,10 @@ Read-only, bounded, documented calls; no production sheet writes; no cookies/ses
 - Implication: working is an exhaustive, cheap activity bit for this snapshot, but does not identify product, quantity, tooling, or whether activity specifically means ship production. Compare by UID against same-time CSV.
 - Independent public SDK found: https://github.com/JonCubed/SWCombine-SDK-CSharp . Inspected `SWCombine SDK/SWC.cs`: generic OAuth/HTTP helper, no evidence of an additional bulk production endpoint. It uses old embedded-browser OAuth patterns; **do not adopt its cookie handling or legacy auth approach**.
 - Priority: build a bounded UID-by-UID parity audit against web CSV and current API inventory, and then test event read only with documented scopes. Keep production pipeline unchanged.
+
+## User-verified semantics of working filter (2026-11-05)
+- User independently verified in the SWC web inventory filter that **retooling is included in `working`**. Consequently working=1 is **not** a ship-production indicator; it represents activity including at least production and retooling.
+- The 107 -> 108 Kashyyyk working count increase coincided with the user starting one station, but that does not establish exclusive production semantics.
+- Do NOT use working=1 as Producing=Yes in HAS, Production Overview, or Production Changes.
+- Do NOT use changes to working bit as a complete production-transition feed: retooling -> producing can remain working=1, and other transitions can also be invisible.
+- Continue investigating bulk discriminators for production vs retooling, particularly documented actions/events and individual details, and validate UID-by-UID against web CSV.
