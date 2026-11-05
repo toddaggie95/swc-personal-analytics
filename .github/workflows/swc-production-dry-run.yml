@@ -1,6 +1,9 @@
-name: SWC production CSV dry run
+name: SWC production API/CSV sync
 
 on:
+  push:
+    branches: [feature/kashyyyk-parity-readonly]
+    paths: ['.github/workflows/swc-production-dry-run.yml']
   workflow_dispatch:
     inputs:
       export_source:
@@ -57,7 +60,7 @@ jobs:
           access_token_scopes: https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/spreadsheets
 
       - name: Check out pinned SWC API collector
-        if: inputs.export_source == 'api'
+        if: inputs.export_source != 'csv'
         uses: actions/checkout@v4
         with:
           repository: toddaggie95/swc-personal-analytics
@@ -66,7 +69,7 @@ jobs:
           persist-credentials: false
 
       - name: Initialize private SWC API credentials
-        if: inputs.export_source == 'api'
+        if: inputs.export_source != 'csv'
         env:
           SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
           SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
@@ -79,7 +82,7 @@ jobs:
           node --input-type=module -e 'import fs from "node:fs"; const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json"));if(!t.accessToken||!t.refreshToken||!Number.isFinite(t.expiresAt))process.exit(1)'
 
       - name: Collect full API inventory and persist OAuth rotation
-        if: inputs.export_source == 'api'
+        if: inputs.export_source != 'csv'
         working-directory: api-collector
         env:
           SWC_PRIVATE_DIR: /tmp/swc-private
@@ -96,7 +99,7 @@ jobs:
           bash ../tools/api-parity/collect-production-systems.sh
 
       - name: Convert API inventory to canonical production inputs
-        if: inputs.export_source == 'api'
+        if: inputs.export_source != 'csv'
         run: |
           set -euo pipefail
           umask 077
