@@ -82,3 +82,14 @@ Inventory collection supports `filter_type=working`, with boolean `filter_value=
 
 ### Hard safety boundaries
 Read-only, bounded, documented calls; no production sheet writes; no cookies/session replay; no state-changing POST/PUT/DELETE; serialize OAuth experiments; no sensitive raw responses in public logs.
+
+## Working=1 live result and event resource documentation (2026-11-05)
+- Run https://github.com/toddaggie95/swc-personal-analytics/actions/runs/42068321664 succeeded.
+- Kashyyyk TJO unfiltered 195, documented working=1 matched **107**, returned 107, and **0** returned UIDs outside the unfiltered list.
+- Working=1 is NOT yet confirmed to mean active ship production. Compare with station details and web CSV, and test working=0 complement.
+- Official events GET: https://www.swcombine.com/ws/v2.0/documentation/events/event_mode/event_type/
+  - Modes: personal, faction, inventory, combat; optional event_type filter is allowed ONLY for personal/faction.
+  - start_time Unix timestamp supports incremental retrieval; item_count 1–1000; faction_id optionally chooses faction.
+  - Event output has uid, type, timestamp, and HTML text. Production-event coverage and ownership scope **not yet verified**. Event streams may be a change-detection aid, but not authoritative state without evidence.
+- Public resource catalog enumerates only Inventory collection and single Inventory entity GET; Inventory/Entities/Property POST is a batch **write**.
+- Next experiment code was committed at e20566ad44eca14445f92f2a813d755989770dbd: working=0 complement, working/idle by type, and full 195-record raw field coverage. Workflow trigger was blocked by tool safety and **was not launched**; do not imply results.
