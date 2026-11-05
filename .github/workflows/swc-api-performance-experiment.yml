@@ -1,5 +1,5 @@
 name: SWC focused API performance experiment
-# Read-only 15-shipyard TJO production and pacing benchmark
+# Read-only nine-shipyard TJO action-response shape experiment
 
 on:
   push:
