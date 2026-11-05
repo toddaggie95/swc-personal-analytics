@@ -10,7 +10,7 @@ on:
         description: 'One system for a small, isolated API experiment'
         type: choice
         options: [Chamble, Lannik, Kashyyyk]
-        default: Chamble
+        default: Kashyyyk
 
 permissions:
   contents: read
@@ -51,7 +51,7 @@ jobs:
           SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
           GH_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          TARGET_SYSTEM: ${{ inputs.system || 'Chamble' }}
+          TARGET_SYSTEM: ${{ inputs.system || 'Kashyyyk' }}
         run: |
           set -euo pipefail
           trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then GH_TOKEN="$SWC_SECRET_WRITER_TOKEN" gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
