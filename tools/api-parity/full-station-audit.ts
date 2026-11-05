@@ -1,6 +1,7 @@
 import {loadConfig,requireLive} from '../../src/config/index.js';
 import {loadAuth} from '../../src/auth/session.js';
 import {ReadClient} from '../../src/swc/read-client.js';
+import {ReadPacer} from '../../src/swc/read-pacer.js';
 import {SnapshotRun} from '../../src/storage/snapshots.js';
 import {syncFactionStations} from '../../src/swc/sync.js';
 import {readJson} from '../../src/storage/files.js';
@@ -21,7 +22,21 @@ function idleAssignment(tooled:boolean){
 const auditStarted=Date.now();
 const shipyardsOnly=process.env.TARGET_SHIPYARDS_ONLY==='1';
 const cfg=loadConfig();requireLive(cfg);
-const client=new ReadClient(await loadAuth(cfg),new SnapshotRun(cfg.privateDir,'full_station_audit'));
+const pace={waitMs:0,calls:0,headersPresent:0,headersMissing:0};
+class MeasuredPacer extends ReadPacer {
+ async beforeRequest(resource:string) {
+  const started=performance.now();
+  try { await super.beforeRequest(resource); }
+  finally { pace.waitMs+=performance.now()-started; pace.calls++; }
+ }
+ afterResponse(resource:string,headers:Headers) {
+  const w=super.afterResponse(resource,headers);
+  if(w.limit!==null&&w.remaining!==null&&w.resetAtMs!==null)pace.headersPresent++;
+  else pace.headersMissing++;
+  return w;
+ }
+}
+const client=new ReadClient(await loadAuth(cfg),new SnapshotRun(cfg.privateDir,'full_station_audit'),fetch,undefined,new MeasuredPacer());
 const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'audit_'+system.toLowerCase()+'_'+faction),cfg.privateDir,faction as 'tjo'|'tff',false,{kind:'system',name:system});
 const inventoryMs=Date.now()-auditStarted;
 const all=(await readJson(inv.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
@@ -54,7 +69,7 @@ for(const station of batch){
 const counts=Object.fromEntries([...new Set(rows.map(r=>String(r.classification)))].map(k=>[k,rows.filter(r=>r.classification===k).length]));
 const sortedTimes=[...detailDurations].sort((a,b)=>a-b);
 const percentile=(p:number)=>sortedTimes.length?sortedTimes[Math.ceil(sortedTimes.length*p)-1]:null;
-const timings={inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted};
+const timings={inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted,pace};
 const report={system,faction,totalInventory:all.length,uniqueInventory:unique.length,eligibleInventory:candidates.length,shipyardsOnly,offset,limit,processed:rows.length,nextOffset:offset+rows.length<candidates.length?offset+rows.length:null,counts,errors:rows.filter(r=>r.detailRead==='failed').length,anomalies:rows.filter(r=>Array.isArray(r.anomalies)&&(r.anomalies as string[]).length).length,timings,rows};
 mkdirSync('/tmp/swc-audit-output',{recursive:true});
 writeFileSync('/tmp/swc-audit-output/station-audit.json',JSON.stringify(report,null,2));
