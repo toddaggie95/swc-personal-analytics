@@ -21,23 +21,14 @@ const rawValue=(rawFirst.value&&typeof rawFirst.value==='object'?rawFirst.value:
 const fieldNames=Object.keys(rawValue).sort();
 const interesting=fieldNames.filter(k=>/action|queue|tool|produc|modif|updat|chang|status/i.test(k));
 console.log(JSON.stringify({phase:'raw-inventory-schema',pageRows:rawRows.length,fieldNames,interesting}));
+const readFiltered=(client as unknown as {get:(endpoint:string,query:Record<string,string|number>)=>Promise<Record<string,unknown>>}).get.bind(client);
+const base={start_index:1,item_count:200,'filter_type[0]':'system','filter_value[0]':String(inventory.locationFilter?.uid??''),'filter_inclusion[0]':'includes'};
+const result=await readFiltered('inventory/'+inventory.ownerUid+'/stations/owner',{...base,'filter_type[1]':'working','filter_value[1]':1,'filter_inclusion[1]':'includes'});
+const entities=(result.entities??{}) as {entity?:Array<{value?:{uid?:string}}> ,attributes?:{total?:number}};
+const rows=entities.entity??[];
+const all=new Set(list.map(s=>String(s.uid)));
+const selected=rows.map(r=>String(r.value?.uid??''));
+console.log(JSON.stringify({phase:'working-filter',unfiltered:list.length,matchedTotal:entities.attributes?.total??null,returned:rows.length,unknownUIDs:selected.filter(uid=>!all.has(uid)).length}));
 const types=Object.entries(list.reduce((acc,s)=>{const key=String(s.typeName??s.type_name??'(missing)');acc[key]=(acc[key]??0)+1;return acc;},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]);
 console.log(JSON.stringify({phase:'type-diagnostic',system,types,missingType:list.filter(s=>!s.typeName).length}));
 // Bounded, deterministic cross-section: first five of each shipyard class, max 15.
-const selected=types.filter(([name])=>/shipyard/i.test(name)).flatMap(([name])=>list.filter(s=>s.typeName===name).slice(0,0)).slice(0,0);
-let actionsPresent=0,actionsAbsent=0,running=0,tooling=0,queue=0;const shapes:Record<string,number>={};
-const detailStart=Date.now();
-for(const station of selected){
- const detail=await client.stationDetail(String(station.uid));
- const op=stationOperations(detail);
- const raw=detail.actions as Record<string,unknown>|undefined;
- const shape=!raw?'absent':Array.isArray(raw)?'array':Array.isArray(raw.action)?'nested-array':raw.action&&typeof raw.action==='object'?'nested-object':Object.keys(raw).length===0?'empty-object':'other';
- shapes[shape]=(shapes[shape]??0)+1;
- if(Array.isArray(op.productionActions)){actionsPresent++;running+=op.productionActions.filter(a=>a?.value?.status==='running').length;}
- else actionsAbsent++;
- if(op.tooledTo!==null)tooling++;
- if(op.queueItems!==null)queue++;
-}
-console.log(JSON.stringify({phase:'bounded-shipyard-sample',system,totalInventory:list.length,shipyards:list.filter(s=>/shipyard/i.test(String(s.typeName))).length,
- sampled:selected.length,actionShapes:shapes,actionsPresent,actionsAbsent,running,tooling,queue,detailSeconds:Math.round((Date.now()-detailStart)/1000),
- estimatedAllShipyardSeconds:Math.round((Date.now()-detailStart)/1000)*list.filter(s=>/shipyard/i.test(String(s.typeName))).length/Math.max(1,selected.length)}));
