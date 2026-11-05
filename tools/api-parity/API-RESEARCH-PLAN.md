@@ -29,3 +29,13 @@ Find a fresh, complete production-status read path that avoids one detail GET pe
 - No cached production status silently masquerades as fresh status.
 - 20-system refresh duration is measured, bounded, and compatible with daily automation.
 - PR remains unmerged; no live sheet changes.
+
+## Initial documentation audit (2026-11-05)
+- Official SWC Y27 D257 announcement explicitly says InventoryEntity action output changed, including multiple actions: https://www.swcombine.com/community/simnews/index.php?display=2&postID=23571
+- Y27 D312 batch Inventory/Entities/Property operation is **update**, not bulk read: https://www.swcombine.com/community/simnews/index.php?display=2&postID=23583
+- Public WS developer resource reference pages were not retrievable from the research environment; no bulk read endpoint is verified. Do not fabricate paths.
+- Existing `stationOperations` assumes `detail.actions.action` is an array. The new action output requires shape testing with saved live snapshots, including zero, one, and multiple actions, before changing status interpretation.
+- Production overview's current `operation-coverage.mjs` treats missing production actions as unknown; preserve this fail-closed behavior until paired CSV verification.
+
+### High-value next controlled experiment
+Using a **single existing authorized station detail GET**, capture only the structural shape (array/object/absent) of `actions`, `actions.action`, `queueitems`, and `tooledto`, plus whether multiple production actions occur. Compare to web CSV by UID. Never print private cargo or station names. Then evaluate whether a documented inventory-level action/status field exists in the same response. Do not probe undocumented URLs.
