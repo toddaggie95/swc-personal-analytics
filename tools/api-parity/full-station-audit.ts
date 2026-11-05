@@ -30,9 +30,10 @@ for(const station of batch){
   const producing=statuses.includes('producing');
   const retooling=actions.includes('RetoolingAction');
   const unknownActions=actions.filter(a=>!['EntityProductionAction','RetoolingAction'].includes(a));
-  const classification=producing&&retooling?'conflict':producing?'producing':retooling?'retooling':unknownActions.length?'other-action':actions.includes('EntityProductionAction')?'ambiguous-production-action':statuses.length?'queued-idle':'idle';
-  const anomalies=[...(producing&&retooling?['producing-and-retooling']:[]),...(actions.includes('EntityProductionAction')&&!producing&&!retooling?['production-action-without-producing-queue']:[]),...(unknownActions.length?['unknown-action-type']:[])];
-  rows.push({uid,system,faction,stationType:station.typeName,classification,actions,queueStatuses:statuses,toolingPresent:ops.tooledTo!==null,anomalies,detailRead:'ok'});
+  const noOperationEvidence=ops.actions===null&&ops.queueItems===null;
+  const classification=producing&&retooling?'conflict':producing?'producing':retooling?'retooling':unknownActions.length?'other-action':actions.includes('EntityProductionAction')?'ambiguous-production-action':statuses.length?'queued-idle':noOperationEvidence?'unknown-no-operation-data':'idle';
+  const anomalies=[...(producing&&retooling?['producing-and-retooling']:[]),...(actions.includes('EntityProductionAction')&&!producing&&!retooling?['production-action-without-producing-queue']:[]),...(unknownActions.length?['unknown-action-type']:[]),...(noOperationEvidence?['missing-action-and-queue-data']:[])];
+  rows.push({uid,system,faction,stationType:station.typeName,classification,actions,queueStatuses:statuses,toolingPresent:ops.tooledTo!==null,actionsFieldPresent:'actions' in detail,queueFieldPresent:'queueitems' in detail,anomalies,detailRead:'ok'});
  }catch(e){rows.push({uid,system,faction,stationType:station.typeName,classification:'unknown',detailRead:'failed',errorClass:e instanceof Error?e.name:'UnknownError'});}
 }
 const counts=Object.fromEntries([...new Set(rows.map(r=>String(r.classification)))].map(k=>[k,rows.filter(r=>r.classification===k).length]));
@@ -40,5 +41,5 @@ const report={system,faction,totalInventory:all.length,uniqueInventory:unique.le
 mkdirSync('/tmp/swc-audit-output',{recursive:true});
 writeFileSync('/tmp/swc-audit-output/station-audit.json',JSON.stringify(report,null,2));
 console.log('AUDIT_SUMMARY '+JSON.stringify({...report,rows:undefined}));
-for(const r of rows)if(r.classification==='unknown'||r.classification==='conflict'||r.classification==='ambiguous-production-action'||r.classification==='other-action')console.log('AUDIT_REVIEW '+JSON.stringify(r));
+for(const r of rows)if(r.classification==='unknown'||r.classification==='unknown-no-operation-data'||r.classification==='conflict'||r.classification==='ambiguous-production-action'||r.classification==='other-action')console.log('AUDIT_REVIEW '+JSON.stringify(r));
 if(report.errors)process.exitCode=2;
