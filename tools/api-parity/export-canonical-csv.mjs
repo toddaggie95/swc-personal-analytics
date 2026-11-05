@@ -30,7 +30,7 @@ export function buildCanonical({apiDir,referenceDir,outDir,systems}){
    }
   }
   const data=[columns.join(','),...rows.map(r=>columns.map(c=>quote(r[c])).join(','))].join('\n')+'\n';
-  // Validate each dataset before writing it to the shared output directory.
+  // Each output remains private to the runner until all four inputs validate.
   fs.writeFileSync(path.join(outDir,name+'.csv'),data,{mode:0o600});
   files.push({owner:owner.toUpperCase(),kind:kind==='stations'?'Stations':'Materials',id:'api:'+name,sha256:crypto.createHash('sha256').update(data).digest('hex'),rowCount:rows.length,canonicalName:name+'.csv'});
  }
