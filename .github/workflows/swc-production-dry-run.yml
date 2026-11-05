@@ -265,7 +265,7 @@ jobs:
             "${{ runner.temp }}/trash-report.json"
 
       - name: Remove private SWC API snapshots and credentials
-        if: always() && inputs.export_source == 'api'
+        if: always() && inputs.export_source != 'csv'
         run: rm -rf /tmp/swc-private
 
       - name: Upload dry-run ledger or diagnostics
