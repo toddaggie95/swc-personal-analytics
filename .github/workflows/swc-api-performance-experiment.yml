@@ -65,3 +65,5 @@ jobs:
       - name: Remove private snapshots and credentials
         if: always()
         run: rm -rf /tmp/swc-private /tmp/swc-perf-inventory.log /tmp/swc-perf-enriched.log
+
+# Inventory schema diagnostic run, read-only.
