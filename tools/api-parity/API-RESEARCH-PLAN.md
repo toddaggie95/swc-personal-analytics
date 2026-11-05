@@ -123,3 +123,11 @@ Read-only, bounded, documented calls; no production sheet writes; no cookies/ses
 - User verified TJO station UID `5:37746` is retooling: https://www.swcombine.com/members/inventory2/jump.php?entity%5B%5D=5%3A37746
 - Compare this exact UID with Daluuj producing controls `5:19046` and `5:19047`, whose detail API exposed `EntityProductionAction` in completed run 42071518653.
 - Targeted read-only diagnostic should report only action type names, field presence, queue length, and tooling presence; avoid dumping private station payloads or secrets.
+
+## Daluuj confirmed retooling action (run 42078881684, 2026-11-05)
+- Manually dispatched the minimal main-branch workflow (not research PR): https://github.com/toddaggie95/swc-personal-analytics/actions/runs/42078881684 — successful in approximately 18 seconds.
+- Known retooling TJO Shipyard III `5:37746`: `actions.action` types **EntityProductionAction AND RetoolingAction**; actionCount=2; productionActionCount=1; queueCount=3; `tooledto` absent.
+- Producing controls: `5:19046` Shipyard IV actions [EntityProductionAction], queueCount=1, tooledto present; `5:19047` Shipyard I actions [EntityProductionAction], queueCount=2, tooledto present.
+- **Critical:** `EntityProductionAction` alone is NOT proof that actual production is ongoing, since a confirmed retooling station included it. Need inspect action status semantics and individual action fields, without printing sensitive contents, before classifying live production.
+- Working=1 includes both retooling and production, consistent with user's web UI observation.
+- No sheet writes, no merge of research PR. Future diagnostics must preserve this separation.
