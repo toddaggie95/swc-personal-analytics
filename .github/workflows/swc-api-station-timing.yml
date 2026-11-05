@@ -13,6 +13,11 @@ jobs:
   timing:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        offset: [0, 25, 50, 75]
     environment: swc-api-shadow
     steps:
       - uses: actions/checkout@v4
@@ -48,25 +53,21 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           TARGET_SYSTEM: Kashyyyk
           TARGET_FACTION: tjo
-          TARGET_OFFSET: '0'
-          TARGET_LIMIT: '50'
+          TARGET_OFFSET: '${{ matrix.offset }}'
+          TARGET_LIMIT: '25'
           TARGET_PACING_EXPERIMENT: '1s'
         run: |
           set -euo pipefail
-          trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
+          trap 'status=$?; exit "$status"' EXIT
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           mkdir -p tools/api-parity
           cp ../tools/api-parity/full-station-audit.ts tools/api-parity/full-station-audit.ts
-          for batch_offset in 0 50; do
-            echo "BATCH_START offset=$batch_offset time=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            TARGET_OFFSET="$batch_offset" npx tsx tools/api-parity/full-station-audit.ts
-            echo "BATCH_END offset=$batch_offset time=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          done
+          npx tsx tools/api-parity/full-station-audit.ts
       - name: Upload sanitized timing report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: station-timing-Kashyyyk-tjo-two-batch-${{ github.run_id }}
+          name: station-timing-Kashyyyk-tjo-parallel-${{ matrix.offset }}-${{ github.run_id }}
           path: /tmp/swc-audit-output/station-audit-*.json
           if-no-files-found: warn
           retention-days: 30
