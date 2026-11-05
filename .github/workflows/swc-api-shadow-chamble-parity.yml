@@ -134,6 +134,24 @@ jobs:
         if: success() && env.SWC_PARITY_SCOPE == 'all'
         working-directory: parity
         run: node tools/api-parity/audit-all-operation-coverage.mjs /tmp/swc-private/normalized /tmp/swc-parity-csv || echo 'Operation coverage remains a diagnostic gate pending validation'
+      - name: Validate canonical API export contract (read-only, diagnostic)
+        if: success() && env.SWC_PARITY_SCOPE == 'all'
+        continue-on-error: true
+        working-directory: parity
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private/canonical
+          if node tools/api-parity/export-canonical-csv.mjs \
+            /tmp/swc-private/normalized \
+            /tmp/swc-parity-csv \
+            /tmp/swc-private/canonical \
+            tools/production-sync/systems.addresses.json > /tmp/swc-private/canonical-validation.log 2>&1; then
+            echo "Canonical API export: PASS (four datasets, all registered systems)"
+          else
+            echo "::warning::Canonical API export: BLOCKED; details remain in private runner logs. Publishing is not enabled."
+          fi
       - name: Capture one immutable read-only workbook input
         if: success() && env.SWC_PARITY_SCOPE == 'all'
         working-directory: parity
