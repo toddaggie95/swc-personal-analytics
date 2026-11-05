@@ -53,3 +53,32 @@ Using a **single existing authorized station detail GET**, capture only the stru
 - Raw entity keys: commander, entitytype, hull, images, infotext, ionic, location, name, opento, owner, protected, shield, tags, type, uid, underconstruction, wrecked.
 - No raw action, production, tooling, queue, or change-indicator keys observed on the inspected record. Thus normalization is not the cause of the missing production data on that record. Inspect field presence across every record before claiming none exist anywhere.
 - Next research hypothesis: the web export may be server-side enriched or use an internal endpoint not exposed by the documented API. Find a documented collection-level read of production actions before committing to per-station polling.
+
+## Official capability discovery: major finding (2026-11-05)
+SWC publishes an official, public, **unauthenticated GET resource-discovery endpoint** at `https://www.swcombine.com/ws/v2.0/`. Its developer reference describes structured route names, URLs, methods, authentication requirements, permissions, and query parameters. This is the answer to the earlier question "can we ask the API what it supports?"
+- Resource catalog: https://www.swcombine.com/ws/v2.0/developers/index.php
+- Machine-readable root: https://www.swcombine.com/ws/v2.0/
+- Root documentation: https://www.swcombine.com/ws/v2.0/documentation/
+- Inventory collection documentation: https://www.swcombine.com/ws/v2.0/documentation/inventory/uid/entity_type/assign_type/
+- Individual entity documentation: https://www.swcombine.com/ws/v2.0/documentation/inventory/entity_type/uid/
+
+### Priority hypothesis: documented `working` filter
+Inventory collection supports `filter_type=working`, with boolean `filter_value=1` or `0`, and `filter_inclusion=includes`; documentation says working applies to stations, but does not define it as production specifically. It may mean any activity, including retooling. **Do not equate working=1 with production started until validated by UID.**
+- Use same authenticated read-only inventory collection with Kashyyyk system filter AND working=1.
+- Compare UID sets with a same-time web export and 15 known detail responses, separately for shipyard classes and depots.
+- Also test working=0 if permitted, and check whether union of both equals unfiltered inventory.
+- Check whether production action state and tooling can be inferred from other documented filters. The documented list includes working but not explicit production or tooling filters.
+- Inventory collection GET and POST are both documented; POST is a **read** for long filter sets, distinct from the separate batch property-update POST. No reason to prefer POST for a short filter set.
+- If working reliably identifies running production, detail GETs may be needed only for a small subset or for tooling changes. But no production type/quantity/tooling fields appear in collection records observed so far.
+
+### Capability audit backlog
+1. Save a sanitized route catalog from unauthenticated root (no credentials); compare live root with documentation for newly added operations.
+2. Audit Events collection for production-start/finish notifications and whether events cover faction-owned stations and contain reliable UIDs.
+3. Audit Inventory entity detail action shapes, queue, tooling, and timing fields; test against web CSV.
+4. Audit other read endpoints for production-related bulk views, but avoid guessing unsupported paths.
+5. Inspect official SWC SDK repositories for extra endpoint usage and supported filters; they may lag current server.
+6. Check rate-limit response headers and documentation; no rate-limit evasion or unbounded parallelism.
+7. Document gaps and send a precise API feature question to SWC maintainers if necessary.
+
+### Hard safety boundaries
+Read-only, bounded, documented calls; no production sheet writes; no cookies/session replay; no state-changing POST/PUT/DELETE; serialize OAuth experiments; no sensitive raw responses in public logs.
