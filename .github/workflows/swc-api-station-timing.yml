@@ -2,7 +2,7 @@ name: SWC API bounded station timing (read only)
 on:
   push:
     branches: [feature/kashyyyk-parity-readonly]
-    paths: ['.github/workflows/swc-api-station-timing.yml']
+    paths: ['.github/workflows/swc-api-station-timing.yml', 'tools/api-parity/full-station-audit.ts']
   workflow_dispatch:
 permissions:
   contents: read
