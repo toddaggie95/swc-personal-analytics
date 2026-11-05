@@ -20,6 +20,9 @@ test('canonical adapter produces four source-marked datasets and stable identity
    fs.writeFileSync(path.join(root,'api',f+'__'+k+'__system-test.json'),JSON.stringify({summary:{locationFilter:{uid:'sys',name:'Test System'}},[k]:[row]}));
   }
   const options={apiDir:path.join(root,'api'),referenceDir:path.join(root,'reference'),outDir:path.join(root,'out'),systems:['Test System']};
+  const independent=buildCanonical({...options,referenceDir:null});
+  assert.equal(independent.source,'api');
+  assert.equal(independent.files.length,4);
   const first=buildCanonical(options);
   assert.equal(first.source,'api');assert.equal(first.files.length,4);
   assert.equal(buildCanonical(options).snapshotId,first.snapshotId);
