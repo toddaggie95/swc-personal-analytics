@@ -14,24 +14,9 @@ if(!['tjo','tff'].includes(faction)||!['Kashyyyk','Tholatin','Daluuj'].includes(
 const obj=(v:unknown):Record<string,unknown>=>v&&typeof v==='object'&&!Array.isArray(v)?v as Record<string,unknown>:{};
 const attrs=(v:unknown)=>obj(obj(v).attributes);
 const hasOwn=(v:Record<string,unknown>,k:string)=>Object.prototype.hasOwnProperty.call(v,k);
-const textFields=['info','infotext','infoText','information','description'] as const;
-function extractInfo(detail:Record<string,unknown>,inventory:Record<string,unknown>){
- const sources=[detail,obj(detail.attributes),inventory,obj(inventory.attributes)];
- for(const source of sources)for(const field of textFields)if(hasOwn(source,field)){
-  const value=source[field];
-  if(typeof value==='string')return {available:true,text:value.trim(),field};
-  if(value===null)return {available:true,text:'',field};
-  return {available:false,text:'',field};
- }
- return {available:false,text:'',field:null};
-}
-// A free-form ship mention is not a verified ship assignment. A canonical ship
-// catalog is required before treating nonblank InfoText as a proposed ship.
-function idleAssignment(tooled:boolean,info:{available:boolean;text:string}){
- if(tooled)return 'idle-assigned-tooled';
- if(!info.available)return 'idle-assignment-unresolved';
- if(!info.text)return 'idle-unassigned';
- return 'idle-assignment-unresolved';
+// InfoText is not an authoritative assignment source. Idle tooling alone determines assignment.
+function idleAssignment(tooled:boolean){
+ return tooled?'idle-assigned-tooled':'idle-unassigned';
 }
 const cfg=loadConfig();requireLive(cfg);
 const client=new ReadClient(await loadAuth(cfg),new SnapshotRun(cfg.privateDir,'full_station_audit'));
@@ -54,10 +39,9 @@ for(const station of batch){
   // SWC retooling can legitimately expose both action types; a producing queue during retooling is the actual conflict.
   const actionConflict=productionAction&&retooling&&queueProducing;
   const queueConflict=queueProducing&&!productionAction;
-  const info=extractInfo(detail,station);
-  const classification=actionConflict||queueConflict?'conflict':unknownActions.length?'other-action':retooling?'retooling':productionAction?'producing':idleAssignment(ops.tooledTo!==null,info);
-  const anomalies=[...(actionConflict?['simultaneous-retooling-and-producing-queue']:[]),...(queueConflict?['producing-queue-without-production-action']:[]),...(productionAction&&!queueProducing&&!retooling?['production-action-without-producing-queue']:[]),...(unknownActions.length?['unknown-action-type']:[]),...(!productionAction&&!retooling&&ops.tooledTo===null&&!info.available?['infotext-unavailable']:[]),...(!productionAction&&!retooling&&ops.tooledTo===null&&info.available&&info.text?['infotext-needs-ship-validation']:[])];
-  rows.push({uid,system,faction,stationType:station.typeName,classification,actions,queueStatuses:statuses,toolingPresent:ops.tooledTo!==null,infoFieldPresent:info.available,infoField:info.field,infoBlank:info.available?!info.text:null,infoNonblank:info.available&&!!info.text,actionsFieldPresent:'actions' in detail,queueFieldPresent:'queueitems' in detail,anomalies,detailRead:'ok'});
+  const classification=actionConflict||queueConflict?'conflict':unknownActions.length?'other-action':retooling?'retooling':productionAction?'producing':idleAssignment(ops.tooledTo!==null);
+  const anomalies=[...(actionConflict?['simultaneous-retooling-and-producing-queue']:[]),...(queueConflict?['producing-queue-without-production-action']:[]),...(productionAction&&!queueProducing&&!retooling?['production-action-without-producing-queue']:[]),...(unknownActions.length?['unknown-action-type']:[])];
+  rows.push({uid,system,faction,stationType:station.typeName,classification,actions,queueStatuses:statuses,toolingPresent:ops.tooledTo!==null,actionsFieldPresent:'actions' in detail,queueFieldPresent:'queueitems' in detail,anomalies,detailRead:'ok'});
  }catch(e){rows.push({uid,system,faction,stationType:station.typeName,classification:'unknown',detailRead:'failed',errorClass:e instanceof Error?e.name:'UnknownError'});}
 }
 const counts=Object.fromEntries([...new Set(rows.map(r=>String(r.classification)))].map(k=>[k,rows.filter(r=>r.classification===k).length]));
