@@ -148,3 +148,11 @@ Read-only, bounded, documented calls; no production sheet writes; no cookies/ses
 - Verified state: queued-but-idle; demonstrates queue alone does not start production/retooling. A `tooledto` field may be present on idle stations, so cannot use it as production indicator.
 - Cross-state verified samples: idle+queued `5:56984`, retooling `5:37746`, producing `5:19046` and `5:19047`. Proposed classifier: any queue item `producing` => producing (check retooling precedence); else RetoolingAction present => retooling; else if queued items => queued/idle; else idle. Validate other edge cases before changing HAS/Production Overview.
 - No production sheet writes and no research PR merge.
+
+## Performance instrumentation after clean first-50 audit (2026-11-05)
+- Run 42098849447: Kashyyyk TJO first 50 completed successfully: 13 producing, 24 idle-assigned-tooled, 13 idle-unassigned, 0 errors, 0 anomalies. The runtime is a baseline, not proof of a pacing bottleneck.
+- Previous separate-chat experiments: targeted refresh 35 requests / 148 s (~4.23 s per detail); shipyard-only TFF can reduce 1,346 inventory stations to 135 shipyards for ship-production details. Do not apply this filter to inventory collection or HAS materials.
+- Official API documentation research previously found no verified bulk station-detail GET; Inventory/Entities/Property batch is a write endpoint. No undocumented route probing or rate-limit bypass.
+- Research branch commit ca7b288 adds audit timing breakdown (inventory, detail total, min/p50/p95/max, elapsed) and opt-in `TARGET_SHIPYARDS_ONLY=1` to restrict **detail** reads to shipyards. Default audit remains all stations, preserving the validated classification batch. The inventory still includes all stations.
+- Scope caveat: some faction shipyards may be absent from a particular system and station type strings are an exploratory selector; before production adoption, validate coverage against web exports and all eligible station types. This is not a complete production export.
+- Next controlled test: run the existing read-only audit with limit 25 and inspect timing metrics; then compare shipyard-only sample with equivalent same-UID full-detail reads, and instrument pacer headers separately. No production Google Sheet writes, no merger, no inferred fresh state from old caches.
