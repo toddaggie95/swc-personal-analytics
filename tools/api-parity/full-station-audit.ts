@@ -23,9 +23,9 @@ const auditStarted=Date.now();
 const shipyardsOnly=process.env.TARGET_SHIPYARDS_ONLY==='1';
 const cfg=loadConfig();requireLive(cfg);
 const pace={waitMs:0,calls:0,headersPresent:0,headersMissing:0};
-const experiment=process.env.TARGET_PACING_EXPERIMENT==='2s';
-const gapMs=experiment?2000:undefined;
-if(experiment&&limit>25)throw Error('Experimental pacing is restricted to 25 station details');
+const experiment=['2s','1s'].includes(process.env.TARGET_PACING_EXPERIMENT??'');
+const experimentalGapMs=process.env.TARGET_PACING_EXPERIMENT==='1s'?1000:2000;
+if(experiment&&limit>(experimentalGapMs===1000?15:25))throw Error('Experimental pacing is restricted to 25 station details');
 const paceSamples:Array<{resource:string;waitMs:number;remaining:number|null;limit:number|null;resetInMs:number|null}>=[];
 const budgetSamples:Array<{resource:string;remaining:number|null;limit:number|null;resetInMs:number|null}>=[];
 const windows:Record<string,{remaining:number|null;limit:number|null;resetAtMs:number|null}>={};
@@ -49,7 +49,7 @@ class MeasuredPacer extends ReadPacer {
   try { if(experiment&&resource==='station-detail'){
    if(this.quotaRemaining===0)throw Error('Experiment stopped: quota exhausted');
    if(this.quotaRemaining!==null&&this.quotaResetMs!==null&&this.quotaRemaining<10)throw Error('Experiment stopped: quota safety reserve');
-   const delay=Math.max(0,this.lastDetailStart+2000-Date.now());
+   const delay=Math.max(0,this.lastDetailStart+experimentalGapMs-Date.now());
    if(delay)await new Promise(resolve=>setTimeout(resolve,delay));
    this.lastDetailStart=Date.now();
   }else await super.beforeRequest(resource); }
@@ -98,7 +98,7 @@ for(const station of batch){
 const counts=Object.fromEntries([...new Set(rows.map(r=>String(r.classification)))].map(k=>[k,rows.filter(r=>r.classification===k).length]));
 const sortedTimes=[...detailDurations].sort((a,b)=>a-b);
 const percentile=(p:number)=>sortedTimes.length?sortedTimes[Math.ceil(sortedTimes.length*p)-1]:null;
-const timings={experiment,inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted,pace,transport,paceSamples,budgetSamples};
+const timings={experiment,experimentalGapMs:experiment?experimentalGapMs:null,inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted,pace,transport,paceSamples,budgetSamples};
 const report={system,faction,totalInventory:all.length,uniqueInventory:unique.length,eligibleInventory:candidates.length,shipyardsOnly,offset,limit,processed:rows.length,nextOffset:offset+rows.length<candidates.length?offset+rows.length:null,counts,errors:rows.filter(r=>r.detailRead==='failed').length,anomalies:rows.filter(r=>Array.isArray(r.anomalies)&&(r.anomalies as string[]).length).length,timings,rows};
 mkdirSync('/tmp/swc-audit-output',{recursive:true});
 writeFileSync('/tmp/swc-audit-output/station-audit.json',JSON.stringify(report,null,2));
