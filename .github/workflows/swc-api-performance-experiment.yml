@@ -1,5 +1,5 @@
 name: SWC focused API performance experiment
-# Read-only diagnostic of production capability by station type
+# Read-only TJO Kashyyyk station-type and production-capability diagnostic
 
 on:
   push:
@@ -57,7 +57,7 @@ jobs:
           set -euo pipefail
           trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then GH_TOKEN="$SWC_SECRET_WRITER_TOKEN" gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
-          echo "Experiment system: $TARGET_SYSTEM; faction: TFF; no sheet writes"
+          echo "Experiment system: $TARGET_SYSTEM; faction: TJO; no sheet writes"
           echo 'Starting targeted shipyard-only comparison'
           mkdir -p tools/api-parity
           cp ../tools/api-parity/benchmark-targeted.ts tools/api-parity/benchmark-targeted.ts
