@@ -102,3 +102,12 @@ Read-only, bounded, documented calls; no production sheet writes; no cookies/ses
 - The pending partition experiment also prints type distributions for both working states and raw key presence across all 195 records; this distinguishes station-type confounding from production status.
 - Proposed further bounded tests: compare working=1/0 against web-export `Producing` and `Tooled To` by UID, test faction event read permission with a tiny item_count and sanitized category-only output, inspect API rate-limit endpoint (read-only), and audit whether queue/tooling can be inferred from any documented response. Do not print event text in public logs.
 - **Execution status:** The partition experiment code is committed but its workflow trigger was blocked; no second result is claimed.
+
+## Successful working-state partition and full raw schema (run 42069625639)
+- https://github.com/toddaggie95/swc-personal-analytics/actions/runs/42069625639 — successful.
+- TJO Kashyyyk unfiltered 195; working=1 **108**; working=0 **87**; overlap **0**, unclassified **0**. Previous run working=1 was 107: dynamic activity likely changed, but not verified.
+- Working by type: Shipyard I 94, Shipyard III 7, Shipyard IV 7. Idle: Shipyard I 56, Shipyard III 8, Shipyard IV 1, Depot Station I 22. All 22 depots are working=0 in this snapshot.
+- Full raw field coverage across 195: commander 190, entitytype 195, hull 195, images 195, infotext 195, ionic 195, location 195, name 195, opento 195, owner 195, pilot 191, protected 195, shield 195, tags 195, type 195, uid 195, underconstruction 195, wrecked 195. **Zero** action, queue, tooling, or production fields in any collection record.
+- Implication: working is an exhaustive, cheap activity bit for this snapshot, but does not identify product, quantity, tooling, or whether activity specifically means ship production. Compare by UID against same-time CSV.
+- Independent public SDK found: https://github.com/JonCubed/SWCombine-SDK-CSharp . Inspected `SWCombine SDK/SWC.cs`: generic OAuth/HTTP helper, no evidence of an additional bulk production endpoint. It uses old embedded-browser OAuth patterns; **do not adopt its cookie handling or legacy auth approach**.
+- Priority: build a bounded UID-by-UID parity audit against web CSV and current API inventory, and then test event read only with documented scopes. Keep production pipeline unchanged.
