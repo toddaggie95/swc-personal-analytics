@@ -23,6 +23,16 @@ const auditStarted=Date.now();
 const shipyardsOnly=process.env.TARGET_SHIPYARDS_ONLY==='1';
 const cfg=loadConfig();requireLive(cfg);
 const pace={waitMs:0,calls:0,headersPresent:0,headersMissing:0};
+const transport={requests:0,fetchMs:0,bodyMs:0,bodyBytes:0};
+const measuredFetch:typeof fetch=async(input,init)=>{
+ const t=performance.now();
+ const response=await fetch(input,init);
+ transport.requests++;
+ transport.fetchMs+=performance.now()-t;
+ const original=response.arrayBuffer.bind(response);
+ response.arrayBuffer=async()=>{const started=performance.now();const bytes=await original();transport.bodyMs+=performance.now()-started;transport.bodyBytes+=bytes.byteLength;return bytes;};
+ return response;
+};
 class MeasuredPacer extends ReadPacer {
  async beforeRequest(resource:string) {
   const started=performance.now();
@@ -36,7 +46,7 @@ class MeasuredPacer extends ReadPacer {
   return w;
  }
 }
-const client=new ReadClient(await loadAuth(cfg),new SnapshotRun(cfg.privateDir,'full_station_audit'),fetch,undefined,new MeasuredPacer());
+const client=new ReadClient(await loadAuth(cfg),new SnapshotRun(cfg.privateDir,'full_station_audit'),measuredFetch,undefined,new MeasuredPacer());
 const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'audit_'+system.toLowerCase()+'_'+faction),cfg.privateDir,faction as 'tjo'|'tff',false,{kind:'system',name:system});
 const inventoryMs=Date.now()-auditStarted;
 const all=(await readJson(inv.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
@@ -69,7 +79,7 @@ for(const station of batch){
 const counts=Object.fromEntries([...new Set(rows.map(r=>String(r.classification)))].map(k=>[k,rows.filter(r=>r.classification===k).length]));
 const sortedTimes=[...detailDurations].sort((a,b)=>a-b);
 const percentile=(p:number)=>sortedTimes.length?sortedTimes[Math.ceil(sortedTimes.length*p)-1]:null;
-const timings={inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted,pace};
+const timings={inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted,pace,transport};
 const report={system,faction,totalInventory:all.length,uniqueInventory:unique.length,eligibleInventory:candidates.length,shipyardsOnly,offset,limit,processed:rows.length,nextOffset:offset+rows.length<candidates.length?offset+rows.length:null,counts,errors:rows.filter(r=>r.detailRead==='failed').length,anomalies:rows.filter(r=>Array.isArray(r.anomalies)&&(r.anomalies as string[]).length).length,timings,rows};
 mkdirSync('/tmp/swc-audit-output',{recursive:true});
 writeFileSync('/tmp/swc-audit-output/station-audit.json',JSON.stringify(report,null,2));
