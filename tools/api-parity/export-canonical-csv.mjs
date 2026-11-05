@@ -15,6 +15,9 @@ export function buildCanonical({apiDir,referenceDir,outDir,systems}){
   const records=loadApi(apiDir,owner,kind,'all',systems);
   if(!records.length)throw Error('Empty API dataset '+name);
   const rows=records.map(raw=>({...(kind==='stations'?normalizeStation(raw):normalizeMaterial(raw)),owner_name:ownerNames[owner]}));
+  // A scoped inventory capture without operation details cannot safely drive Started flags.
+  if(kind==='stations'&&rows.some(r=>r.productionStatus===null||r['tooled-to']===null))
+   throw Error('Incomplete API station operations in '+name);
   const known=new Set(Object.keys(rows[0]));
   const unknown=columns.filter(c=>!known.has(c));
   if(unknown.length)throw Error('Unmapped canonical columns in '+name+': '+unknown.join(','));
