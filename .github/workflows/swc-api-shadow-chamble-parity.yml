@@ -150,7 +150,21 @@ jobs:
             tools/production-sync/systems.addresses.json > /tmp/swc-private/canonical-validation.log 2>&1; then
             echo "Canonical API export: PASS (four datasets, all registered systems)"
           else
-            echo "::warning::Canonical API export: BLOCKED; details remain in private runner logs. Publishing is not enabled."
+            python3 - <<'PY'
+          from pathlib import Path
+          log=Path('/tmp/swc-private/canonical-validation.log').read_text(errors='replace')
+          categories={
+            'incomplete_station_operations':'Incomplete API station operations',
+            'unmapped_columns':'Unmapped canonical columns',
+            'missing_field':'Missing API field',
+            'missing_scope':'scoped API capture',
+            'missing_uid':'Missing UID',
+            'invalid_template':'Invalid CSV template',
+          }
+          matches=[name for name,needle in categories.items() if needle in log]
+          print('Canonical conversion blocker categories:', ', '.join(matches) if matches else 'other (inspect private runner diagnostics)')
+          PY
+            echo "::warning::Canonical API export: BLOCKED. Publishing is not enabled."
           fi
       - name: Capture one immutable read-only workbook input
         if: success() && env.SWC_PARITY_SCOPE == 'all'
