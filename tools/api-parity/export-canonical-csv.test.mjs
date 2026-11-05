@@ -47,7 +47,7 @@ test('canonical adapter produces four source-marked datasets and stable identity
   stationDoc.stations[0].operations={tooledTo:{value:'Example'},productionActions:[]};
   fs.writeFileSync(stationCapture,JSON.stringify(stationDoc));
   const template=path.join(root,'reference','tff-materials.csv');
-  fs.writeFileSync(template,fs.readFileSync(template,'utf8').trimEnd()+',unmapped-field\\n');
+  fs.writeFileSync(template,fs.readFileSync(template,'utf8').trimEnd()+',unmapped-field\n');
   assert.throws(()=>buildCanonical(options),/Unmapped canonical columns/);
  }finally{fs.rmSync(root,{recursive:true,force:true})}
 });
