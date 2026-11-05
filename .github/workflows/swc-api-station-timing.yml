@@ -40,7 +40,7 @@ jobs:
           umask 077
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
-      - name: Read 25 station details and report timings
+      - name: Repeat parallel quota telemetry across fresh runners
         working-directory: api-collector
         env:
           SWC_PRIVATE_DIR: /tmp/swc-private
