@@ -40,16 +40,25 @@ const measuredFetch:typeof fetch=async(input,init)=>{
  return response;
 };
 class MeasuredPacer extends ReadPacer {
- constructor(){super(undefined,undefined,experiment?2000:6500,60000,experiment?2000:1000);}
+ private lastDetailStart=0;
+ private quotaRemaining:number|null=null;
+ private quotaResetMs:number|null=null;
 
  async beforeRequest(resource:string) {
   const started=performance.now();
-  try { await super.beforeRequest(resource); }
+  try { if(experiment&&resource==='station-detail'){
+   if(this.quotaRemaining===0)throw Error('Experiment stopped: quota exhausted');
+   if(this.quotaRemaining!==null&&this.quotaResetMs!==null&&this.quotaRemaining<10)throw Error('Experiment stopped: quota safety reserve');
+   const delay=Math.max(0,this.lastDetailStart+2000-Date.now());
+   if(delay)await new Promise(resolve=>setTimeout(resolve,delay));
+   this.lastDetailStart=Date.now();
+  }else await super.beforeRequest(resource); }
   finally { const ms=performance.now()-started;pace.waitMs+=ms;pace.calls++;const w=windows[resource];paceSamples.push({resource,waitMs:Math.round(ms),remaining:w?.remaining??null,limit:w?.limit??null,resetInMs:w?.resetAtMs===null||w===undefined?null:Math.round(w.resetAtMs-Date.now())}); }
  }
  afterResponse(resource:string,headers:Headers) {
   const w=super.afterResponse(resource,headers);
   windows[resource]=w;
+  if(resource==='station-detail'){this.quotaRemaining=w.remaining;this.quotaResetMs=w.resetAtMs;}
   budgetSamples.push({resource,remaining:w.remaining,limit:w.limit,resetInMs:w.resetAtMs===null?null:Math.round(w.resetAtMs-Date.now())});
   if(w.limit!==null&&w.remaining!==null&&w.resetAtMs!==null)pace.headersPresent++;
   else pace.headersMissing++;
