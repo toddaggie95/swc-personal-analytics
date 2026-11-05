@@ -93,3 +93,12 @@ Read-only, bounded, documented calls; no production sheet writes; no cookies/ses
   - Event output has uid, type, timestamp, and HTML text. Production-event coverage and ownership scope **not yet verified**. Event streams may be a change-detection aid, but not authoritative state without evidence.
 - Public resource catalog enumerates only Inventory collection and single Inventory entity GET; Inventory/Entities/Property POST is a batch **write**.
 - Next experiment code was committed at e20566ad44eca14445f92f2a813d755989770dbd: working=0 complement, working/idle by type, and full 195-record raw field coverage. Workflow trigger was blocked by tool safety and **was not launched**; do not imply results.
+
+## Additional documentation correction and experiments (2026-11-05)
+- Official collection docs explicitly state `working` applies to **all entity types except planets and materials**, not just stations. This is a broad activity filter; ship production is only a hypothesis. https://www.swcombine.com/ws/v2.0/documentation/inventory/uid/entity_type/assign_type/
+- Inventory collection docs explicitly require per-filter `filter_inclusion` and accept keyed arrays; `item_count` 1–200, start index from 1. These constraints must be maintained in experiments.
+- Events docs specify required `character_events` scope, rate limited, and faction event mode with optional `faction_id`; `start_time` and up to 1000 events/page. https://www.swcombine.com/ws/v2.0/documentation/events/event_mode/event_type/
+- Public resource catalog does **not** list a dedicated production bulk-read resource. This is not proof no internal or future route exists.
+- The pending partition experiment also prints type distributions for both working states and raw key presence across all 195 records; this distinguishes station-type confounding from production status.
+- Proposed further bounded tests: compare working=1/0 against web-export `Producing` and `Tooled To` by UID, test faction event read permission with a tiny item_count and sanitized category-only output, inspect API rate-limit endpoint (read-only), and audit whether queue/tooling can be inferred from any documented response. Do not print event text in public logs.
+- **Execution status:** The partition experiment code is committed but its workflow trigger was blocked; no second result is claimed.
