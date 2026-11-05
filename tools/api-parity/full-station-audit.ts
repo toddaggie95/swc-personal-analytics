@@ -18,17 +18,24 @@ const hasOwn=(v:Record<string,unknown>,k:string)=>Object.prototype.hasOwnPropert
 function idleAssignment(tooled:boolean){
  return tooled?'idle-assigned-tooled':'idle-unassigned';
 }
+const auditStarted=Date.now();
+const shipyardsOnly=process.env.TARGET_SHIPYARDS_ONLY==='1';
 const cfg=loadConfig();requireLive(cfg);
 const client=new ReadClient(await loadAuth(cfg),new SnapshotRun(cfg.privateDir,'full_station_audit'));
 const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'audit_'+system.toLowerCase()+'_'+faction),cfg.privateDir,faction as 'tjo'|'tff',false,{kind:'system',name:system});
+const inventoryMs=Date.now()-auditStarted;
 const all=(await readJson(inv.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
 const unique=[...new Map(all.map(s=>[String(s.uid),s])).values()].sort((a,b)=>String(a.uid).localeCompare(String(b.uid),undefined,{numeric:true}));
-const batch=unique.slice(offset,offset+limit);
+const candidates=shipyardsOnly?unique.filter(s=>/shipyard/i.test(String(s.typeName??''))):unique;
+const batch=candidates.slice(offset,offset+limit);
+const detailDurations:number[]=[];
 const rows:Array<Record<string,unknown>>=[];
 for(const station of batch){
  const uid=String(station.uid);
+ const detailStarted=Date.now();
  try{
   const detail=await client.stationDetail(uid);
+  detailDurations.push(Date.now()-detailStarted);
   const ops=stationOperations(detail);
   const actions=(ops.actions??[]).map(a=>String(attrs(a).type??obj(a).type??'unknown'));
   const statuses=(ops.queueItems??[]).map(q=>String(obj(q).status??'unknown'));
@@ -42,10 +49,13 @@ for(const station of batch){
   const classification=actionConflict||queueConflict?'conflict':unknownActions.length?'other-action':retooling?'retooling':productionAction?'producing':idleAssignment(ops.tooledTo!==null);
   const anomalies=[...(actionConflict?['simultaneous-retooling-and-producing-queue']:[]),...(queueConflict?['producing-queue-without-production-action']:[]),...(productionAction&&!queueProducing&&!retooling?['production-action-without-producing-queue']:[]),...(unknownActions.length?['unknown-action-type']:[])];
   rows.push({uid,system,faction,stationType:station.typeName,classification,actions,queueStatuses:statuses,toolingPresent:ops.tooledTo!==null,actionsFieldPresent:'actions' in detail,queueFieldPresent:'queueitems' in detail,anomalies,detailRead:'ok'});
- }catch(e){rows.push({uid,system,faction,stationType:station.typeName,classification:'unknown',detailRead:'failed',errorClass:e instanceof Error?e.name:'UnknownError'});}
+ }catch(e){detailDurations.push(Date.now()-detailStarted);rows.push({uid,system,faction,stationType:station.typeName,classification:'unknown',detailRead:'failed',errorClass:e instanceof Error?e.name:'UnknownError'});}
 }
 const counts=Object.fromEntries([...new Set(rows.map(r=>String(r.classification)))].map(k=>[k,rows.filter(r=>r.classification===k).length]));
-const report={system,faction,totalInventory:all.length,uniqueInventory:unique.length,offset,limit,processed:rows.length,nextOffset:offset+rows.length<unique.length?offset+rows.length:null,counts,errors:rows.filter(r=>r.detailRead==='failed').length,anomalies:rows.filter(r=>Array.isArray(r.anomalies)&&(r.anomalies as string[]).length).length,rows};
+const sortedTimes=[...detailDurations].sort((a,b)=>a-b);
+const percentile=(p:number)=>sortedTimes.length?sortedTimes[Math.ceil(sortedTimes.length*p)-1]:null;
+const timings={inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted};
+const report={system,faction,totalInventory:all.length,uniqueInventory:unique.length,eligibleInventory:candidates.length,shipyardsOnly,offset,limit,processed:rows.length,nextOffset:offset+rows.length<candidates.length?offset+rows.length:null,counts,errors:rows.filter(r=>r.detailRead==='failed').length,anomalies:rows.filter(r=>Array.isArray(r.anomalies)&&(r.anomalies as string[]).length).length,timings,rows};
 mkdirSync('/tmp/swc-audit-output',{recursive:true});
 writeFileSync('/tmp/swc-audit-output/station-audit.json',JSON.stringify(report,null,2));
 console.log('AUDIT_SUMMARY '+JSON.stringify({...report,rows:undefined}));
