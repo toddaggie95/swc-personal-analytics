@@ -1,0 +1,80 @@
+name: SWC focused API performance experiment
+
+on:
+  push:
+    branches: [feature/kashyyyk-parity-readonly]
+    paths: ['.github/workflows/swc-api-performance-experiment.yml']
+  workflow_dispatch:
+    inputs:
+      system:
+        description: 'One system for a small, isolated API experiment'
+        type: choice
+        options: [Chamble, Lannik, Kashyyyk]
+        default: Chamble
+
+permissions:
+  contents: read
+  id-token: none
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: api-collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Initialize private API credentials
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+      - name: Compare inventory and enriched collection on one system
+        working-directory: api-collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          GH_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TARGET_SYSTEM: ${{ inputs.system || 'Chamble' }}
+        run: |
+          set -euo pipefail
+          trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then GH_TOKEN="$SWC_SECRET_WRITER_TOKEN" gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          echo "Experiment system: $TARGET_SYSTEM; faction: TFF; no sheet writes"
+          start=$SECONDS
+          if npx tsx src/cli/index.ts sync:faction-station-inventory:tff --system "$TARGET_SYSTEM" >/tmp/swc-perf-inventory.log 2>&1; then
+            echo "INVENTORY_SECONDS=$((SECONDS-start))"
+          else
+            echo "::error::Inventory collection failed"
+            tail -n 8 /tmp/swc-perf-inventory.log | sed -E 's/[0-9]+:[0-9]+/[UID]/g'
+            exit 1
+          fi
+          start=$SECONDS
+          if npx tsx src/cli/index.ts sync:faction-stations:tff --system "$TARGET_SYSTEM" >/tmp/swc-perf-enriched.log 2>&1; then
+            echo "ENRICHED_SECONDS=$((SECONDS-start))"
+          else
+            echo "::error::Enriched collection failed after $((SECONDS-start)) seconds"
+            grep -E 'Enriching [0-9]+ stations|Station details: [0-9]+/[0-9]+' /tmp/swc-perf-enriched.log | tail -n 3 || true
+            tail -n 6 /tmp/swc-perf-enriched.log | sed -E 's/[0-9]+:[0-9]+/[UID]/g'
+            exit 1
+          fi
+          grep -E 'Enriching [0-9]+ stations|Station details: [0-9]+/[0-9]+' /tmp/swc-perf-enriched.log | head -n 1 || true
+          grep -E 'Station details: [0-9]+/[0-9]+' /tmp/swc-perf-enriched.log | tail -n 1 || true
+      - name: Remove private snapshots and credentials
+        if: always()
+        run: rm -rf /tmp/swc-private /tmp/swc-perf-inventory.log /tmp/swc-perf-enriched.log
