@@ -15,16 +15,18 @@ const inventory=await syncFactionStations(client,run,config.privateDir,'tjo',fal
 const list=(await readJson(inventory.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
 const types=Object.entries(list.reduce((acc,s)=>{const key=String(s.typeName??s.type_name??'(missing)');acc[key]=(acc[key]??0)+1;return acc;},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]);
 console.log(JSON.stringify({phase:'type-diagnostic',system,types,missingType:list.filter(s=>!s.typeName).length}));
-// Diagnose production capability with a bounded sample, not a full enrichment.
-const sampleTypes=types.slice(0,5).map(([name])=>name);
-for(const type of sampleTypes){
- const station=list.find(s=>s.typeName===type);
- if(!station)continue;
- const started=Date.now();
+// Bounded, deterministic cross-section: first five of each shipyard class, max 15.
+const selected=types.filter(([name])=>/shipyard/i.test(name)).flatMap(([name])=>list.filter(s=>s.typeName===name).slice(0,5)).slice(0,15);
+let actionsPresent=0,actionsAbsent=0,running=0,tooling=0,queue=0;
+const detailStart=Date.now();
+for(const station of selected){
  const detail=await client.stationDetail(String(station.uid));
  const op=stationOperations(detail);
- console.log(JSON.stringify({phase:'capability-sample',type,seconds:Math.round((Date.now()-started)/1000),
-  actionsKnown:Array.isArray(op.productionActions),productionActionCount:op.productionActions?.length??null,
-  toolingKnown:op.tooledTo!==null,queueKnown:op.queueItems!==null,
-  topLevelFields:Object.keys(detail).filter(k=>!/(token|secret|auth)/i.test(k)).sort()}));
+ if(Array.isArray(op.productionActions)){actionsPresent++;running+=op.productionActions.filter(a=>a?.value?.status==='running').length;}
+ else actionsAbsent++;
+ if(op.tooledTo!==null)tooling++;
+ if(op.queueItems!==null)queue++;
 }
+console.log(JSON.stringify({phase:'bounded-shipyard-sample',system,totalInventory:list.length,shipyards:list.filter(s=>/shipyard/i.test(String(s.typeName))).length,
+ sampled:selected.length,actionsPresent,actionsAbsent,running,tooling,queue,detailSeconds:Math.round((Date.now()-detailStart)/1000),
+ estimatedAllShipyardSeconds:Math.round((Date.now()-detailStart)/1000)*list.filter(s=>/shipyard/i.test(String(s.typeName))).length/Math.max(1,selected.length)}));
