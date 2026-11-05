@@ -76,3 +76,10 @@ Establish correct classification from SWC API inventory, station detail, and exi
 - Corrected mixed-action precedence in the research classifier: a retooling station with both `EntityProductionAction` and `RetoolingAction`, but without a producing queue entry, is **retooling**, not a conflict. Daluuj TJO `5:37746` is the previously verified control. Both a retooling action and a producing queue item together remain a conflict. Bare production action without a producing queue is anomalous only when not retooling.
 - Pause broad system audits; finish Kashyyyk classification first, including canonical Ships catalog matching for nonblank InfoText, and targeted controls for mixed actions. Do not infer intended ship from arbitrary InfoText, change live production, or interpret queue presence as assignment.
 - Following correctness validation, profile read-client pacing, per-detail latency, filtered inventory calls, repeated inventory fetching per bounded audit, and checkpoint reuse across GitHub runs. Compare safe optimized implementation against same UIDs and classification before broad rollout.
+
+## Simplified idle assignment policy — user-confirmed 2026-11-05
+- Kashyyyk TJO depot `5:52839` is web-confirmed idle with no known assignment; its InfoText `384 TI` is not a reliable ship identifier.
+- **Final simplified rule:** idle station with tooling present => `idle-assigned-tooled`; idle station with no tooling => `idle-unassigned`. InfoText is informational only, and does not create a proposed assignment or an unresolved classification.
+- Retain `unknown` for failed reads and `conflict` for inconsistent operational signals. Do not build a free-text ship parser or require Ships tab lookup for idle classification.
+- Earlier research notes and prior audit artifacts describe superseded exploratory InfoText logic; do not reinterpret historical reports as using this policy.
+- The current audit script reflects this policy. Live re-audit and automated regression coverage remain to be performed; production publishers remain unchanged.
