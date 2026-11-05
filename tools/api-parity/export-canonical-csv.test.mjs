@@ -23,12 +23,22 @@ test('canonical adapter produces four source-marked datasets and stable identity
   const first=buildCanonical(options);
   assert.equal(first.source,'api');assert.equal(first.files.length,4);
   assert.equal(buildCanonical(options).snapshotId,first.snapshotId);
+  assert.ok(first.files.every(f=>f.id==='api:'+f.canonicalName.replace('.csv','')+':'+f.sha256));
+  const initialIds=first.files.map(f=>f.id);
   for(const name of names){
    const rows=csv(fs.readFileSync(path.join(root,'out',name+'.csv'),'utf8'));
    assert.equal(rows.length,1);
    assert.equal(rows[0].owner_name,owner[name.split('-')[0]]);
   }
   assert.throws(()=>buildCanonical({...options,systems:['Test System','Missing']}),/Missing/);
+  const materialCapture=path.join(root,'api','tff__materials__system-test.json');
+  const materialDoc=JSON.parse(fs.readFileSync(materialCapture,'utf8'));
+  materialDoc.materials[0].quantity=101;
+  fs.writeFileSync(materialCapture,JSON.stringify(materialDoc));
+  const revised=buildCanonical(options);
+  assert.notEqual(revised.snapshotId,first.snapshotId);
+  assert.notEqual(revised.files[1].id,initialIds[1]);
+  assert.equal(revised.files[0].id,initialIds[0]);
   const stationCapture=path.join(root,'api','tff__stations__system-test.json');
   const stationDoc=JSON.parse(fs.readFileSync(stationCapture,'utf8'));
   delete stationDoc.stations[0].operations;
