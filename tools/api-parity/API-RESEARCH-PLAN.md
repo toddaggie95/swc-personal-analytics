@@ -47,3 +47,9 @@ Using a **single existing authorized station detail GET**, capture only the stru
 - Parser extracted three running actions. Tooling present 9/9; queue present 8/9.
 - This sample does **not** establish that omitted actions means idle. Compare by UID with same-time web exports before any status interpretation changes.
 - Next: inspect SWC official read resource documentation and collector's station inventory response fields; avoid unnecessary per-station detail requests until a better read route is verified.
+
+## Raw inventory collection inspection (run 42063259495)
+- Read-only run succeeded; one filtered Kashyyyk TJO inventory page contained all 195 stations.
+- Raw entity keys: commander, entitytype, hull, images, infotext, ionic, location, name, opento, owner, protected, shield, tags, type, uid, underconstruction, wrecked.
+- No raw action, production, tooling, queue, or change-indicator keys observed on the inspected record. Thus normalization is not the cause of the missing production data on that record. Inspect field presence across every record before claiming none exist anywhere.
+- Next research hypothesis: the web export may be server-side enriched or use an internal endpoint not exposed by the documented API. Find a documented collection-level read of production actions before committing to per-station polling.
