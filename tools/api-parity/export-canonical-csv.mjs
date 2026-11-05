@@ -15,7 +15,7 @@ export function buildCanonical({apiDir,referenceDir,outDir,systems}){
   const records=loadApi(apiDir,owner,kind,'all',systems);
   if(!records.length)throw Error('Empty API dataset '+name);
   const rows=records.map(raw=>({...(kind==='stations'?normalizeStation(raw):normalizeMaterial(raw)),owner_name:ownerNames[owner]}));
-  const known=new Set([...Object.keys(rows[0]),'container_name']);
+  const known=new Set(Object.keys(rows[0]));
   const unknown=columns.filter(c=>!known.has(c));
   if(unknown.length)throw Error('Unmapped canonical columns in '+name+': '+unknown.join(','));
   if(rows.some(r=>!r.uid))throw Error('Missing UID '+name);
