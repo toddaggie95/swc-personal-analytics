@@ -7,7 +7,7 @@ for system in "${systems[@]}"; do
   echo "Collecting API inventory: $system"
   for faction in tff tjo; do
     npx tsx src/cli/index.ts "sync:faction-materials:$faction" --system "$system" > "/tmp/swc-${faction}-materials.log" 2>&1 || { echo "::error::API material collection failed for $system/$faction"; exit 1; }
-    npx tsx src/cli/index.ts "sync:faction-station-inventory:$faction" --system "$system" > "/tmp/swc-${faction}-stations.log" 2>&1 || { echo "::error::API station collection failed for $system/$faction"; exit 1; }
+    npx tsx src/cli/index.ts "sync:faction-stations:$faction" --system "$system" > "/tmp/swc-${faction}-stations.log" 2>&1 || { echo "::error::API station collection failed for $system/$faction"; exit 1; }
   done
   sleep 3
 done
