@@ -37,3 +37,11 @@ Establish correct classification from SWC API inventory, station detail, and exi
 - No producing or retooling samples in this batch. These 17 records are missing API fields, NOT confirmed CSV/API mismatches or failed reads.
 - The 25-detail workflow completed within approximately 50 seconds elapsed from start, with artifact upload successful; do not extrapolate unbounded performance without more samples.
 - Next: TJO Kashyyyk offset 25, limit 50, then subsequent offsets until all 195 unique TJO stations captured. Repeat for TFF; then Tholatin and Daluuj. Treat snapshots as non-transactional. Checkpoint persistence across separate GitHub runs is not yet implemented.
+
+## Second live Kashyyyk batch — 2026-11-05
+- Run: https://github.com/toddaggie95/swc-personal-analytics/actions/runs/42089880214 (success). Artifact `station-audit-Kashyyyk-tjo-25-42089880214` (ID `13444847182`).
+- Target Kashyyyk TJO, offset 25, limit 50: 50/50 details read, zero errors, nextOffset 75; 195 unique TJO stations.
+- Classifications: 22 producing (16 Shipyard I, 6 Shipyard IV); 21 queued-idle (17 Shipyard I, 4 Shipyard III); 7 unknown-no-operation-data (3 Shipyard I, 4 Shipyard III). All 7 unknown shipyards have tooling but neither actions nor queueitems.
+- Producing examples: `5:53035` EntityProductionAction with queue statuses `producing,queued,queued`; `5:53036` same action with `producing,queued,queued,queued`. Mixed queue statuses within a producing station are expected, not contradictory.
+- Cumulative TJO Kashyyyk first 75: 22 producing, 29 queued-idle, 24 unknown-no-operation-data; zero detail-read errors. No retooling cases yet in these 75.
+- Next offset 75, limit 50; after that offset 125, limit 50, then offset 175, limit 20, assuming inventory UID order remains stable. Note offset batching can skip or duplicate UIDs if inventory changes between runs; compare saved UIDs at aggregation.
