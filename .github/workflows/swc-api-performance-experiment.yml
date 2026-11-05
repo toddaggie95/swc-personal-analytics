@@ -1,4 +1,5 @@
 name: SWC focused API performance experiment
+# Read-only diagnostic of normalized station type coverage
 
 on:
   push:
