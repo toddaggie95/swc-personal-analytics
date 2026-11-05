@@ -57,6 +57,9 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           mkdir -p tools/api-parity
           cp ../tools/api-parity/full-station-audit.ts tools/api-parity/full-station-audit.ts
+          echo 'Initializing OAuth credentials in one process before parallel reads'
+          TARGET_OFFSET=175 TARGET_LIMIT=1 npx tsx tools/api-parity/full-station-audit.ts > /tmp/auth-prime.log 2>&1 || { cat /tmp/auth-prime.log; exit 1; }
+          gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json
           pids=()
           for offset in 0 25 50 75; do
             mkdir -p "/tmp/swc-private/worker-$offset"
