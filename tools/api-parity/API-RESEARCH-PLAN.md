@@ -139,3 +139,12 @@ Read-only, bounded, documented calls; no production sheet writes; no cookies/ses
 - `5:19047`, producing: same production-action fields as `5:19046`; first queue item `status: producing`, second `status: queued`, `tooledto` present.
 - Promising status classifier: `RetoolingAction` indicates retooling; any `queueitems[].status === 'producing'` indicates active production. Unlike mere `EntityProductionAction` presence, these distinguish observed examples. Verify precedence, exact action status values, queue-only idle stations, and post-retool material shortages before production integration.
 - Experiment diagnostic `tools/api-parity/benchmark-targeted.ts` logs sanitized shapes/whitelisted values only; no sheet writes.
+
+## Kashyyyk queued-but-idle control (run 42086929708, 2026-11-05)
+- Run: https://github.com/toddaggie95/swc-personal-analytics/actions/runs/42086929708 — success.
+- TFF station `5:56984`, `Shipyard IV`, `TFF Kashyyyk Pron-alban Ring Eta`, system Kashyyyk, ownerUid `20:1838`.
+- Canonical inventory station representation contains `coordinates,entityType,location,name,observedAt,ownerUid,sourceRun,tags,typeName,typeUid,uid`; **no action/queue/tooling/status or working flag** in this normalized inventory export. Do not confuse this normalized station model with the raw SWC inventory API response or working filter.
+- Station detail keys include `queueitems` and `tooledto`, **no `actions` field**. Enrichment `stationOperations` returns `actions=[]`, `productionActions` absent/null, one `queueItems[]` entry with `status='queued'` and non-null `tooledTo`.
+- Verified state: queued-but-idle; demonstrates queue alone does not start production/retooling. A `tooledto` field may be present on idle stations, so cannot use it as production indicator.
+- Cross-state verified samples: idle+queued `5:56984`, retooling `5:37746`, producing `5:19046` and `5:19047`. Proposed classifier: any queue item `producing` => producing (check retooling precedence); else RetoolingAction present => retooling; else if queued items => queued/idle; else idle. Validate other edge cases before changing HAS/Production Overview.
+- No production sheet writes and no research PR merge.
