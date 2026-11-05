@@ -4,13 +4,14 @@ import crypto from 'node:crypto';
 import {loadApi,normalizeMaterial,normalizeStation} from './compare-production-has.mjs';
 const ownerNames={tff:'The Faerytail Family',tjo:'The Faerytail Family: The Je`daii Order'};
 const names=['tff-stations','tff-materials','tjo-stations','tjo-materials'];
+const canonicalColumns={stations:['uid','name','owner_name','type_name','system','sysX','sysY','tooled-to','productionStatus','productionQuantity'],materials:['uid','name','owner_name','type_name','system','sysX','sysY','quantity','container_type_name','container_uid']};
 const quote=v=>{const s=String(v??'');return /[",\r\n]/.test(s)?'"'+s.replaceAll('"','""')+'"':s};
 export function buildCanonical({apiDir,referenceDir,outDir,systems}){
  if(!Array.isArray(systems)||!systems.length||new Set(systems).size!==systems.length)throw Error('Invalid system registry');
  fs.mkdirSync(outDir,{recursive:true});const files=[];
  for(const name of names){
   const [owner,kind]=name.split('-');
-  const columns=fs.readFileSync(path.join(referenceDir,name+'.csv'),'utf8').replace(/^\uFEFF/,'').split(/\r?\n/,1)[0].split(',');
+  const columns=referenceDir?fs.readFileSync(path.join(referenceDir,name+'.csv'),'utf8').replace(/^\uFEFF/,'').split(/\r?\n/,1)[0].split(','):canonicalColumns[kind];
   if(!columns.includes('uid')||!columns.includes('owner_name')||(kind==='stations'&&!columns.includes('tooled-to'))||(kind==='materials'&&!columns.includes('quantity')))throw Error('Invalid CSV template '+name);
   const records=loadApi(apiDir,owner,kind,'all',systems);
   if(!records.length)throw Error('Empty API dataset '+name);
@@ -43,8 +44,8 @@ export function buildCanonical({apiDir,referenceDir,outDir,systems}){
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(new URL(import.meta.url).pathname)){
  try{
-  if(process.argv.length!==6)throw Error('Usage: node export-canonical-csv.mjs API_DIR CSV_REFERENCE_DIR OUTPUT_DIR SYSTEMS_JSON');
+  if(process.argv.length!==6)throw Error('Usage: node export-canonical-csv.mjs API_DIR CSV_REFERENCE_DIR_OR_DASH OUTPUT_DIR SYSTEMS_JSON');
   const registry=JSON.parse(fs.readFileSync(process.argv[5],'utf8'));
-  buildCanonical({apiDir:process.argv[2],referenceDir:process.argv[3],outDir:process.argv[4],systems:registry.systems.map(s=>s.system)});
+  buildCanonical({apiDir:process.argv[2],referenceDir:process.argv[3]==='-'?null:process.argv[3],outDir:process.argv[4],systems:registry.systems.map(s=>s.system)});
  }catch(e){console.error(e.stack);process.exitCode=1}
 }
