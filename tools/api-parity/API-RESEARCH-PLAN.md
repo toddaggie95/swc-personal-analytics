@@ -131,3 +131,11 @@ Read-only, bounded, documented calls; no production sheet writes; no cookies/ses
 - **Critical:** `EntityProductionAction` alone is NOT proof that actual production is ongoing, since a confirmed retooling station included it. Need inspect action status semantics and individual action fields, without printing sensitive contents, before classifying live production.
 - Working=1 includes both retooling and production, consistent with user's web UI observation.
 - No sheet writes, no merge of research PR. Future diagnostics must preserve this separation.
+
+## Daluuj action and queue shape audit (run 42082296310, 2026-11-05)
+- Run: https://github.com/toddaggie95/swc-personal-analytics/actions/runs/42082296310 — successful.
+- `5:37746`, known retooling: `EntityProductionAction.value` keys `actiontype,producing,quantity,workers` (no delay/status); `RetoolingAction.value` keys `actiontype,delay,status,type`; all three queue items have `status: queued`, `tooledto` absent.
+- `5:19046`, producing: `EntityProductionAction.value` keys `actiontype,delay,producing,quantity,status,workers`, one queue item `status: producing`, `tooledto` present.
+- `5:19047`, producing: same production-action fields as `5:19046`; first queue item `status: producing`, second `status: queued`, `tooledto` present.
+- Promising status classifier: `RetoolingAction` indicates retooling; any `queueitems[].status === 'producing'` indicates active production. Unlike mere `EntityProductionAction` presence, these distinguish observed examples. Verify precedence, exact action status values, queue-only idle stations, and post-retool material shortages before production integration.
+- Experiment diagnostic `tools/api-parity/benchmark-targeted.ts` logs sanitized shapes/whitelisted values only; no sheet writes.
