@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Collect the complete production registry without CSV comparison.
-mapfile -t systems < <(python3 -c 'import json; d=json.load(open("../production/tools/production-sync/systems.addresses.json")); print("\n".join(x["system"] for x in d["systems"]))')
+mapfile -t systems < <(python3 -c 'import json; d=json.load(open("../tools/production-sync/systems.addresses.json")); print("\n".join(x["system"] for x in d["systems"]))')
 test "${#systems[@]}" -eq 20
 for system in "${systems[@]}"; do
   echo "Collecting API inventory: $system"
