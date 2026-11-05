@@ -51,3 +51,9 @@ Establish correct classification from SWC API inventory, station detail, and exi
 - API audit had `actions` absent, `queueitems` absent, and `tooledto` present. This is a confirmed example that missing action/queue fields can represent **idle** rather than an API read failure, and that tooling does not mean active production.
 - Working rule: operational status should derive from explicit active action; queue describes queued/producing items and should be retained independently. Before globally treating absent action fields as idle, verify a second case (prefer a depot and/or shipyard of a different class), and continue flagging inconsistent action/queue combinations.
 - Current reports retain `unknown-no-operation-data` for historical batches pending cross-check; do not silently rewrite prior observed evidence.
+
+## Second SWC web control and classifier update — 2026-11-05
+- User independently verified Kashyyyk TJO Depot Station I `5:52582`: idle, no production, empty queue, no tooling, blank info field. This corroborates `5:52955` (idle Shipyard III, tooled to TIE/in Interceptor, empty queue).
+- Research collector updated in commit `a71a2d2`: when no active action is reported, classify `idle-queued`, `idle-tooled`, or `idle-untooled`; an explicit EntityProductionAction is producing; RetoolingAction is retooling. A queue item marked producing without a corresponding production action is a conflict requiring investigation. Mixed production/retooling actions are also a conflict. Unknown action types remain under review.
+- Preserve action presence and queue presence separately for auditing; queue status and tooling do not independently establish production. This is a hypothesis supported by two SWC UI controls; test against more station types and action combinations before using in authoritative production writes.
+- Prior run artifacts are historical and retain their original classifications; no production sheet writes.
