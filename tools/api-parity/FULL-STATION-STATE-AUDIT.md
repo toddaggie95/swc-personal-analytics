@@ -28,3 +28,12 @@ Establish correct classification from SWC API inventory, station detail, and exi
 - All detail read failures accounted for; totals reconcile against inventory; known controls match.
 - No unresolved model contradictions hidden in aggregates.
 - Regression fixtures and audit report retained; performance design based on measured call counts, latency, and correctness.
+
+## First live Kashyyyk batch — 2026-11-05
+- Run: https://github.com/toddaggie95/swc-personal-analytics/actions/runs/42089414411 (success). Artifact: `station-audit-Kashyyyk-tjo-0-42089414411`, GitHub artifact ID `13444457512`.
+- Target: Kashyyyk, TJO, UID-sorted offset 0, limit 25. Inventory: 195 unique TJO stations; processed 25/25; zero detail-read errors; next offset 25.
+- Classification: 8 `queued-idle` (all Shipyard I, queue status `queued`, no actions); 17 `unknown-no-operation-data` (13 Depot Station I and 4 Shipyard I).
+- All four unknown Shipyard I records had non-null tooling; all 13 unknown Depot Station I records had no tooling. Missing `actions` and `queueitems` are not assumed to imply idle: investigate with independent working-state evidence and other action cases.
+- No producing or retooling samples in this batch. These 17 records are missing API fields, NOT confirmed CSV/API mismatches or failed reads.
+- The 25-detail workflow completed within approximately 50 seconds elapsed from start, with artifact upload successful; do not extrapolate unbounded performance without more samples.
+- Next: TJO Kashyyyk offset 25, limit 50, then subsequent offsets until all 195 unique TJO stations captured. Repeat for TFF; then Tholatin and Daluuj. Treat snapshots as non-transactional. Checkpoint persistence across separate GitHub runs is not yet implemented.
