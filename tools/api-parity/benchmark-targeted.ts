@@ -22,6 +22,15 @@ for(const faction of ['tjo'] as const){
   const detail=await client.stationDetail(uid);
   const ops=stationOperations(detail);
   const actions=Array.isArray(ops.actions)?ops.actions:[];
+  const describe=(value:unknown):Record<string,unknown>=>{
+    const r=obj(value);
+    const attrs=obj(r.attributes);
+    const safeKeys=['type','status','state','active','paused','progress','percent','percentage','remaining','duration','timeleft','time_left','starttime','endtime'];
+    const safe=(source:Record<string,unknown>)=>Object.fromEntries(Object.entries(source).filter(([k,v])=>safeKeys.includes(k.toLowerCase())&&(typeof v==='string'||typeof v==='number'||typeof v==='boolean')).map(([k,v])=>[k,typeof v==='string'?v.slice(0,80):v]));
+    return {keys:Object.keys(r).sort(),attributeKeys:Object.keys(attrs).sort(),safeValues:safe(r),safeAttributes:safe(attrs),
+      nestedShapes:Object.fromEntries(Object.entries(r).filter(([k,v])=>k!=='attributes'&&v!==null&&typeof v==='object').map(([k,v])=>[k,Array.isArray(v)?{kind:'array',count:v.length}:{kind:'object',keys:Object.keys(obj(v)).sort()}]))};
+  };
+  console.log(JSON.stringify({phase:'targeted-action-shapes',uid,actions:actions.map(describe),queueItemShapes:(ops.queueItems??[]).slice(0,4).map(describe)}));
   console.log(JSON.stringify({phase:'targeted-detail',uid,stationType:station.typeName,
     actionTypes:actions.map(a=>String(obj(obj(a).attributes).type??'unknown')),
     actionCount:ops.actions?.length??null,productionActionCount:ops.productionActions?.length??null,
