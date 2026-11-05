@@ -14,8 +14,8 @@ if(!['tjo','tff'].includes(faction)||!['Kashyyyk','Tholatin','Daluuj'].includes(
 const obj=(v:unknown):Record<string,unknown>=>v&&typeof v==='object'&&!Array.isArray(v)?v as Record<string,unknown>:{};
 const attrs=(v:unknown)=>obj(obj(v).attributes);
 const cfg=loadConfig();requireLive(cfg);
-const client=new ReadClient(await loadAuth(cfg),new SnapshotRun(cfg.privateDir,'full-station-audit'));
-const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'audit-'+system+'-'+faction),cfg.privateDir,faction as 'tjo'|'tff',false,{kind:'system',name:system});
+const client=new ReadClient(await loadAuth(cfg),new SnapshotRun(cfg.privateDir,'full_station_audit'));
+const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'audit_'+system.toLowerCase()+'_'+faction),cfg.privateDir,faction as 'tjo'|'tff',false,{kind:'system',name:system});
 const all=(await readJson(inv.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
 const unique=[...new Map(all.map(s=>[String(s.uid),s])).values()].sort((a,b)=>String(a.uid).localeCompare(String(b.uid),undefined,{numeric:true}));
 const batch=unique.slice(offset,offset+limit);
@@ -25,7 +25,7 @@ for(const station of batch){
  try{
   const detail=await client.stationDetail(uid);
   const ops=stationOperations(detail);
-  const actions=(ops.actions??[]).map(a=>String(attrs(a).type??'unknown'));
+  const actions=(ops.actions??[]).map(a=>String(attrs(a).type??obj(a).type??'unknown'));
   const statuses=(ops.queueItems??[]).map(q=>String(obj(q).status??'unknown'));
   const producing=statuses.includes('producing');
   const retooling=actions.includes('RetoolingAction');
