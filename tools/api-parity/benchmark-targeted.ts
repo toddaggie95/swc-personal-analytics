@@ -13,6 +13,7 @@ const client=new ReadClient(auth,run);
 const start=Date.now();
 const inventory=await syncFactionStations(client,run,config.privateDir,'tjo',false,{kind:'system',name:system});
 const list=(await readJson(inventory.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
+console.log(JSON.stringify({phase:'inventory-schema',keys:Object.keys(list[0]??{})}));
 const types=Object.entries(list.reduce((acc,s)=>{const key=String(s.typeName??s.type_name??'(missing)');acc[key]=(acc[key]??0)+1;return acc;},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]);
 console.log(JSON.stringify({phase:'type-diagnostic',system,types,missingType:list.filter(s=>!s.typeName).length}));
 // Bounded, deterministic cross-section: first five of each shipyard class, max 15.
