@@ -11,10 +11,10 @@ export function buildCanonical({apiDir,referenceDir,outDir,systems}){
  for(const name of names){
   const [owner,kind]=name.split('-');
   const columns=fs.readFileSync(path.join(referenceDir,name+'.csv'),'utf8').replace(/^\uFEFF/,'').split(/\r?\n/,1)[0].split(',');
-  if(!columns.includes('uid')||!columns.includes('owner_name'))throw Error('Invalid CSV template '+name);
+  if(!columns.includes('uid')||!columns.includes('owner_name')||(kind==='stations'&&!columns.includes('tooled-to'))||(kind==='materials'&&!columns.includes('quantity')))throw Error('Invalid CSV template '+name);
   const records=loadApi(apiDir,owner,kind,'all',systems);
   if(!records.length)throw Error('Empty API dataset '+name);
-  const rows=records.map(raw=>({...kind==='stations'?normalizeStation(raw):normalizeMaterial(raw),owner_name:ownerNames[owner]}));
+  const rows=records.map(raw=>({...(kind==='stations'?normalizeStation(raw):normalizeMaterial(raw)),owner_name:ownerNames[owner]}));
   if(rows.some(r=>!r.uid))throw Error('Missing UID '+name);
   const data=[columns.join(','),...rows.map(r=>columns.map(c=>quote(r[c])).join(','))].join('\n')+'\n';
   fs.writeFileSync(path.join(outDir,name+'.csv'),data,{mode:0o600});
