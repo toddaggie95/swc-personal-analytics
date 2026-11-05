@@ -14,10 +14,17 @@ const start=Date.now();
 const inventory=await syncFactionStations(client,run,config.privateDir,'tjo',false,{kind:'system',name:system});
 const list=(await readJson(inventory.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
 console.log(JSON.stringify({phase:'inventory-schema',keys:Object.keys(list[0]??{})}));
+const rawPage=await client.factionStations(inventory.ownerUid,1,inventory.locationFilter);
+const rawRows=(rawPage.entities as {entity?:unknown[]}|undefined)?.entity??[];
+const rawFirst=(rawRows[0]??{}) as Record<string,unknown>;
+const rawValue=(rawFirst.value&&typeof rawFirst.value==='object'?rawFirst.value:rawFirst) as Record<string,unknown>;
+const fieldNames=Object.keys(rawValue).sort();
+const interesting=fieldNames.filter(k=>/action|queue|tool|produc|modif|updat|chang|status/i.test(k));
+console.log(JSON.stringify({phase:'raw-inventory-schema',pageRows:rawRows.length,fieldNames,interesting}));
 const types=Object.entries(list.reduce((acc,s)=>{const key=String(s.typeName??s.type_name??'(missing)');acc[key]=(acc[key]??0)+1;return acc;},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]);
 console.log(JSON.stringify({phase:'type-diagnostic',system,types,missingType:list.filter(s=>!s.typeName).length}));
 // Bounded, deterministic cross-section: first five of each shipyard class, max 15.
-const selected=types.filter(([name])=>/shipyard/i.test(name)).flatMap(([name])=>list.filter(s=>s.typeName===name).slice(0,3)).slice(0,9);
+const selected=types.filter(([name])=>/shipyard/i.test(name)).flatMap(([name])=>list.filter(s=>s.typeName===name).slice(0,0)).slice(0,0);
 let actionsPresent=0,actionsAbsent=0,running=0,tooling=0,queue=0;const shapes:Record<string,number>={};
 const detailStart=Date.now();
 for(const station of selected){
