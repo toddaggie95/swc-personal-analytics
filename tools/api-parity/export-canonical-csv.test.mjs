@@ -29,5 +29,8 @@ test('canonical adapter produces four source-marked datasets and stable identity
    assert.equal(rows[0].owner_name,owner[name.split('-')[0]]);
   }
   assert.throws(()=>buildCanonical({...options,systems:['Test System','Missing']}),/Missing/);
+  const template=path.join(root,'reference','tff-materials.csv');
+  fs.writeFileSync(template,fs.readFileSync(template,'utf8').trimEnd()+',unmapped-field\\n');
+  assert.throws(()=>buildCanonical(options),/Unmapped canonical columns/);
  }finally{fs.rmSync(root,{recursive:true,force:true})}
 });
