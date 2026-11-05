@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        offset: [0, 25, 50, 75]
+        offset: [75, 100, 125, 150]
     environment: swc-api-shadow
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
           umask 077
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
-      - name: Repeat parallel quota telemetry across fresh runners
+      - name: Repeat quota telemetry within the 22:02 UTC reset window
         working-directory: api-collector
         env:
           SWC_PRIVATE_DIR: /tmp/swc-private
