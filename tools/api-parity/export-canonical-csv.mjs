@@ -18,10 +18,12 @@ export function buildCanonical({apiDir,referenceDir,outDir,systems}){
   // A scoped inventory capture without operation details cannot safely drive Started flags.
   if(kind==='stations'&&rows.some(r=>r.productionStatus===null))
    throw Error('Incomplete API station operations in '+name);
-  const known=new Set(Object.keys(rows[0]));
+  const known=new Set(rows.flatMap(r=>Object.keys(r)));
   const unknown=columns.filter(c=>!known.has(c));
   if(unknown.length)throw Error('Unmapped canonical columns in '+name+': '+unknown.join(','));
   if(rows.some(r=>!r.uid))throw Error('Missing UID '+name);
+  const ids=new Set();
+  for(const row of rows){if(ids.has(row.uid))throw Error('Duplicate UID '+name);ids.add(row.uid)}
   for(const row of rows){
    for(const field of columns){
     if(row[field]===undefined||row[field]===null)throw Error('Missing API field '+name+' '+field);
