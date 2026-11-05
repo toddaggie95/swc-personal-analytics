@@ -23,7 +23,11 @@ const auditStarted=Date.now();
 const shipyardsOnly=process.env.TARGET_SHIPYARDS_ONLY==='1';
 const cfg=loadConfig();requireLive(cfg);
 const pace={waitMs:0,calls:0,headersPresent:0,headersMissing:0};
+const experiment=process.env.TARGET_PACING_EXPERIMENT==='2s';
+const gapMs=experiment?2000:undefined;
+if(experiment&&limit>25)throw Error('Experimental pacing is restricted to 25 station details');
 const paceSamples:Array<{resource:string;waitMs:number;remaining:number|null;limit:number|null;resetInMs:number|null}>=[];
+const budgetSamples:Array<{resource:string;remaining:number|null;limit:number|null;resetInMs:number|null}>=[];
 const windows:Record<string,{remaining:number|null;limit:number|null;resetAtMs:number|null}>={};
 const transport={requests:0,fetchMs:0,bodyMs:0,bodyBytes:0};
 const measuredFetch:typeof fetch=async(input,init)=>{
@@ -36,6 +40,8 @@ const measuredFetch:typeof fetch=async(input,init)=>{
  return response;
 };
 class MeasuredPacer extends ReadPacer {
+ constructor(){super(undefined,undefined,experiment?2000:6500,60000,experiment?2000:1000);}
+
  async beforeRequest(resource:string) {
   const started=performance.now();
   try { await super.beforeRequest(resource); }
@@ -44,6 +50,7 @@ class MeasuredPacer extends ReadPacer {
  afterResponse(resource:string,headers:Headers) {
   const w=super.afterResponse(resource,headers);
   windows[resource]=w;
+  budgetSamples.push({resource,remaining:w.remaining,limit:w.limit,resetInMs:w.resetAtMs===null?null:Math.round(w.resetAtMs-Date.now())});
   if(w.limit!==null&&w.remaining!==null&&w.resetAtMs!==null)pace.headersPresent++;
   else pace.headersMissing++;
   return w;
@@ -82,11 +89,11 @@ for(const station of batch){
 const counts=Object.fromEntries([...new Set(rows.map(r=>String(r.classification)))].map(k=>[k,rows.filter(r=>r.classification===k).length]));
 const sortedTimes=[...detailDurations].sort((a,b)=>a-b);
 const percentile=(p:number)=>sortedTimes.length?sortedTimes[Math.ceil(sortedTimes.length*p)-1]:null;
-const timings={inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted,pace,transport,paceSamples};
+const timings={experiment,inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted,pace,transport,paceSamples,budgetSamples};
 const report={system,faction,totalInventory:all.length,uniqueInventory:unique.length,eligibleInventory:candidates.length,shipyardsOnly,offset,limit,processed:rows.length,nextOffset:offset+rows.length<candidates.length?offset+rows.length:null,counts,errors:rows.filter(r=>r.detailRead==='failed').length,anomalies:rows.filter(r=>Array.isArray(r.anomalies)&&(r.anomalies as string[]).length).length,timings,rows};
 mkdirSync('/tmp/swc-audit-output',{recursive:true});
 writeFileSync('/tmp/swc-audit-output/station-audit.json',JSON.stringify(report,null,2));
-console.log('AUDIT_SUMMARY '+JSON.stringify({...report,rows:undefined,paceSamples:undefined}));
-console.log('PACE_DIAGNOSTICS '+JSON.stringify({samples:paceSamples}));
+console.log('AUDIT_SUMMARY '+JSON.stringify({...report,rows:undefined,paceSamples:undefined,budgetSamples:undefined}));
+console.log('PACE_DIAGNOSTICS '+JSON.stringify({samples:paceSamples,budgets:budgetSamples}));
 for(const r of rows)if(r.classification==='unknown'||r.classification==='idle-assignment-unresolved'||r.classification==='conflict'||r.classification==='ambiguous-production-action'||r.classification==='other-action')console.log('AUDIT_REVIEW '+JSON.stringify(r));
 if(report.errors)process.exitCode=2;
