@@ -2,6 +2,28 @@ name: SWC API Station Diagnostics
 on:
   workflow_dispatch:
     inputs:
+      mode:
+        description: 'Single station or bounded full-system batch'
+        type: choice
+        required: true
+        default: station
+        options: [station, audit-batch]
+      faction:
+        description: 'Faction for audit batch'
+        type: choice
+        required: true
+        default: tjo
+        options: [tjo, tff]
+      offset:
+        description: 'Zero-based starting station index for audit batch'
+        type: number
+        required: true
+        default: 0
+      limit:
+        description: 'Number of station details to read (maximum 50)'
+        type: number
+        required: true
+        default: 25
       system:
         description: 'SWC system name'
         required: true
@@ -52,13 +74,30 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           TARGET_SYSTEM: ${{ inputs.system }}
           TARGET_STATION_UID: ${{ inputs.station_uid }}
+          TARGET_FACTION: ${{ inputs.faction }}
+          TARGET_OFFSET: ${{ inputs.offset }}
+          TARGET_LIMIT: ${{ inputs.limit }}
+          TARGET_MODE: ${{ inputs.mode }}
         run: |
           set -euo pipefail
           trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           mkdir -p tools/api-parity
           cp ../tools/api-parity/benchmark-targeted.ts tools/api-parity/benchmark-targeted.ts
-          npx tsx tools/api-parity/benchmark-targeted.ts
+          cp ../tools/api-parity/full-station-audit.ts tools/api-parity/full-station-audit.ts
+          if [ "$TARGET_MODE" = 'audit-batch' ]; then
+            npx tsx tools/api-parity/full-station-audit.ts
+          else
+            npx tsx tools/api-parity/benchmark-targeted.ts
+          fi
+      - name: Upload sanitized station audit report
+        if: always() && inputs.mode == 'audit-batch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: station-audit-${{ inputs.system }}-${{ inputs.faction }}-${{ inputs.offset }}-${{ github.run_id }}
+          path: /tmp/swc-audit-output/station-audit.json
+          if-no-files-found: warn
+          retention-days: 30
       - name: Clean up private files
         if: always()
         run: rm -rf /tmp/swc-private
