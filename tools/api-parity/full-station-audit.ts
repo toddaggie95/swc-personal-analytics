@@ -51,11 +51,12 @@ for(const station of batch){
   const productionAction=actions.includes('EntityProductionAction');
   const retooling=actions.includes('RetoolingAction');
   const unknownActions=actions.filter(a=>!['EntityProductionAction','RetoolingAction'].includes(a));
-  const actionConflict=productionAction&&retooling;
+  // SWC retooling can legitimately expose both action types; a producing queue during retooling is the actual conflict.
+  const actionConflict=productionAction&&retooling&&queueProducing;
   const queueConflict=queueProducing&&!productionAction;
   const info=extractInfo(detail,station);
   const classification=actionConflict||queueConflict?'conflict':unknownActions.length?'other-action':retooling?'retooling':productionAction?'producing':idleAssignment(ops.tooledTo!==null,info);
-  const anomalies=[...(actionConflict?['production-and-retooling-actions']:[]),...(queueConflict?['producing-queue-without-production-action']:[]),...(productionAction&&!queueProducing?['production-action-without-producing-queue']:[]),...(unknownActions.length?['unknown-action-type']:[]),...(!productionAction&&!retooling&&ops.tooledTo===null&&!info.available?['infotext-unavailable']:[]),...(!productionAction&&!retooling&&ops.tooledTo===null&&info.available&&info.text?['infotext-needs-ship-validation']:[])];
+  const anomalies=[...(actionConflict?['simultaneous-retooling-and-producing-queue']:[]),...(queueConflict?['producing-queue-without-production-action']:[]),...(productionAction&&!queueProducing&&!retooling?['production-action-without-producing-queue']:[]),...(unknownActions.length?['unknown-action-type']:[]),...(!productionAction&&!retooling&&ops.tooledTo===null&&!info.available?['infotext-unavailable']:[]),...(!productionAction&&!retooling&&ops.tooledTo===null&&info.available&&info.text?['infotext-needs-ship-validation']:[])];
   rows.push({uid,system,faction,stationType:station.typeName,classification,actions,queueStatuses:statuses,toolingPresent:ops.tooledTo!==null,infoFieldPresent:info.available,infoField:info.field,infoBlank:info.available?!info.text:null,infoNonblank:info.available&&!!info.text,actionsFieldPresent:'actions' in detail,queueFieldPresent:'queueitems' in detail,anomalies,detailRead:'ok'});
  }catch(e){rows.push({uid,system,faction,stationType:station.typeName,classification:'unknown',detailRead:'failed',errorClass:e instanceof Error?e.name:'UnknownError'});}
 }
