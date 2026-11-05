@@ -37,6 +37,7 @@ jobs:
   dry-run:
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    environment: swc-api-shadow
     steps:
       - name: Check out audited branch
         uses: actions/checkout@v4
