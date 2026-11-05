@@ -39,3 +39,11 @@ Find a fresh, complete production-status read path that avoids one detail GET pe
 
 ### High-value next controlled experiment
 Using a **single existing authorized station detail GET**, capture only the structural shape (array/object/absent) of `actions`, `actions.action`, `queueitems`, and `tooledto`, plus whether multiple production actions occur. Compare to web CSV by UID. Never print private cargo or station names. Then evaluate whether a documented inventory-level action/status field exists in the same response. Do not probe undocumented URLs.
+
+## Nine-shipyard action-shape result (run 42060877856)
+- Completed successfully on 2026-11-05. Kashyyyk TJO inventory: 195 total, 173 shipyards.
+- Nine detail reads: 52 seconds, extrapolated 173 details ~1000 seconds (16.7 minutes). The estimate is sample-based and differs from the 15-station benchmark.
+- Raw action shape: 3 `actions.action` arrays; 6 entirely absent `actions` fields; no nested singleton objects observed in this sample.
+- Parser extracted three running actions. Tooling present 9/9; queue present 8/9.
+- This sample does **not** establish that omitted actions means idle. Compare by UID with same-time web exports before any status interpretation changes.
+- Next: inspect SWC official read resource documentation and collector's station inventory response fields; avoid unnecessary per-station detail requests until a better read route is verified.
