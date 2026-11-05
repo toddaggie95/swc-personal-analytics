@@ -71,3 +71,4 @@ jobs:
 # Raw inventory schema inspection, read-only.
 
 # Documented working filter experiment; read-only.
+# Partition validation: compare working and idle station inventories.
