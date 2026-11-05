@@ -16,17 +16,20 @@ const list=(await readJson(inventory.exportFile) as {stations:Array<Record<strin
 const types=Object.entries(list.reduce((acc,s)=>{const key=String(s.typeName??s.type_name??'(missing)');acc[key]=(acc[key]??0)+1;return acc;},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]);
 console.log(JSON.stringify({phase:'type-diagnostic',system,types,missingType:list.filter(s=>!s.typeName).length}));
 // Bounded, deterministic cross-section: first five of each shipyard class, max 15.
-const selected=types.filter(([name])=>/shipyard/i.test(name)).flatMap(([name])=>list.filter(s=>s.typeName===name).slice(0,5)).slice(0,15);
-let actionsPresent=0,actionsAbsent=0,running=0,tooling=0,queue=0;
+const selected=types.filter(([name])=>/shipyard/i.test(name)).flatMap(([name])=>list.filter(s=>s.typeName===name).slice(0,3)).slice(0,9);
+let actionsPresent=0,actionsAbsent=0,running=0,tooling=0,queue=0;const shapes:Record<string,number>={};
 const detailStart=Date.now();
 for(const station of selected){
  const detail=await client.stationDetail(String(station.uid));
  const op=stationOperations(detail);
+ const raw=detail.actions as Record<string,unknown>|undefined;
+ const shape=!raw?'absent':Array.isArray(raw)?'array':Array.isArray(raw.action)?'nested-array':raw.action&&typeof raw.action==='object'?'nested-object':Object.keys(raw).length===0?'empty-object':'other';
+ shapes[shape]=(shapes[shape]??0)+1;
  if(Array.isArray(op.productionActions)){actionsPresent++;running+=op.productionActions.filter(a=>a?.value?.status==='running').length;}
  else actionsAbsent++;
  if(op.tooledTo!==null)tooling++;
  if(op.queueItems!==null)queue++;
 }
 console.log(JSON.stringify({phase:'bounded-shipyard-sample',system,totalInventory:list.length,shipyards:list.filter(s=>/shipyard/i.test(String(s.typeName))).length,
- sampled:selected.length,actionsPresent,actionsAbsent,running,tooling,queue,detailSeconds:Math.round((Date.now()-detailStart)/1000),
+ sampled:selected.length,actionShapes:shapes,actionsPresent,actionsAbsent,running,tooling,queue,detailSeconds:Math.round((Date.now()-detailStart)/1000),
  estimatedAllShipyardSeconds:Math.round((Date.now()-detailStart)/1000)*list.filter(s=>/shipyard/i.test(String(s.typeName))).length/Math.max(1,selected.length)}));
