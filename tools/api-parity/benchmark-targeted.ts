@@ -29,6 +29,13 @@ const rows=entities.entity??[];
 const all=new Set(list.map(s=>String(s.uid)));
 const selected=rows.map(r=>String(r.value?.uid??''));
 console.log(JSON.stringify({phase:'working-filter',unfiltered:list.length,matchedTotal:entities.attributes?.total??null,returned:rows.length,unknownUIDs:selected.filter(uid=>!all.has(uid)).length}));
+const idleResult=await readFiltered('inventory/'+inventory.ownerUid+'/stations/owner',{...base,'filter_type[1]':'working','filter_value[1]':0,'filter_inclusion[1]':'includes'});
+const idleEntities=(idleResult.entities??{}) as {entity?:Array<{value?:{uid?:string}}> ,attributes?:{total?:number}};
+const idleUIDs=(idleEntities.entity??[]).map(r=>String(r.value?.uid??''));
+const workingSet=new Set(selected),idleSet=new Set(idleUIDs);
+const matchedByType=(uids:string[])=>Object.entries(uids.reduce((acc,uid)=>{const item=list.find(s=>String(s.uid)===uid);const type=String(item?.typeName??'(unmatched)');acc[type]=(acc[type]??0)+1;return acc;},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]);
+const rawCoverage=Object.entries(rawRows.reduce((acc,r)=>{const item=r as Record<string,unknown>;const v=(item.value&&typeof item.value==='object'?item.value:item) as Record<string,unknown>;for(const key of Object.keys(v))acc[key]=(acc[key]??0)+1;return acc;},{} as Record<string,number>)).sort((a,b)=>a[0].localeCompare(b[0]));
+console.log(JSON.stringify({phase:'working-partition',working:workingSet.size,idle:idleSet.size,idleTotal:idleEntities.attributes?.total??null,overlap:selected.filter(uid=>idleSet.has(uid)).length,unclassified:[...all].filter(uid=>!workingSet.has(uid)&&!idleSet.has(uid)).length,workingTypes:matchedByType(selected),idleTypes:matchedByType(idleUIDs),rawCoverage}));
 const types=Object.entries(list.reduce((acc,s)=>{const key=String(s.typeName??s.type_name??'(missing)');acc[key]=(acc[key]??0)+1;return acc;},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]);
 console.log(JSON.stringify({phase:'type-diagnostic',system,types,missingType:list.filter(s=>!s.typeName).length}));
 // Bounded, deterministic cross-section: first five of each shipyard class, max 15.
