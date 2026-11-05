@@ -1,5 +1,5 @@
 name: SWC focused API performance experiment
-# Read-only TJO Kashyyyk station-type and production-capability diagnostic
+# Read-only 15-shipyard TJO production and pacing benchmark
 
 on:
   push:
