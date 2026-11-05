@@ -36,6 +36,9 @@ def main():
         write_report = json.load(handle)
     if write_report.get("status") != "verified":
         raise ValueError("HAS updates have not been verified")
+    source = manifest.get("source", "csv")
+    if source not in ("csv", "api"):
+        raise ValueError("unknown export source")
     files = manifest["files"]
     keys = {(item["owner"], item["kind"]) for item in files}
     ids = {item["id"] for item in files}
@@ -59,6 +62,9 @@ def main():
                 raise ValueError("previously accepted export was mutated")
     state = {
         "schemaVersion": 1,
+        "source": source,
+        "snapshotId": manifest.get("snapshotId"),
+        "collectedAt": manifest.get("collectedAt"),
         "acceptedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "workflowRunId": os.environ.get("GITHUB_RUN_ID"),
         "verification": "verified",
@@ -74,6 +80,7 @@ def main():
     api(url, token, "PUT", payload)
     report = {
         "status": "accepted",
+        "source": source,
         "acceptedFiles": [item["id"] for item in files],
         "previousBatchFiles": [item["id"] for item in old["files"]] if old else [],
         "archivePerformed": False,
