@@ -15,15 +15,16 @@ const inventory=await syncFactionStations(client,run,config.privateDir,'tff',fal
 const list=(await readJson(inventory.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
 const types=Object.entries(list.reduce((acc,s)=>{const key=String(s.typeName??s.type_name??'(missing)');acc[key]=(acc[key]??0)+1;return acc;},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]);
 console.log(JSON.stringify({phase:'type-diagnostic',system,types,missingType:list.filter(s=>!s.typeName).length}));
-const shipyards=list.filter(s=>/shipyard/i.test(String(s.typeName??s.type_name??'')));
-console.log(JSON.stringify({phase:'inventory',system,total:list.length,shipyards:shipyards.length,seconds:Math.round((Date.now()-start)/1000)}));
-let complete=0,unknown=0,active=0;
-const detailsStart=Date.now();
-for(const station of shipyards){
+// Diagnose production capability with a bounded sample, not a full enrichment.
+const sampleTypes=['Ataturk-class Station','Golan II','Depot Station IV'];
+for(const type of sampleTypes){
+ const station=list.find(s=>s.typeName===type);
+ if(!station)continue;
+ const started=Date.now();
  const detail=await client.stationDetail(String(station.uid));
  const op=stationOperations(detail);
- if(op.productionActions===null)unknown++;
- else {complete++;if(op.productionActions.length)active++;}
+ console.log(JSON.stringify({phase:'capability-sample',type,seconds:Math.round((Date.now()-started)/1000),
+  actionsKnown:Array.isArray(op.productionActions),productionActionCount:op.productionActions?.length??null,
+  toolingKnown:op.tooledTo!==null,queueKnown:op.queueItems!==null,
+  topLevelFields:Object.keys(detail).filter(k=>!/(token|secret|auth)/i.test(k)).sort()}));
 }
-console.log(JSON.stringify({phase:'targeted-detail',system,shipyards:shipyards.length,complete,unknown,active,seconds:Math.round((Date.now()-detailsStart)/1000),totalSeconds:Math.round((Date.now()-start)/1000)}));
-if(unknown)process.exitCode=1;
