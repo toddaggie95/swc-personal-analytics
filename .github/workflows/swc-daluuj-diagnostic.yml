@@ -1,6 +1,17 @@
 name: SWC API Station Diagnostics
 on:
   workflow_dispatch:
+    inputs:
+      system:
+        description: 'SWC system name'
+        required: true
+        type: string
+        default: Kashyyyk
+      station_uid:
+        description: 'Station UID (5:xxxxx)'
+        required: true
+        type: string
+        default: '5:56984'
 permissions:
   contents: read
 jobs:
@@ -39,7 +50,8 @@ jobs:
           SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
           GH_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          TARGET_SYSTEM: Kashyyyk
+          TARGET_SYSTEM: ${{ inputs.system }}
+          TARGET_STATION_UID: ${{ inputs.station_uid }}
         run: |
           set -euo pipefail
           trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
