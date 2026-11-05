@@ -30,9 +30,12 @@ const paceSamples:Array<{resource:string;waitMs:number;remaining:number|null;lim
 const budgetSamples:Array<{resource:string;remaining:number|null;limit:number|null;resetInMs:number|null;resetAtMs:number|null}>=[];
 const windows:Record<string,{remaining:number|null;limit:number|null;resetAtMs:number|null}>={};
 const transport={requests:0,fetchMs:0,bodyMs:0,bodyBytes:0};
+const httpSamples:Array<{startedAt:string;finishedAt:string;status:number;remaining:string|null;limit:string|null;reset:string|null;resetTime:string|null}>=[];
 const measuredFetch:typeof fetch=async(input,init)=>{
  const t=performance.now();
+ const startedAt=new Date().toISOString();
  const response=await fetch(input,init);
+ httpSamples.push({startedAt,finishedAt:new Date().toISOString(),status:response.status,remaining:response.headers.get('x-ratelimit-remaining'),limit:response.headers.get('x-ratelimit-limit'),reset:response.headers.get('x-ratelimit-reset'),resetTime:response.headers.get('x-ratelimit-resettime')});
  transport.requests++;
  transport.fetchMs+=performance.now()-t;
  const original=response.arrayBuffer.bind(response);
@@ -98,11 +101,11 @@ for(const station of batch){
 const counts=Object.fromEntries([...new Set(rows.map(r=>String(r.classification)))].map(k=>[k,rows.filter(r=>r.classification===k).length]));
 const sortedTimes=[...detailDurations].sort((a,b)=>a-b);
 const percentile=(p:number)=>sortedTimes.length?sortedTimes[Math.ceil(sortedTimes.length*p)-1]:null;
-const timings={experiment,experimentalGapMs:experiment?experimentalGapMs:null,inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted,pace,transport,paceSamples,budgetSamples};
+const timings={experiment,experimentalGapMs:experiment?experimentalGapMs:null,inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted,pace,transport,paceSamples,budgetSamples,httpSamples};
 const report={system,faction,totalInventory:all.length,uniqueInventory:unique.length,eligibleInventory:candidates.length,shipyardsOnly,offset,limit,processed:rows.length,nextOffset:offset+rows.length<candidates.length?offset+rows.length:null,counts,errors:rows.filter(r=>r.detailRead==='failed').length,anomalies:rows.filter(r=>Array.isArray(r.anomalies)&&(r.anomalies as string[]).length).length,timings,rows};
 mkdirSync('/tmp/swc-audit-output',{recursive:true});
 writeFileSync('/tmp/swc-audit-output/station-audit-'+offset+'.json',JSON.stringify(report,null,2));
-console.log('AUDIT_SUMMARY '+JSON.stringify({...report,rows:undefined,paceSamples:undefined,budgetSamples:undefined}));
-console.log('PACE_DIAGNOSTICS '+JSON.stringify({samples:paceSamples,budgets:budgetSamples}));
+console.log('AUDIT_SUMMARY '+JSON.stringify({...report,rows:undefined,paceSamples:undefined,budgetSamples:undefined,httpSamples:undefined}));
+console.log('PACE_DIAGNOSTICS '+JSON.stringify({samples:paceSamples,budgets:budgetSamples,http:httpSamples}));
 for(const r of rows)if(r.classification==='unknown'||r.classification==='idle-assignment-unresolved'||r.classification==='conflict'||r.classification==='ambiguous-production-action'||r.classification==='other-action')console.log('AUDIT_REVIEW '+JSON.stringify(r));
 if(report.errors)process.exitCode=2;
