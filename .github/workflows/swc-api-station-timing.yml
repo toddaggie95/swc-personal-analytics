@@ -50,6 +50,7 @@ jobs:
           TARGET_FACTION: tjo
           TARGET_OFFSET: '0'
           TARGET_LIMIT: '25'
+          TARGET_PACING_EXPERIMENT: '2s'
         run: |
           set -euo pipefail
           trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
