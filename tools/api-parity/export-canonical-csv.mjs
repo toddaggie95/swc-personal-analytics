@@ -19,7 +19,13 @@ export function buildCanonical({apiDir,referenceDir,outDir,systems}){
   const unknown=columns.filter(c=>!known.has(c));
   if(unknown.length)throw Error('Unmapped canonical columns in '+name+': '+unknown.join(','));
   if(rows.some(r=>!r.uid))throw Error('Missing UID '+name);
+  for(const row of rows){
+   for(const field of columns){
+    if(row[field]===undefined||row[field]===null)throw Error('Missing API field '+name+' '+field);
+   }
+  }
   const data=[columns.join(','),...rows.map(r=>columns.map(c=>quote(r[c])).join(','))].join('\n')+'\n';
+  // Validate each dataset before writing it to the shared output directory.
   fs.writeFileSync(path.join(outDir,name+'.csv'),data,{mode:0o600});
   files.push({owner:owner.toUpperCase(),kind:kind==='stations'?'Stations':'Materials',id:'api:'+name,sha256:crypto.createHash('sha256').update(data).digest('hex'),rowCount:rows.length,canonicalName:name+'.csv'});
  }
