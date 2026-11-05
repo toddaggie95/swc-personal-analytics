@@ -29,6 +29,13 @@ test('canonical adapter produces four source-marked datasets and stable identity
    assert.equal(rows[0].owner_name,owner[name.split('-')[0]]);
   }
   assert.throws(()=>buildCanonical({...options,systems:['Test System','Missing']}),/Missing/);
+  const stationCapture=path.join(root,'api','tff__stations__system-test.json');
+  const stationDoc=JSON.parse(fs.readFileSync(stationCapture,'utf8'));
+  delete stationDoc.stations[0].operations;
+  fs.writeFileSync(stationCapture,JSON.stringify(stationDoc));
+  assert.throws(()=>buildCanonical(options),/Incomplete API station operations/);
+  stationDoc.stations[0].operations={tooledTo:{value:'Example'},productionActions:[]};
+  fs.writeFileSync(stationCapture,JSON.stringify(stationDoc));
   const template=path.join(root,'reference','tff-materials.csv');
   fs.writeFileSync(template,fs.readFileSync(template,'utf8').trimEnd()+',unmapped-field\\n');
   assert.throws(()=>buildCanonical(options),/Unmapped canonical columns/);
