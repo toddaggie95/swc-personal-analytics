@@ -1,0 +1,52 @@
+name: SWC Daluuj API diagnostic (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/kashyyyk-parity-readonly
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: api-collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Initialize private credentials
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          umask 077
+          mkdir -p /tmp/swc-private
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+      - name: Run three read-only station details
+        working-directory: api-collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          GH_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TARGET_SYSTEM: Daluuj
+        run: |
+          set -euo pipefail
+          trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          mkdir -p tools/api-parity
+          cp ../tools/api-parity/benchmark-targeted.ts tools/api-parity/benchmark-targeted.ts
+          npx tsx tools/api-parity/benchmark-targeted.ts
+      - name: Clean up private files
+        if: always()
+        run: rm -rf /tmp/swc-private
