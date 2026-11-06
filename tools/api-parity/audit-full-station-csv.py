@@ -4,6 +4,7 @@ import csv, json, pathlib, collections, sys
 csvroot, apiroot, output = map(pathlib.Path, sys.argv[1:4])
 rows = {}
 issues = []
+api_anomalies = []
 counts = {}
 for faction in ('tff','tjo'):
     with (csvroot / f'{faction}-stations.csv').open(encoding='utf-8-sig',newline='') as f:
@@ -18,12 +19,14 @@ for path in files:
     doc=json.loads(path.read_text())
     faction=doc['faction']
     if faction not in api: raise ValueError('Unknown API faction')
-    if doc.get('errors') or doc.get('anomalies'): raise ValueError('API collection errors or anomalies')
+    if doc.get('errors'): raise ValueError('API collection read errors')
     for row in doc['rows']:
         uid=str(row['uid']).strip()
         if uid in api[faction]: raise ValueError('Duplicate API UID '+faction+'/'+uid)
         if row.get('detailRead')!='ok': raise ValueError('Failed API read '+faction+'/'+uid)
         api[faction][uid]=row
+        if row.get('anomalies'):
+            api_anomalies.append({'faction':faction,'uid':uid,'anomalies':row['anomalies'],'classification':row.get('classification')})
 for faction in rows:
     web,actual=rows[faction],api[faction]
     counts[faction]['api']=len(actual)
@@ -44,8 +47,8 @@ for faction in rows:
             issues.append({'faction':faction,'uid':uid,'field':'toolingPresence','csv':tooled,'api':a.get('toolingPresent')})
             counts[faction]['fieldDiscrepancies']+=1
         # Classification is retained as an API-only snapshot; web CSV does not expose equivalent action/queue evidence.
-report={'apiRunId':42162627899,'source':'current Drive station CSVs','apiBatchFiles':len(files),'factions':counts,'totalApi':sum(x['api'] for x in counts.values()),'totalCsv':sum(x['csv'] for x in counts.values()),'issues':issues,'issueCounts':dict(collections.Counter(x['field'] for x in issues)),'limitations':['Current API detail artifact omits name, location, station type and exact tooled-to ship; these cannot be field-compared without enriched API capture','Production classification derived from actions/queue is not directly equivalent to CSV production fields','Snapshot times differ; field differences are not automatically defects']}
+report={'apiRunId':42162627899,'source':'current Drive station CSVs','apiBatchFiles':len(files),'factions':counts,'totalApi':sum(x['api'] for x in counts.values()),'totalCsv':sum(x['csv'] for x in counts.values()),'issues':issues,'apiAnomalies':api_anomalies,'apiAnomalyCount':len(api_anomalies),'issueCounts':dict(collections.Counter(x['field'] for x in issues)),'limitations':['Current API detail artifact omits name, location, station type and exact tooled-to ship; these cannot be field-compared without enriched API capture','Production classification derived from actions/queue is not directly equivalent to CSV production fields','Snapshot times differ; field differences are not automatically defects']}
 if report['totalApi']!=2375 or len(files)!=48: raise ValueError('Incomplete API batch artifact set')
 output.parent.mkdir(parents=True,exist_ok=True)
 output.write_text(json.dumps(report,indent=2)+'\n')
-print('FULL_CSV_PARITY '+json.dumps({k:v for k,v in report.items() if k!='issues'}))
+print('FULL_CSV_PARITY '+json.dumps({k:v for k,v in report.items() if k not in ('issues','apiAnomalies')}))
