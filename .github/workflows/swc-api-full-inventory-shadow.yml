@@ -56,6 +56,7 @@ jobs:
           cp ../tools/api-parity/live-station-inventory.ts tools/api-parity/
           trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then bash ../tools/api-parity/persist-swc-token.sh || status=1; fi; exit "$status"' EXIT
           npx tsx tools/api-parity/live-station-inventory.ts
+          node --input-type=module -e 'import fs from "node:fs";const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json","utf8"));if(!t.refreshToken||!t.accessToken||t.expiresAt<Date.now()+3600000)throw Error("Coordinator token expires too soon for parallel batch execution")'
           node ../tools/api-parity/plan-station-batches.mjs /tmp/station-plan/inventory.json /tmp/station-plan/plan.json
           node ../tools/api-parity/limit-station-plan.mjs /tmp/station-plan/plan.json "${{ inputs.max_batches }}"
       - id: matrix
