@@ -11,7 +11,7 @@ const system=process.env.TARGET_SYSTEM||'Kashyyyk';
 const faction=process.env.TARGET_FACTION||'tjo';
 const offset=Number(process.env.TARGET_OFFSET??0);
 const limit=Number(process.env.TARGET_LIMIT??25);
-if(!['tjo','tff'].includes(faction)||!['Kashyyyk','Tholatin','Daluuj'].includes(system)||!Number.isInteger(offset)||offset<0||!Number.isInteger(limit)||limit<1||limit>50)throw Error('Invalid bounded audit inputs');
+if(!['tjo','tff'].includes(faction)||!(system==='ALL'||['Kashyyyk','Tholatin','Daluuj'].includes(system))||!Number.isInteger(offset)||offset<0||!Number.isInteger(limit)||limit<1||limit>50)throw Error('Invalid bounded audit inputs');
 const obj=(v:unknown):Record<string,unknown>=>v&&typeof v==='object'&&!Array.isArray(v)?v as Record<string,unknown>:{};
 const attrs=(v:unknown)=>obj(obj(v).attributes);
 const hasOwn=(v:Record<string,unknown>,k:string)=>Object.prototype.hasOwnProperty.call(v,k);
@@ -69,7 +69,7 @@ class MeasuredPacer extends ReadPacer {
  }
 }
 const client=new ReadClient(await loadAuth(cfg),new SnapshotRun(cfg.privateDir,'full_station_audit'),measuredFetch,undefined,new MeasuredPacer());
-const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'audit_'+system.toLowerCase()+'_'+faction),cfg.privateDir,faction as 'tjo'|'tff',false,{kind:'system',name:system});
+const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'audit_'+system.toLowerCase()+'_'+faction),cfg.privateDir,faction as 'tjo'|'tff',false,system==='ALL'?undefined:{kind:'system',name:system});
 const inventoryMs=Date.now()-auditStarted;
 const all=(await readJson(inv.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
 const unique=[...new Map(all.map(s=>[String(s.uid),s])).values()].sort((a,b)=>String(a.uid).localeCompare(String(b.uid),undefined,{numeric:true}));
