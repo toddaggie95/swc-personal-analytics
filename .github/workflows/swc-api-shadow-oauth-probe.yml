@@ -60,6 +60,18 @@ jobs:
           SWC_APP_ACTIVATED: 'true'
           SWC_SECRET_REGENERATED: 'true'
         run: npx tsx src/cli/github-auth-probe.ts
+      - name: Persist any rotated OAuth credentials
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          token_file="$RUNNER_TEMP/swc-private/tokens.json"
+          if [ -s "$token_file" ]; then
+            gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < "$token_file"
+          fi
       - name: Remove temporary credentials
         if: always()
         run: rm -rf "$RUNNER_TEMP/swc-private"
