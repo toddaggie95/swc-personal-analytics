@@ -143,6 +143,7 @@ jobs:
         env:
           EXPECTED_BATCHES: '4'
           EXPECTED_STATIONS: '195'
+          # Merge uses the corrected batch filename matcher.
         run: node tools/api-parity/merge-station-batches.mjs /tmp/station-batches
       - uses: actions/upload-artifact@v4
         if: always()
