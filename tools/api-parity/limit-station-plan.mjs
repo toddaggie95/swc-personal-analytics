@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+const [file,raw='1']=process.argv.slice(2);
+const n=Number(raw);
+if(!file||!Number.isInteger(n)||![0,1,4].includes(n))throw Error('Invalid batch cap');
+const plan=JSON.parse(fs.readFileSync(file,'utf8'));
+if(plan.version!==1||!Array.isArray(plan.batches))throw Error('Invalid plan');
+if(n>0)plan.batches=plan.batches.slice(0,n);
+plan.batchCount=plan.batches.length;
+plan.counts={tff:0,tjo:0};
+for(const b of plan.batches)plan.counts[b.faction]+=b.expected;
+plan.totalStations=plan.counts.tff+plan.counts.tjo;
+if(!plan.batchCount)throw Error('Empty plan');
+fs.writeFileSync(file,JSON.stringify(plan,null,2));
+console.log('BOUNDED_PLAN '+JSON.stringify({batchCount:plan.batchCount,totalStations:plan.totalStations,counts:plan.counts}));
