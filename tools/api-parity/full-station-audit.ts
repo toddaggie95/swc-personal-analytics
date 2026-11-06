@@ -69,20 +69,24 @@ class MeasuredPacer extends ReadPacer {
  }
 }
 const client=new ReadClient(await loadAuth(cfg),new SnapshotRun(cfg.privateDir,'full_station_audit'),measuredFetch,undefined,new MeasuredPacer());
-const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'audit_'+system.toLowerCase()+'_'+faction),cfg.privateDir,faction as 'tjo'|'tff',false,system==='ALL'?undefined:{kind:'system',name:system});
-const inventoryMs=Date.now()-auditStarted;
-const all=(await readJson(inv.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
-const unique=[...new Map(all.map(s=>[String(s.uid),s])).values()].sort((a,b)=>String(a.uid).localeCompare(String(b.uid),undefined,{numeric:true}));
-const candidates=shipyardsOnly?unique.filter(s=>/shipyard/i.test(String(s.typeName??''))):unique;
 const uidBatchFile=process.env.TARGET_UID_BATCH_FILE;
-let batch=candidates.slice(offset,offset+limit);
+let inventoryMs=0;
+let all:Array<Record<string,unknown>>=[];
+let unique:Array<Record<string,unknown>>=[];
+let candidates:Array<Record<string,unknown>>=[];
+let batch:Array<Record<string,unknown>>=[];
 if(uidBatchFile){
- const spec=JSON.parse(readFileSync(uidBatchFile,'utf8')) as {faction:string;uids:string[];expected:number};
+ const spec=JSON.parse(readFileSync(uidBatchFile,'utf8')) as {id?:string;faction:string;uids:string[];expected:number};
  if(spec.faction!==faction||!Array.isArray(spec.uids)||spec.uids.length!==spec.expected||spec.uids.length<1||spec.uids.length>50)throw Error('Invalid UID batch');
- const lookup=new Map(unique.map(s=>[String(s.uid),s]));
- if(new Set(spec.uids).size!==spec.uids.length)throw Error('Duplicate requested UID');
- if(spec.uids.some(uid=>!lookup.has(String(uid))))throw Error('Inventory drift detected');
- batch=spec.uids.map(uid=>lookup.get(String(uid))!);
+ if(spec.uids.some(uid=>!/^\\d+$/.test(String(uid)))||new Set(spec.uids.map(String)).size!==spec.uids.length)throw Error('Invalid or duplicate requested UID');
+ batch=spec.uids.map(uid=>({uid:String(uid),typeName:'manifest-station'}));
+}else{
+ const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'audit_'+system.toLowerCase()+'_'+faction),cfg.privateDir,faction as 'tjo'|'tff',false,system==='ALL'?undefined:{kind:'system',name:system});
+ inventoryMs=Date.now()-auditStarted;
+ all=(await readJson(inv.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
+ unique=[...new Map(all.map(s=>[String(s.uid),s])).values()].sort((a,b)=>String(a.uid).localeCompare(String(b.uid),undefined,{numeric:true}));
+ candidates=shipyardsOnly?unique.filter(s=>/shipyard/i.test(String(s.typeName??''))):unique;
+ batch=candidates.slice(offset,offset+limit);
 }
 
 const detailDurations:number[]=[];
