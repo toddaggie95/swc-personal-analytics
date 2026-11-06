@@ -86,6 +86,8 @@ jobs:
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
           node --input-type=module -e 'import fs from "node:fs";const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json","utf8"));if(!t.accessToken||t.expiresAt<Date.now()+600000){console.error("::error::Token too close to expiry; worker must not refresh");process.exit(1)}'
+          # Workers require only the access token; never expose rotating refresh credentials.
+          node --input-type=module -e 'import fs from "node:fs"; const p="/tmp/swc-private/tokens.json";const t=JSON.parse(fs.readFileSync(p,"utf8"));delete t.refreshToken;fs.writeFileSync(p,JSON.stringify(t),{mode:0o600})'
           cp /tmp/swc-private/tokens.json /tmp/swc-private/initial.json
       - name: Read bounded station batch
         working-directory: api-collector
@@ -134,9 +136,10 @@ jobs:
         with:
           pattern: station-batch-*
           path: /tmp/station-batches
-      - name: Validate all four batches
+      - name: Validate all 195 stations across four batches
         env:
           EXPECTED_BATCHES: '4'
+          EXPECTED_STATIONS: '195'
         run: node tools/api-parity/merge-station-batches.mjs /tmp/station-batches
       - uses: actions/upload-artifact@v4
         if: always()
