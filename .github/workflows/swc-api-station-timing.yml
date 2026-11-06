@@ -35,7 +35,7 @@ jobs:
           umask 077
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
-      - name: Compare four concurrent workers on one GitHub runner
+      - name: Compare two concurrent 50-station workers on one GitHub runner
         working-directory: api-collector
         env:
           SWC_PRIVATE_DIR: /tmp/swc-private
@@ -49,7 +49,7 @@ jobs:
           TARGET_SYSTEM: Kashyyyk
           TARGET_FACTION: tjo
           TARGET_OFFSET: '0'
-          TARGET_LIMIT: '25'
+          TARGET_LIMIT: '50'
           TARGET_PACING_EXPERIMENT: '1s'
         run: |
           set -euo pipefail
@@ -64,7 +64,7 @@ jobs:
           bash ../tools/api-parity/persist-swc-token.sh
           cp /tmp/swc-private/tokens.json /tmp/swc-private/coordinator-tokens.json
           pids=()
-          for offset in 0 25 50 75; do
+          for offset in 0 50; do
             mkdir -p "/tmp/swc-private/worker-$offset"
             cp /tmp/swc-private/tokens.json "/tmp/swc-private/worker-$offset/tokens.json"
             ( SWC_PRIVATE_DIR="/tmp/swc-private/worker-$offset" TARGET_OFFSET="$offset" npx tsx tools/api-parity/full-station-audit.ts > "/tmp/worker-$offset.log" 2>&1 ) &
@@ -72,7 +72,7 @@ jobs:
           done
           failed=0
           for pid in "${pids[@]}"; do wait "$pid" || failed=1; done
-          for offset in 0 25 50 75; do
+          for offset in 0 50; do
             if ! cmp -s /tmp/swc-private/coordinator-tokens.json "/tmp/swc-private/worker-$offset/tokens.json"; then
               echo "::error::Worker $offset independently refreshed OAuth; stop to avoid losing rotated credentials"
               failed=1
@@ -85,7 +85,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: station-timing-Kashyyyk-tjo-single-runner-four-workers-${{ github.run_id }}
+          name: station-timing-Kashyyyk-tjo-single-runner-two-workers-${{ github.run_id }}
           path: /tmp/swc-audit-output/station-audit-*.json
           if-no-files-found: warn
           retention-days: 30
