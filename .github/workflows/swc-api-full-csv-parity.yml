@@ -47,11 +47,13 @@ jobs:
           print('ANOMALY_BREAKDOWN',json.dumps(dict(collections.Counter(a for x in anomalies for a in x['anomalies']))))
           for x in anomalies: print('ANOMALY_STATION',json.dumps(x))
           PY
+      - name: Offline regression of all 2375 recorded station actions
+        run: python3 tools/api-parity/reclassify-station-snapshot.py /tmp/swc-api /tmp/swc-parity/station-classification-regression.json
       - name: Upload detailed read-only report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: full-station-csv-parity-report
-          path: /tmp/swc-parity/full-station-parity.json
+          path: /tmp/swc-parity/*.json
           if-no-files-found: warn
           retention-days: 30
