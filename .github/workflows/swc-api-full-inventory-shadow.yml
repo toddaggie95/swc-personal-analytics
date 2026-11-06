@@ -1,6 +1,13 @@
 name: SWC API full inventory shadow (read only)
 on:
   workflow_dispatch:
+    inputs:
+      max_batches:
+        description: 'Maximum batches to read (default 1; 0 means all)'
+        required: true
+        default: '1'
+        type: choice
+        options: ['1', '4', '0']
 permissions:
   contents: read
 concurrency:
@@ -50,6 +57,7 @@ jobs:
           trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then bash ../tools/api-parity/persist-swc-token.sh || status=1; fi; exit "$status"' EXIT
           npx tsx tools/api-parity/live-station-inventory.ts
           node ../tools/api-parity/plan-station-batches.mjs /tmp/station-plan/inventory.json /tmp/station-plan/plan.json
+          node ../tools/api-parity/limit-station-plan.mjs /tmp/station-plan/plan.json "${{ inputs.max_batches }}"
       - id: matrix
         run: node tools/api-parity/build-matrix-from-plan.mjs /tmp/station-plan/plan.json "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
