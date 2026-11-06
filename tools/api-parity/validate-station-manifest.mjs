@@ -7,19 +7,27 @@ if(plan.version!==1||!Array.isArray(plan.batches))throw Error('Invalid batch pla
 const files=[];
 function visit(dir){for(const ent of readdirSync(dir,{withFileTypes:true})){const p=join(dir,ent.name);if(ent.isDirectory())visit(p);else if(/^station-audit-[a-z0-9-]+\.json$/.test(ent.name))files.push(p);}}
 visit(artifactRoot);
-const reports=files.map(p=>JSON.parse(readFileSync(p,'utf8')));
+const reports=files.map(p=>({path:p,report:JSON.parse(readFileSync(p,'utf8'))}));
 const problems=[],expected=new Map(),actual=new Map();
 for(const batch of plan.batches){
  if(!['tff','tjo'].includes(batch.faction)||!Array.isArray(batch.uids)||batch.expected!==batch.uids.length){problems.push('Invalid batch '+batch.id);continue;}
  for(const uid of batch.uids){const key=batch.faction+':'+String(uid);if(expected.has(key))problems.push('Duplicate planned station '+key);expected.set(key,batch.id);}
 }
 if(reports.length!==plan.batchCount)problems.push(`Expected ${plan.batchCount} batch reports, got ${reports.length}`);
-for(const rep of reports){
+for(const {path,report:rep} of reports){
+ const filename=path.split('/').at(-1);
+ const batchId=filename?.replace(/^station-audit-/,'').replace(/\.json$/,'');
+ const planned=plan.batches.find(b=>b.id===batchId);
+ if(planned){
+  if(planned.faction!==rep.faction)problems.push('Wrong faction in batch '+batchId);
+  if(rep.rows?.length!==planned.expected)problems.push('Wrong row count in batch '+batchId);
+ }else if(/^((tff|tjo)-)/.test(batchId??''))problems.push('Unexpected batch artifact '+batchId);
  if(!['tff','tjo'].includes(rep.faction)||!Array.isArray(rep.rows)){problems.push('Invalid report');continue;}
  if(rep.errors)problems.push(`Report ${rep.faction}/${rep.offset} has ${rep.errors} errors`);
  for(const row of rep.rows){
   const key=rep.faction+':'+String(row.uid);
   if(!expected.has(key))problems.push('Unexpected station '+key);
+  if(planned&&expected.get(key)!==batchId)problems.push('Station in wrong batch '+key);
   if(actual.has(key))problems.push('Duplicate collected station '+key);
   actual.set(key,row);
   if(row.detailRead!=='ok')problems.push('Failed station '+key);
