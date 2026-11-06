@@ -38,6 +38,15 @@ jobs:
           path: /tmp/swc-api
       - name: Audit 100 percent of station UIDs and recorded comparable fields
         run: python3 tools/api-parity/audit-full-station-csv.py /tmp/swc-csv /tmp/swc-api /tmp/swc-parity/full-station-parity.json
+      - name: Summarize API anomalies by station and reason
+        run: |
+          python3 - <<'PY'
+          import json,collections
+          p=json.load(open('/tmp/swc-parity/full-station-parity.json'))
+          anomalies=p['apiAnomalies']
+          print('ANOMALY_BREAKDOWN',json.dumps(dict(collections.Counter(a for x in anomalies for a in x['anomalies']))))
+          for x in anomalies: print('ANOMALY_STATION',json.dumps(x))
+          PY
       - name: Upload detailed read-only report
         if: always()
         uses: actions/upload-artifact@v4
