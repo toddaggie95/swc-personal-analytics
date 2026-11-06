@@ -102,12 +102,14 @@ for(const station of batch){
   const statuses=(ops.queueItems??[]).map(q=>String(obj(q).status??'unknown'));
   const queueProducing=statuses.includes('producing');
   const productionAction=actions.includes('EntityProductionAction');
+  const crateProduction=actions.includes('CrateProductionAction');
+  const stationConstruction=actions.includes('StationConstructionAction');
   const retooling=actions.includes('RetoolingAction');
-  const unknownActions=actions.filter(a=>!['EntityProductionAction','RetoolingAction'].includes(a));
+  const unknownActions=actions.filter(a=>!['EntityProductionAction','CrateProductionAction','StationConstructionAction','RetoolingAction'].includes(a));
   // SWC retooling can legitimately expose both action types; a producing queue during retooling is the actual conflict.
   const actionConflict=productionAction&&retooling&&queueProducing;
-  const queueConflict=queueProducing&&!productionAction;
-  const classification=actionConflict||queueConflict?'conflict':unknownActions.length?'other-action':retooling?'retooling':productionAction?'producing':idleAssignment(ops.tooledTo!==null);
+  const queueConflict=queueProducing&&!productionAction&&!crateProduction;
+  const classification=actionConflict||queueConflict?'conflict':unknownActions.length?'other-action':retooling?'retooling':stationConstruction?'station-construction':crateProduction?'crate-production':productionAction?'producing':idleAssignment(ops.tooledTo!==null);
   const anomalies=[...(actionConflict?['simultaneous-retooling-and-producing-queue']:[]),...(queueConflict?['producing-queue-without-production-action']:[]),...(productionAction&&!queueProducing&&!retooling?['production-action-without-producing-queue']:[]),...(unknownActions.length?['unknown-action-type']:[])];
   rows.push({uid,system,faction,stationType:station.typeName,classification,actions,queueStatuses:statuses,toolingPresent:ops.tooledTo!==null,actionsFieldPresent:'actions' in detail,queueFieldPresent:'queueitems' in detail,anomalies,detailRead:'ok'});
  }catch(e){detailDurations.push(Date.now()-detailStarted);rows.push({uid,system,faction,stationType:station.typeName,classification:'unknown',detailRead:'failed',errorClass:e instanceof Error?e.name:'UnknownError'});}
