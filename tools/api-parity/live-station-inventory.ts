@@ -12,7 +12,7 @@ for(const faction of ['tff','tjo'] as const){
  const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'inventory_'+faction),cfg.privateDir,faction,false);
  const stations=(await readJson(inv.exportFile) as {stations:Array<{uid:string|number}>}).stations;
  const ids=stations.map(s=>String(s.uid));
- if(ids.some(id=>!/^\d+$/.test(id))||new Set(ids).size!==ids.length)throw Error('Invalid or duplicate station IDs');
+ if(ids.some(id=>!/^(?:\d+:)?\d+$/.test(id))||new Set(ids).size!==ids.length)throw Error('Invalid or duplicate station IDs');
  factions[faction]=ids;
  console.log('INVENTORY_FACTION '+JSON.stringify({faction,count:ids.length}));
 }
