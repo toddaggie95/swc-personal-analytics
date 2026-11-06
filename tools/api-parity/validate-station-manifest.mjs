@@ -5,7 +5,7 @@ if(!planPath||!artifactRoot)throw Error('Usage: node validate-station-manifest.m
 const plan=JSON.parse(readFileSync(planPath,'utf8'));
 if(plan.version!==1||!Array.isArray(plan.batches))throw Error('Invalid batch plan');
 const files=[];
-function visit(dir){for(const ent of readdirSync(dir,{withFileTypes:true})){const p=join(dir,ent.name);if(ent.isDirectory())visit(p);else if(/^station-audit-\d+\.json$/.test(ent.name))files.push(p);}}
+function visit(dir){for(const ent of readdirSync(dir,{withFileTypes:true})){const p=join(dir,ent.name);if(ent.isDirectory())visit(p);else if(/^station-audit-[a-z0-9-]+\.json$/.test(ent.name))files.push(p);}}
 visit(artifactRoot);
 const reports=files.map(p=>JSON.parse(readFileSync(p,'utf8')));
 const problems=[],expected=new Map(),actual=new Map();
