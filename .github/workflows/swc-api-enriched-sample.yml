@@ -67,7 +67,7 @@ jobs:
         run: node tools/api-parity/build-matrix-from-plan.mjs /tmp/station-plan/plan.json "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
-          name: enriched-station-plan
+          name: station-plan
           path: /tmp/station-plan/plan.json
           retention-days: 14
       - if: always()
@@ -133,7 +133,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: enriched-station-batch-${{ matrix.id }}
+          name: station-batch-${{ matrix.id }}
           path: /tmp/swc-audit-output/station-audit-*.json
           if-no-files-found: error
           retention-days: 14
@@ -151,7 +151,7 @@ jobs:
           path: /tmp/station-plan
       - uses: actions/download-artifact@v4
         with:
-          pattern: enriched-station-batch-*
+          pattern: station-batch-*
           path: /tmp/station-batches
       - run: node tools/api-parity/validate-station-manifest.mjs /tmp/station-plan/plan.json /tmp/station-batches
       - uses: actions/upload-artifact@v4
