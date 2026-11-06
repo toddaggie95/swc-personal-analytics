@@ -17,7 +17,11 @@ for(const rep of reports){
  for(const row of rep.rows||[]){const key=`${row.faction}:${row.uid}`;if(seen.has(key))problems.push(`Duplicate station ${key}`);seen.add(key);rows.push(row);if(row.detailRead!=='ok')problems.push(`Failed station ${key}`);}
 }
 for(let i=0;i<expected;i++)if(!offsets.has(i*50))problems.push(`Missing offset ${i*50}`);
-if(rows.length!==expected*50)problems.push(`Expected ${expected*50} station rows, received ${rows.length}`);
+const expectedRows=Number(process.env.EXPECTED_STATIONS||195);
+if(rows.length!==expectedRows)problems.push(`Expected ${expectedRows} station rows, received ${rows.length}`);
+if(reports.some(rep=>rep.eligibleInventory!==expectedRows))problems.push('Inventory count disagrees with expected station count');
+for(const rep of reports){const n=Math.min(50,Math.max(0,expectedRows-rep.offset));if(rep.processed!==n)problems.push(`Offset ${rep.offset}: expected ${n} rows, got ${rep.processed}`);}
+
 const result={system:'Kashyyyk',faction:'tjo',batchCount:reports.length,stationCount:rows.length,uniqueStations:seen.size,problems,rows:rows.sort((a,b)=>Number(a.uid)-Number(b.uid))};
 mkdirSync('/tmp/station-merged',{recursive:true});
 writeFileSync('/tmp/station-merged/merged.json',JSON.stringify(result,null,2));
