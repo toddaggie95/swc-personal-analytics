@@ -78,7 +78,7 @@ let batch:Array<Record<string,unknown>>=[];
 if(uidBatchFile){
  const spec=JSON.parse(readFileSync(uidBatchFile,'utf8')) as {id?:string;faction:string;uids:string[];expected:number};
  if(spec.faction!==faction||!Array.isArray(spec.uids)||spec.uids.length!==spec.expected||spec.uids.length<1||spec.uids.length>50)throw Error('Invalid UID batch');
- if(spec.uids.some(uid=>!/^\\d+$/.test(String(uid)))||new Set(spec.uids.map(String)).size!==spec.uids.length)throw Error('Invalid or duplicate requested UID');
+ if(spec.uids.some(uid=>!/^\d+$/.test(String(uid)))||new Set(spec.uids.map(String)).size!==spec.uids.length)throw Error('Invalid or duplicate requested UID');
  batch=spec.uids.map(uid=>({uid:String(uid),typeName:'manifest-station'}));
 }else{
  const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'audit_'+system.toLowerCase()+'_'+faction),cfg.privateDir,faction as 'tjo'|'tff',false,system==='ALL'?undefined:{kind:'system',name:system});
