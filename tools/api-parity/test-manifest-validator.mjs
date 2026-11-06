@@ -17,5 +17,14 @@ try {
  assert.notEqual(check().status,0,'Unexpected and missing stations must fail');
  write(50,'tjo',['201','201']);
  assert.notEqual(check().status,0,'Duplicate stations must fail');
- console.log('PASS: manifest coverage, missing/unexpected IDs, and duplicates');
+ const named=join(root,'named');mkdirSync(named);
+ const namedWrite=(id,faction,ids)=>writeFileSync(join(named,`station-audit-${id}.json`),JSON.stringify({faction,errors:0,rows:ids.map(uid=>({uid,detailRead:'ok'}))}));
+ const namedCheck=()=>spawnSync(process.execPath,['tools/api-parity/validate-station-manifest.mjs',plan,named,out],{encoding:'utf8'});
+ namedWrite('tff-000','tff',['101','102']);namedWrite('tjo-000','tjo',['201']);
+ assert.equal(namedCheck().status,0,'Correct named batch assignments must pass');
+ namedWrite('tff-000','tff',['101','201']);namedWrite('tjo-000','tjo',['102']);
+ assert.notEqual(namedCheck().status,0,'Cross-batch station swaps must fail');
+ namedWrite('tff-000','tjo',['101','102']);
+ assert.notEqual(namedCheck().status,0,'Mismatched batch faction must fail');
+ console.log('PASS: manifest coverage, duplicate IDs, and strict batch ownership');
 }finally{rmSync(root,{recursive:true,force:true});}
