@@ -1,0 +1,149 @@
+name: SWC API full inventory shadow (read only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: swc-api-shadow-full-inventory
+  cancel-in-progress: false
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: swc-api-shadow
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: api-collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Prepare coordinator OAuth
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+      - name: Read live inventory and create plan
+        working-directory: api-collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          mkdir -p tools/api-parity
+          cp ../tools/api-parity/live-station-inventory.ts tools/api-parity/
+          trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then bash ../tools/api-parity/persist-swc-token.sh || status=1; fi; exit "$status"' EXIT
+          npx tsx tools/api-parity/live-station-inventory.ts
+          node ../tools/api-parity/plan-station-batches.mjs /tmp/station-plan/inventory.json /tmp/station-plan/plan.json
+      - id: matrix
+        run: node tools/api-parity/build-matrix-from-plan.mjs /tmp/station-plan/plan.json "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: station-plan
+          path: /tmp/station-plan/plan.json
+          retention-days: 14
+      - if: always()
+        run: rm -rf /tmp/swc-private
+  collect:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: swc-api-shadow
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: api-collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: station-plan
+          path: /tmp/station-plan
+      - name: Select assigned IDs
+        run: node tools/api-parity/select-station-batch.mjs /tmp/station-plan/plan.json "${{ matrix.id }}" /tmp/station-plan/batch.json
+      - name: Prepare access-token-only credentials
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          node --input-type=module -e 'import fs from "node:fs";const p="/tmp/swc-private/tokens.json";const t=JSON.parse(fs.readFileSync(p,"utf8"));if(!t.accessToken||t.expiresAt<Date.now()+900000)throw Error("Token expiry guard");delete t.refreshToken;fs.writeFileSync(p,JSON.stringify(t),{mode:0o600})'
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial.json
+      - name: Read assigned station details
+        working-directory: api-collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+          TARGET_SYSTEM: ALL
+          TARGET_FACTION: ${{ matrix.faction }}
+          TARGET_UID_BATCH_FILE: /tmp/station-plan/batch.json
+          TARGET_BATCH_ID: ${{ matrix.id }}
+          TARGET_LIMIT: '50'
+          TARGET_PACING_EXPERIMENT: '1s'
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          mkdir -p tools/api-parity
+          cp ../tools/api-parity/full-station-audit.ts tools/api-parity/
+          npx tsx tools/api-parity/full-station-audit.ts > /tmp/batch.log 2>&1 || { grep -E '^AUDIT_SUMMARY |^AUDIT_REVIEW ' /tmp/batch.log || true; exit 1; }
+          grep -E '^AUDIT_SUMMARY |^AUDIT_REVIEW ' /tmp/batch.log || true
+          cmp -s /tmp/swc-private/initial.json /tmp/swc-private/tokens.json || { echo "::error::Worker attempted OAuth rotation"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: station-batch-${{ matrix.id }}
+          path: /tmp/swc-audit-output/station-audit-*.json
+          if-no-files-found: error
+          retention-days: 14
+      - if: always()
+        run: rm -rf /tmp/swc-private
+  validate:
+    needs: [plan, collect]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: station-plan
+          path: /tmp/station-plan
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: station-batch-*
+          path: /tmp/station-batches
+      - run: node tools/api-parity/validate-station-manifest.mjs /tmp/station-plan/plan.json /tmp/station-batches
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: station-validation
+          path: /tmp/station-merged/manifest-validation.json
+          retention-days: 14
