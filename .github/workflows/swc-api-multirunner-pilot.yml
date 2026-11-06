@@ -1,0 +1,147 @@
+name: SWC API multi-runner station pilot (read only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: swc-api-shadow-multirunner
+  cancel-in-progress: false
+jobs:
+  coordinator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: api-collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Initialize private OAuth
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+      - name: Refresh if necessary and persist before worker launch
+        working-directory: api-collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TARGET_SYSTEM: Kashyyyk
+          TARGET_FACTION: tjo
+          TARGET_OFFSET: '175'
+          TARGET_LIMIT: '1'
+          TARGET_PACING_EXPERIMENT: '1s'
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          mkdir -p tools/api-parity
+          cp ../tools/api-parity/full-station-audit.ts tools/api-parity/full-station-audit.ts
+          trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then bash ../tools/api-parity/persist-swc-token.sh || status=1; fi; exit "$status"' EXIT
+          npx tsx tools/api-parity/full-station-audit.ts > /tmp/coordinator.log 2>&1 || { cat /tmp/coordinator.log; exit 1; }
+          node --input-type=module -e 'import fs from "node:fs"; const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json","utf8")); if(!t.refreshToken || t.expiresAt<Date.now()+900000)process.exit(1)'
+      - name: Clean private files
+        if: always()
+        run: rm -rf /tmp/swc-private
+  batch:
+    needs: coordinator
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        offset: [0, 50, 100, 150]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: api-collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Prepare isolated OAuth token
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          node --input-type=module -e 'import fs from "node:fs";const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json","utf8"));if(!t.accessToken||t.expiresAt<Date.now()+600000){console.error("::error::Token too close to expiry; worker must not refresh");process.exit(1)}'
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial.json
+      - name: Read bounded station batch
+        working-directory: api-collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+          TARGET_SYSTEM: Kashyyyk
+          TARGET_FACTION: tjo
+          TARGET_OFFSET: ${{ matrix.offset }}
+          TARGET_LIMIT: '50'
+          TARGET_PACING_EXPERIMENT: '1s'
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          mkdir -p tools/api-parity
+          cp ../tools/api-parity/full-station-audit.ts tools/api-parity/full-station-audit.ts
+          status=0
+          npx tsx tools/api-parity/full-station-audit.ts > /tmp/batch.log 2>&1 || status=$?
+          grep -E '^AUDIT_SUMMARY |^AUDIT_REVIEW ' /tmp/batch.log || true
+          if ! cmp -s /tmp/swc-private/initial.json /tmp/swc-private/tokens.json; then
+            echo "::error::Worker attempted OAuth rotation; aborting without overwriting shared credentials"
+            status=1
+          fi
+          exit "$status"
+      - name: Upload sanitized station batch
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: station-batch-${{ matrix.offset }}
+          path: /tmp/swc-audit-output/station-audit-*.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove private credentials
+        if: always()
+        run: rm -rf /tmp/swc-private
+  merge:
+    needs: batch
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: station-batch-*
+          path: /tmp/station-batches
+      - name: Validate all four batches
+        env:
+          EXPECTED_BATCHES: '4'
+        run: node tools/api-parity/merge-station-batches.mjs /tmp/station-batches
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: station-merged-audit
+          path: /tmp/station-merged/merged.json
+          if-no-files-found: warn
+          retention-days: 30
