@@ -6,7 +6,7 @@ import {SnapshotRun} from '../../src/storage/snapshots.js';
 import {syncFactionStations} from '../../src/swc/sync.js';
 import {readJson} from '../../src/storage/files.js';
 import {stationOperations} from '../../src/swc/enrich-stations.js';
-import {writeFileSync,mkdirSync} from 'node:fs';
+import {writeFileSync,mkdirSync,readFileSync} from 'node:fs';
 const system=process.env.TARGET_SYSTEM||'Kashyyyk';
 const faction=process.env.TARGET_FACTION||'tjo';
 const offset=Number(process.env.TARGET_OFFSET??0);
@@ -74,7 +74,17 @@ const inventoryMs=Date.now()-auditStarted;
 const all=(await readJson(inv.exportFile) as {stations:Array<Record<string,unknown>>}).stations;
 const unique=[...new Map(all.map(s=>[String(s.uid),s])).values()].sort((a,b)=>String(a.uid).localeCompare(String(b.uid),undefined,{numeric:true}));
 const candidates=shipyardsOnly?unique.filter(s=>/shipyard/i.test(String(s.typeName??''))):unique;
-const batch=candidates.slice(offset,offset+limit);
+const uidBatchFile=process.env.TARGET_UID_BATCH_FILE;
+let batch=candidates.slice(offset,offset+limit);
+if(uidBatchFile){
+ const spec=JSON.parse(readFileSync(uidBatchFile,'utf8')) as {faction:string;uids:string[];expected:number};
+ if(spec.faction!==faction||!Array.isArray(spec.uids)||spec.uids.length!==spec.expected||spec.uids.length<1||spec.uids.length>50)throw Error('Invalid UID batch');
+ const lookup=new Map(unique.map(s=>[String(s.uid),s]));
+ if(new Set(spec.uids).size!==spec.uids.length)throw Error('Duplicate requested UID');
+ if(spec.uids.some(uid=>!lookup.has(String(uid))))throw Error('Inventory drift detected');
+ batch=spec.uids.map(uid=>lookup.get(String(uid))!);
+}
+
 const detailDurations:number[]=[];
 const rows:Array<Record<string,unknown>>=[];
 for(const station of batch){
@@ -104,7 +114,7 @@ const percentile=(p:number)=>sortedTimes.length?sortedTimes[Math.ceil(sortedTime
 const timings={experiment,experimentalGapMs:experiment?experimentalGapMs:null,inventoryMs,detailTotalMs:detailDurations.reduce((a,b)=>a+b,0),detailMinMs:sortedTimes[0]??null,detailP50Ms:percentile(.5),detailP95Ms:percentile(.95),detailMaxMs:sortedTimes.at(-1)??null,elapsedMs:Date.now()-auditStarted,pace,transport,paceSamples,budgetSamples,httpSamples};
 const report={system,faction,totalInventory:all.length,uniqueInventory:unique.length,eligibleInventory:candidates.length,shipyardsOnly,offset,limit,processed:rows.length,nextOffset:offset+rows.length<candidates.length?offset+rows.length:null,counts,errors:rows.filter(r=>r.detailRead==='failed').length,anomalies:rows.filter(r=>Array.isArray(r.anomalies)&&(r.anomalies as string[]).length).length,timings,rows};
 mkdirSync('/tmp/swc-audit-output',{recursive:true});
-writeFileSync('/tmp/swc-audit-output/station-audit-'+offset+'.json',JSON.stringify(report,null,2));
+writeFileSync('/tmp/swc-audit-output/station-audit-'+(process.env.TARGET_BATCH_ID||offset)+'.json',JSON.stringify(report,null,2));
 console.log('AUDIT_SUMMARY '+JSON.stringify({...report,rows:undefined,paceSamples:undefined,budgetSamples:undefined,httpSamples:undefined}));
 console.log('PACE_DIAGNOSTICS '+JSON.stringify({samples:paceSamples,budgets:budgetSamples,http:httpSamples}));
 for(const r of rows)if(r.classification==='unknown'||r.classification==='idle-assignment-unresolved'||r.classification==='conflict'||r.classification==='ambiguous-production-action'||r.classification==='other-action')console.log('AUDIT_REVIEW '+JSON.stringify(r));
