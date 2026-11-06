@@ -22,3 +22,4 @@ jobs:
           node-version: '24'
       - run: node tools/api-parity/test-batch-planner.mjs
       - run: node tools/api-parity/test-manifest-validator.mjs
+      - run: node tools/api-parity/test-dynamic-matrix.mjs
