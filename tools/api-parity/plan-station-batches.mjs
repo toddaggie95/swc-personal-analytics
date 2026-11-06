@@ -14,7 +14,7 @@ for(const faction of ['tff','tjo']){
  const ids=uids.map(String);
  if(ids.some(id=>!/^(?:\d+:)?\d+$/.test(id)))throw Error('Invalid station UID in '+faction);
  if(new Set(ids).size!==ids.length)throw Error('Duplicate station UID in '+faction);
- ids.sort((a,b)=>BigInt(a)<BigInt(b)?-1:BigInt(a)>BigInt(b)?1:0);
+ ids.sort((a,b)=>{const x=BigInt(a.split(':').at(-1)),y=BigInt(b.split(':').at(-1));return x<y?-1:x>y?1:a.localeCompare(b);});
  counts[faction]=ids.length;
  for(let start=0;start<ids.length;start+=size){
   const subset=ids.slice(start,start+size);
