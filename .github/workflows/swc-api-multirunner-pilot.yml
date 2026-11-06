@@ -1,5 +1,8 @@
 name: SWC API multi-runner station pilot (read only)
 on:
+  push:
+    branches: [feature/kashyyyk-parity-readonly]
+    paths: ['.github/workflows/swc-api-multirunner-pilot.yml']
   workflow_dispatch:
 permissions:
   contents: read
