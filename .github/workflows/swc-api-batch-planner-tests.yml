@@ -7,6 +7,8 @@ on:
       - 'tools/api-parity/test-batch-planner.mjs'
       - 'tools/api-parity/validate-station-manifest.mjs'
       - 'tools/api-parity/test-manifest-validator.mjs'
+      - 'tools/api-parity/limit-station-plan.mjs'
+      - 'tools/api-parity/test-limit-station-plan.mjs'
       - '.github/workflows/swc-api-batch-planner-tests.yml'
   workflow_dispatch:
 permissions:
@@ -23,3 +25,4 @@ jobs:
       - run: node tools/api-parity/test-batch-planner.mjs
       - run: node tools/api-parity/test-manifest-validator.mjs
       - run: node tools/api-parity/test-dynamic-matrix.mjs
+      - run: node tools/api-parity/test-limit-station-plan.mjs
