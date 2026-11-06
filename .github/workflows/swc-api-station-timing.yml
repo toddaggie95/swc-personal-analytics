@@ -53,13 +53,16 @@ jobs:
           TARGET_PACING_EXPERIMENT: '1s'
         run: |
           set -euo pipefail
-          trap 'status=$?; exit "$status"' EXIT
+          # Only the coordinator may refresh/persist OAuth credentials.
+          # Worker copies are short-lived and never become the durable source of truth.
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           mkdir -p tools/api-parity
           cp ../tools/api-parity/full-station-audit.ts tools/api-parity/full-station-audit.ts
           echo 'Initializing OAuth credentials in one process before parallel reads'
           TARGET_OFFSET=175 TARGET_LIMIT=1 npx tsx tools/api-parity/full-station-audit.ts > /tmp/auth-prime.log 2>&1 || { cat /tmp/auth-prime.log; exit 1; }
-          gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json
+          node --input-type=module -e 'import fs from "node:fs"; const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json","utf8")); if (!t.refreshToken || t.expiresAt < Date.now()+600000) { console.error("::error::OAuth access token not valid for the full benchmark; refusing parallel refresh"); process.exit(1); }'
+          bash ../tools/api-parity/persist-swc-token.sh
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/coordinator-tokens.json
           pids=()
           for offset in 0 25 50 75; do
             mkdir -p "/tmp/swc-private/worker-$offset"
@@ -70,6 +73,10 @@ jobs:
           failed=0
           for pid in "${pids[@]}"; do wait "$pid" || failed=1; done
           for offset in 0 25 50 75; do
+            if ! cmp -s /tmp/swc-private/coordinator-tokens.json "/tmp/swc-private/worker-$offset/tokens.json"; then
+              echo "::error::Worker $offset independently refreshed OAuth; stop to avoid losing rotated credentials"
+              failed=1
+            fi
             echo "WORKER_OFFSET=$offset"
             grep -E 'AUDIT_SUMMARY|PACE_DIAGNOSTICS|Error|error' "/tmp/worker-$offset.log" || true
           done
