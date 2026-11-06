@@ -1,4 +1,5 @@
 name: SWC full station CSV/API parity (read only)
+# Diagnostic rerun: record API anomalies without suppressing remaining UID comparisons.
 on:
   push:
     branches: [feature/kashyyyk-parity-readonly]
