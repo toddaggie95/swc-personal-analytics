@@ -1,0 +1,67 @@
+name: SWC dynamic station matrix end-to-end (offline)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Create immutable fixture manifest
+        run: |
+          mkdir -p /tmp/station-plan
+          node tools/api-parity/create-fixture-inventory.mjs /tmp/station-plan/inventory.json
+          node tools/api-parity/plan-station-batches.mjs /tmp/station-plan/inventory.json /tmp/station-plan/plan.json
+      - id: matrix
+        run: node tools/api-parity/build-matrix-from-plan.mjs /tmp/station-plan/plan.json "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: station-plan
+          path: /tmp/station-plan/plan.json
+          retention-days: 7
+  collect:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: station-plan
+          path: /tmp/station-plan
+      - run: node tools/api-parity/fixture-station-batch.mjs /tmp/station-plan/plan.json "${{ matrix.id }}" /tmp/station-output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: station-batch-${{ matrix.id }}
+          path: /tmp/station-output/station-audit-*.json
+          retention-days: 7
+  validate:
+    needs: [plan, collect]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: station-plan
+          path: /tmp/station-plan
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: station-batch-*
+          path: /tmp/station-batches
+      - run: node tools/api-parity/validate-station-manifest.mjs /tmp/station-plan/plan.json /tmp/station-batches
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: station-validation
+          path: /tmp/station-merged/manifest-validation.json
+          retention-days: 7
