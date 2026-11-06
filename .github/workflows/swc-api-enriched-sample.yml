@@ -160,7 +160,7 @@ jobs:
           rows=[]
           for path in glob.glob('/tmp/station-batches/**/station-audit-*.json',recursive=True):
               rows+=json.load(open(path))['rows']
-          keys=['stationName','stationLocation','stationCoordinates','tooledTo']
+          keys=['stationName','stationLocation','stationCoordinates','tooledTo','tooledToValue']
           result={k:{'present':sum(x.get(k) is not None for x in rows),'null':sum(x.get(k) is None for x in rows),'types':dict(collections.Counter(type(x.get(k)).__name__ for x in rows))} for k in keys}
           print('ENRICHED_FIELD_COMPLETENESS',json.dumps({'stations':len(rows),'fields':result}))
           print('ENRICHED_EXAMPLE_SHAPES',json.dumps({k:next((list(v.keys()) if isinstance(v,dict) else type(v).__name__ for x in rows if (v:=x.get(k)) is not None),'missing') for k in keys}))
