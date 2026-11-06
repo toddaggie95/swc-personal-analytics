@@ -3,7 +3,7 @@ import {join} from 'node:path';
 const root=process.argv[2]||'/tmp/station-batches';
 const expected=Number(process.env.EXPECTED_BATCHES||4);
 const files=[];
-function visit(dir){for(const ent of readdirSync(dir,{withFileTypes:true})){const path=join(dir,ent.name);if(ent.isDirectory())visit(path);else if(/^station-audit-\\d+\\.json$/.test(ent.name))files.push(path);}}
+function visit(dir){for(const ent of readdirSync(dir,{withFileTypes:true})){const path=join(dir,ent.name);if(ent.isDirectory())visit(path);else if(/^station-audit-\d+\.json$/.test(ent.name))files.push(path);}}
 visit(root);
 const reports=files.map(p=>JSON.parse(readFileSync(p,'utf8')));
 const problems=[];
