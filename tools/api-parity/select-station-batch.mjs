@@ -1,0 +1,12 @@
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
+import {dirname} from 'node:path';
+const [planFile,batchId,outFile]=process.argv.slice(2);
+if(!planFile||!batchId||!outFile)throw Error('Usage: select-station-batch.mjs plan.json batch-id output.json');
+const plan=JSON.parse(readFileSync(planFile,'utf8'));
+const matches=plan.batches.filter(b=>b.id===batchId);
+if(matches.length!==1)throw Error('Expected exactly one matching batch');
+const batch=matches[0];
+if(!['tff','tjo'].includes(batch.faction)||!Array.isArray(batch.uids)||batch.expected!==batch.uids.length||batch.expected<1||batch.expected>50)throw Error('Invalid batch');
+mkdirSync(dirname(outFile),{recursive:true});
+writeFileSync(outFile,JSON.stringify(batch));
+console.log('SELECTED_BATCH '+JSON.stringify({id:batch.id,faction:batch.faction,expected:batch.expected}));
