@@ -5,6 +5,8 @@ on:
     paths:
       - 'tools/api-parity/plan-station-batches.mjs'
       - 'tools/api-parity/test-batch-planner.mjs'
+      - 'tools/api-parity/validate-station-manifest.mjs'
+      - 'tools/api-parity/test-manifest-validator.mjs'
       - '.github/workflows/swc-api-batch-planner-tests.yml'
   workflow_dispatch:
 permissions:
@@ -19,3 +21,4 @@ jobs:
         with:
           node-version: '24'
       - run: node tools/api-parity/test-batch-planner.mjs
+      - run: node tools/api-parity/test-manifest-validator.mjs
