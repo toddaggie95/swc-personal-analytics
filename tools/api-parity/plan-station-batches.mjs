@@ -12,7 +12,7 @@ for(const faction of ['tff','tjo']){
  const uids=manifest.factions?.[faction];
  if(!Array.isArray(uids))throw Error('Missing inventory for '+faction);
  const ids=uids.map(String);
- if(ids.some(id=>!/^\d+$/.test(id)))throw Error('Invalid station UID in '+faction);
+ if(ids.some(id=>!/^(?:\d+:)?\d+$/.test(id)))throw Error('Invalid station UID in '+faction);
  if(new Set(ids).size!==ids.length)throw Error('Duplicate station UID in '+faction);
  ids.sort((a,b)=>BigInt(a)<BigInt(b)?-1:BigInt(a)>BigInt(b)?1:0);
  counts[faction]=ids.length;
