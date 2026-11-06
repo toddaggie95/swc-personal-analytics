@@ -1,4 +1,5 @@
 name: SWC API full inventory shadow (read only)
+# Second bounded pilot: typed station UID compatibility
 on:
   push:
     branches: [feature/kashyyyk-parity-readonly]
