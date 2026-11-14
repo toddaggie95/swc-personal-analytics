@@ -25,4 +25,6 @@ test('canonical output retains ownership, zero coordinates and production quanti
  const row=canonicalRow({uid:'5:1',ownerUid:'20:1174',typeName:'Shipyard I',location:{system:{name:'Test',uid:'9:1'}},coordinates:{system:{x:0,y:1}},operations:{productionStateValidated:true,productionStatus:'running',productionQuantity:'48',tooledTo:'Ship'}});
  assert.equal(row.owner_uid,'20:1174');assert.equal(row.sysX,'0');assert.equal(row.productionQuantity,'48');
  assert.equal(canonicalRow({uid:'5:2',typeName:'Shipyard I'}).productionStatus,null);
+ assert.throws(()=>canonicalRow({uid:'5:3',entityType:'stations',typeName:null}),/station type/);
+ assert.throws(()=>canonicalRow({uid:'5:4',operations:{productionStateValidated:true,productionStatus:'running',productionQuantity:'0',tooledTo:'Ship'}}),/quantity/);
 });

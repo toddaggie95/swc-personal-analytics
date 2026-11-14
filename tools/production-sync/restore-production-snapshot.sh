@@ -6,7 +6,7 @@ current="${GITHUB_RUN_ID:?}"
 repo="${GITHUB_REPOSITORY:?}"
 history="$output/previous-overview-artifact"
 mkdir -p "$history"
-runs=$(gh api "repos/$repo/actions/runs?branch=${GITHUB_REF_NAME:?}&status=success&per_page=100" --jq '.workflow_runs[] | select(.name == "SWC production overview readiness and publish") | [.id, .event] | @tsv')
+runs=$(gh api "repos/$repo/actions/runs?branch=${PRODUCTION_HISTORY_REF:-${GITHUB_REF_NAME:?}}&status=success&per_page=100" --jq '.workflow_runs[] | select(.name == "SWC production overview readiness and publish") | [.id, .event] | @tsv')
 while IFS=$'\t' read -r previous event; do
   if [[ "${ACCEPTED_HISTORY_ONLY:-false}" == "true" && "$event" != "workflow_run" && "$event" != "workflow_dispatch" ]]; then continue; fi
   [[ -n "$previous" ]] || continue

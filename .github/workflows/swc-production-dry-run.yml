@@ -1,9 +1,6 @@
 name: SWC Production Sync
 
 on:
-  push:
-    branches: [feature/production-api-source-integration]
-    paths: ['.github/workflows/swc-production-dry-run.yml']
   workflow_dispatch:
     inputs:
       export_source:
@@ -13,7 +10,7 @@ on:
         required: true
         default: api
       enable_has_writes:
-        description: 'Write validated HAS changes to Google Sheets (default: true)'
+        description: 'Apply validated HAS and production updates (unchecked = preview only)'
         type: boolean
         required: true
         default: true
@@ -29,6 +26,7 @@ on:
         default: true
 
 permissions:
+  actions: read
   contents: write
   id-token: write
 
@@ -38,12 +36,11 @@ concurrency:
 
 jobs:
   dry-run:
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Validate API and Manual Export production previews without writes'
     environment: swc-api-shadow
     strategy:
       fail-fast: false
       matrix:
-        source: ${{ github.event_name == 'push' && fromJSON('["api","csv"]') || fromJSON(format('["{0}"]', inputs.export_source || 'api')) }}
+        source: ${{ fromJSON(format('["{0}"]', inputs.export_source || 'api')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -54,15 +51,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-
-      - name: Authenticate Google Drive and Sheets
-        id: google
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: 'projects/772242617730/locations/global/workloadIdentityPools/github-actions/providers/github'
-          service_account: 'swc-production-sync@swc-analytics-512519.iam.gserviceaccount.com'
-          token_format: access_token
-          access_token_scopes: https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/spreadsheets
 
       - name: Check out pinned API collector
         if: matrix.source == 'api'
@@ -111,6 +99,15 @@ jobs:
       - name: Convert API inventory into production inputs
         if: matrix.source == 'api'
         run: node tools/api-parity/export-canonical-csv.mjs /tmp/swc-private/normalized - "${{ runner.temp }}/swc-exports" tools/production-sync/systems.addresses.json
+
+      - name: Authenticate Google Drive and Sheets
+        id: google
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/772242617730/locations/global/workloadIdentityPools/github-actions/providers/github'
+          service_account: 'swc-production-sync@swc-analytics-512519.iam.gserviceaccount.com'
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/spreadsheets
 
       - name: Download four exports from private Drive folder
         if: matrix.source == 'csv'
@@ -234,6 +231,22 @@ jobs:
           node tools/production-sync/overview-shadow-audit.mjs --snapshot "${{ runner.temp }}/production-preview/projected-workbook.json" --overview "${{ runner.temp }}/production-preview/overview-readiness.json" --tff-stations "${{ runner.temp }}/swc-exports/tff-stations.csv" --tjo-stations "${{ runner.temp }}/swc-exports/tjo-stations.csv" --tff-materials "${{ runner.temp }}/swc-exports/tff-materials.csv" --tjo-materials "${{ runner.temp }}/swc-exports/tjo-materials.csv" --out "${{ runner.temp }}/production-preview/overview-shadow-audit.json"
           python3 tools/production-sync/overview-publish-preview.py "${{ runner.temp }}/production-preview/overview-readiness.json" "${{ runner.temp }}/production-preview/overview-shadow-audit.json" "${{ runner.temp }}/production-preview/overview-publish-preview.json"
 
+      - name: Validate material matrix preview without writes
+        env:
+          ENABLE_MATERIAL_BALANCE_WRITES: 'false'
+          ACCEPTED_HAS_BATCH: 'false'
+        run: python3 tools/production-sync/publish-material-matrix.py "${{ runner.temp }}/production-preview/overview-readiness.json"
+      - name: Restore accepted production history for change preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCEPTED_HISTORY_ONLY: 'true'
+          PRODUCTION_HISTORY_REF: main
+        run: bash tools/production-sync/restore-production-snapshot.sh "${{ runner.temp }}"
+      - name: Preview Production Changes without publishing
+        run: |
+          prior=()
+          if [ -s "${{ runner.temp }}/previous-production-snapshot.json" ]; then prior=(--previous "${{ runner.temp }}/previous-production-snapshot.json"); fi
+          node tools/production-sync/production-change-cli.mjs "${prior[@]}" --overview "${{ runner.temp }}/production-preview/overview-readiness.json" --snapshot-out "${{ runner.temp }}/production-preview/production-change-snapshot.json" --report-out "${{ runner.temp }}/production-preview/production-change-report.json" --batch-id "preview-${{ github.run_id }}-${{ matrix.source }}"
       - name: Seal exact accepted API inputs for downstream publishing
         if: success() && matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         run: node tools/api-parity/api-snapshot.mjs seal "${{ runner.temp }}/swc-exports" /tmp/swc-private/accepted-public-key.pem "${{ runner.temp }}/accepted-api-snapshot.encrypted.json"
@@ -294,10 +307,10 @@ jobs:
             "${{ runner.temp }}/trash-report.json"
 
       - name: Seal private dry-run diagnostics
-        if: always() && github.event_name == 'push'
+        if: always() && inputs.enable_has_writes != true
         run: node tools/api-parity/seal-sync-diagnostics.mjs "${{ runner.temp }}" tools/api-parity/production-audit-public-key.pem "${{ runner.temp }}/sync-preview.encrypted.json"
       - name: Upload encrypted dry-run preview
-        if: always() && github.event_name == 'push'
+        if: always() && inputs.enable_has_writes != true
         uses: actions/upload-artifact@v4
         with:
           name: swc-dry-run-${{ matrix.source }}
@@ -306,7 +319,7 @@ jobs:
             ${{ runner.temp }}/production-preview/preview-summary.json
           retention-days: 7
       - name: Upload dry-run ledger or diagnostics
-        if: always() && github.event_name != 'push' 
+        if: always() && inputs.enable_has_writes == true
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event_name == 'push' && format('swc-dry-run-{0}', matrix.source) || 'swc-audited-ledger' }}

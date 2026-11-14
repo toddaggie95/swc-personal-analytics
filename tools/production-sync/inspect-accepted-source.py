@@ -13,7 +13,7 @@ def main():
     if result.returncode == 0:
         manifest = output / 'swc-exports' / 'export-manifest.json'
         if manifest.is_file():
-            source = json.loads(manifest.read_text()) .get('source', 'csv')
+            source = json.loads(manifest.read_text()).get('source', 'csv')
     if source not in ('api', 'csv'):
         raise ValueError('Unknown accepted source')
     with open(os.environ['GITHUB_OUTPUT'], 'a') as stream:

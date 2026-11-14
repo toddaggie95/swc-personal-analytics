@@ -10,7 +10,7 @@ const canonicalColumns={stations:['uid','name','owner_name','owner_uid','type_na
 const quote=v=>{const s=String(v??'');return /[",\r\n]/.test(s)?'"'+s.replaceAll('"','""')+'"':s};
 export function buildCanonical({apiDir,referenceDir,outDir,systems}){
  if(!Array.isArray(systems)||!systems.length||new Set(systems).size!==systems.length)throw Error('Invalid system registry');
- fs.mkdirSync(outDir,{recursive:true});const files=[];
+ fs.mkdirSync(outDir,{recursive:true});const files=[];const seenByKind={stations:new Set(),materials:new Set()};
  for(const name of names){
   const [owner,kind]=name.split('-');
   const columns=referenceDir?fs.readFileSync(path.join(referenceDir,name+'.csv'),'utf8').replace(/^\uFEFF/,'').split(/\r?\n/,1)[0].split(','):canonicalColumns[kind];
@@ -27,7 +27,7 @@ export function buildCanonical({apiDir,referenceDir,outDir,systems}){
   if(unknown.length)throw Error('Unmapped canonical columns in '+name+': '+unknown.join(','));
   if(rows.some(r=>!r.uid))throw Error('Missing UID '+name);
   const ids=new Set();
-  for(const row of rows){if(ids.has(row.uid))throw Error('Duplicate UID '+name);ids.add(row.uid)}
+  for(const row of rows){if(ids.has(row.uid)||seenByKind[kind].has(row.uid))throw Error('Duplicate or cross-faction UID '+name);ids.add(row.uid);seenByKind[kind].add(row.uid)}
   for(const row of rows){
    for(const field of columns){
     if(row[field]===undefined||row[field]===null)throw Error('Missing API field '+name+' '+field);

@@ -1,8 +1,5 @@
 name: API source encrypted handoff validation
 on:
-  push:
-    branches: [feature/production-api-source-integration]
-    paths: ['.github/workflows/api-source-handoff-tests.yml']
   workflow_dispatch:
 permissions:
   contents: read

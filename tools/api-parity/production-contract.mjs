@@ -33,7 +33,10 @@ export function canonicalRow(raw){
   if(!Number.isSafeInteger(raw.quantity)||raw.quantity<0)throw Error('Invalid material quantity');
   row.quantity=String(raw.quantity);
  }
+ if(raw.entityType==='stations'&&!str(raw.typeName).trim())throw Error('Missing API station type');
  if(ops?.productionStateValidated){
+  if(!['','running'].includes(ops.productionStatus))throw Error('Invalid validated production status');
+  if(ops.productionStatus==='running'&&(!Number.isSafeInteger(Number(ops.productionQuantity))||Number(ops.productionQuantity)<=0||!str(ops.tooledTo).trim()))throw Error('Invalid validated running quantity/tooling');
   row['tooled-to']=str(ops.tooledTo);row.productionStatus=ops.productionStatus;row.productionQuantity=ops.productionQuantity;
  }else if(ops&&Array.isArray(ops.productionActions)){
   const running=ops.productionActions.filter(a=>record(a.value).status==='running');
