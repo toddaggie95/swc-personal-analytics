@@ -6,7 +6,12 @@ import {syncFactionStations} from '../../src/swc/sync.js';
 import {readJson} from '../../src/storage/files.js';
 import {mkdirSync,writeFileSync} from 'node:fs';
 const cfg=loadConfig();requireLive(cfg);
-const client=new ReadClient(await loadAuth(cfg),new SnapshotRun(cfg.privateDir,'full_inventory'));
+const auth=await loadAuth(cfg);
+// Avoid starting a matrix with a token that passes normal expiry checks but
+// cannot cover queued worker startup. Refresh once in the durable coordinator.
+const initial=await readJson(cfg.privateDir+'/tokens.json') as {expiresAt:number};
+if(initial.expiresAt<Date.now()+25*60_000)await auth.refresh();
+const client=new ReadClient(auth,new SnapshotRun(cfg.privateDir,'full_inventory'));
 const factions:Record<string,string[]>={};
 for(const faction of ['tff','tjo'] as const){
  const inv=await syncFactionStations(client,new SnapshotRun(cfg.privateDir,'inventory_'+faction),cfg.privateDir,faction,false);
