@@ -17,3 +17,5 @@ jobs:
           node-version: '24'
       - run: node --test tools/api-parity/oauth-session.test.mjs tools/api-parity/station-fields.test.mjs tools/api-parity/oauth-persistence.test.mjs
       - run: node tools/api-parity/test-all-planning.mjs && node tools/api-parity/test-limit-station-plan.mjs
+
+      - run: python3 -m unittest discover -s tools/api-parity -p 'test_*parity.py'

@@ -1,9 +1,6 @@
 name: SWC API enriched station sample (read only)
 # Manual read-only collection; default remains one batch
 on:
-  push:
-    branches: [feature/kashyyyk-parity-readonly]
-    paths: ['.github/workflows/swc-api-enriched-sample.yml']
   workflow_dispatch:
     inputs:
       max_batches:
@@ -19,7 +16,6 @@ concurrency:
   cancel-in-progress: false
 jobs:
   plan:
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Capture full enriched station inventory for fresh export parity'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: swc-api-shadow
@@ -66,7 +62,7 @@ jobs:
           npx tsx tools/api-parity/live-station-inventory.ts
           node --input-type=module -e 'import fs from "node:fs";const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json","utf8"));if(!t.refreshToken||!t.accessToken||t.expiresAt<Date.now()+1200000)throw Error("Coordinator token expires too soon for parallel batch execution")'
           node ../tools/api-parity/plan-station-batches.mjs /tmp/station-plan/inventory.json /tmp/station-plan/plan.json
-          node ../tools/api-parity/limit-station-plan.mjs /tmp/station-plan/plan.json "${{ github.event_name == 'push' && '0' || inputs.max_batches || '1' }}"
+          node ../tools/api-parity/limit-station-plan.mjs /tmp/station-plan/plan.json "${{ inputs.max_batches || '1' }}"
       - id: matrix
         run: node tools/api-parity/build-matrix-from-plan.mjs /tmp/station-plan/plan.json "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
