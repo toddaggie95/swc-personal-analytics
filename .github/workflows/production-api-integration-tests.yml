@@ -1,0 +1,18 @@
+name: Production API integration tests
+on:
+  push:
+    branches: [feature/production-api-source-integration]
+  pull_request:
+    paths: ['tools/production-sync/**', 'tools/api-parity/**', 'src/auth/**', '.github/workflows/swc-production-dry-run.yml']
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tools/production-sync/*.test.mjs tools/api-parity/*.test.mjs
+      - run: python3 -m unittest discover -s tools/production-sync -p 'test_*.py'
