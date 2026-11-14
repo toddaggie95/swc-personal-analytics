@@ -2,3 +2,5 @@
 .validation/
 station-pilot-evidence/
 station-pilot.zip
+
+__pycache__/
