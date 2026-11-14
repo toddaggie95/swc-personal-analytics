@@ -1,9 +1,6 @@
 name: SWC production API/CSV sync
 
 on:
-  push:
-    branches: [feature/kashyyyk-parity-readonly]
-    paths: ['.github/workflows/swc-production-dry-run.yml']
   workflow_dispatch:
     inputs:
       export_source:
@@ -33,7 +30,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: swc-production-dry-run
+  group: swc-api-shadow-oauth
   cancel-in-progress: false
 
 jobs:
@@ -68,6 +65,10 @@ jobs:
           path: api-collector
           persist-credentials: false
 
+      - name: Install durable OAuth session
+        if: inputs.export_source != 'csv'
+        run: cp src/auth/*.ts api-collector/src/auth/
+
       - name: Initialize private SWC API credentials
         if: inputs.export_source != 'csv'
         env:
@@ -79,6 +80,7 @@ jobs:
           mkdir -p /tmp/swc-private
           test -n "$SWC_SECRET_WRITER_TOKEN"
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
           node --input-type=module -e 'import fs from "node:fs"; const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json"));if(!t.accessToken||!t.refreshToken||!Number.isFinite(t.expiresAt))process.exit(1)'
 
       - name: Collect full API inventory and persist OAuth rotation

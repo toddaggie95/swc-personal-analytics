@@ -1,0 +1,12 @@
+{
+  "sourceRun": 42190245065,
+  "validation": "offline mapping of retained source objects; no new API capture",
+  "counts": {
+    "stations": 50,
+    "names": 50,
+    "locations": 50,
+    "nestedCoordinates": 50,
+    "toolingObjects": 10,
+    "toolingValues": 10
+  }
+}

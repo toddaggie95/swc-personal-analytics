@@ -43,9 +43,9 @@ async function main(): Promise<void> {
     accessTokenRefreshed: refreshed,
     refreshTokenChanged: rotated,
     refreshTokenAvailable: Boolean(updated.refreshToken),
-    nextRunRequiresPersistence: rotated,
+    nextRunRequiresPersistence: rotated && process.env.GITHUB_ACTIONS !== 'true',
   }));
-  if (rotated) throw new SafeError('Refresh token rotated. Stop: durable persistence is required before another hosted collection.');
+  if (rotated && process.env.GITHUB_ACTIONS !== 'true') throw new SafeError('Refresh token rotated. Stop: durable persistence is required before another hosted collection.');
 }
 main().catch(() => {
   // Do not expose SDK or API errors in CI, including accidental secrets in exception messages.

@@ -2,9 +2,6 @@ name: SWC focused API performance experiment
 # Read-only nine-shipyard TJO action-response shape experiment
 
 on:
-  push:
-    branches: [feature/kashyyyk-parity-readonly]
-    paths: ['.github/workflows/swc-api-performance-experiment.yml']
   workflow_dispatch:
     inputs:
       system:
@@ -16,6 +13,10 @@ on:
 permissions:
   contents: read
   id-token: none
+
+concurrency:
+  group: swc-api-shadow-oauth
+  cancel-in-progress: false
 
 jobs:
   focused:
@@ -30,6 +31,8 @@ jobs:
           ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
           path: api-collector
           persist-credentials: false
+      - name: Install durable OAuth session
+        run: cp src/auth/*.ts api-collector/src/auth/
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -41,6 +44,7 @@ jobs:
           umask 077
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
       - name: Compare inventory and enriched collection on one system
         working-directory: api-collector
         env:
@@ -55,7 +59,7 @@ jobs:
           TARGET_SYSTEM: ${{ inputs.system || 'Daluuj' }}
         run: |
           set -euo pipefail
-          trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then GH_TOKEN="$SWC_SECRET_WRITER_TOKEN" gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
+          trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then bash ../tools/api-parity/persist-swc-token.sh || status=1; fi; exit "$status"' EXIT
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           echo "Experiment system: $TARGET_SYSTEM; factions: TJO and TFF; no sheet writes"
           echo 'Starting targeted shipyard-only comparison'

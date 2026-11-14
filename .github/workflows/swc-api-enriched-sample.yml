@@ -1,9 +1,6 @@
 name: SWC API enriched station sample (read only)
-# Full read-only 48-batch collection (push only); manual default remains one batch
+# Manual read-only collection; default remains one batch
 on:
-  push:
-    branches: [feature/kashyyyk-parity-readonly]
-    paths: ['.github/workflows/swc-api-enriched-sample.yml']
   workflow_dispatch:
     inputs:
       max_batches:
@@ -15,7 +12,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: swc-api-enriched-sample
+  group: swc-api-shadow-oauth
   cancel-in-progress: false
 jobs:
   plan:
@@ -32,6 +29,8 @@ jobs:
           ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
           path: api-collector
           persist-credentials: false
+      - name: Install durable OAuth session
+        run: cp src/auth/*.ts api-collector/src/auth/
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -43,6 +42,7 @@ jobs:
           umask 077
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
       - name: Read live inventory and create plan
         working-directory: api-collector
         env:
@@ -62,7 +62,7 @@ jobs:
           npx tsx tools/api-parity/live-station-inventory.ts
           node --input-type=module -e 'import fs from "node:fs";const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json","utf8"));if(!t.refreshToken||!t.accessToken||t.expiresAt<Date.now()+1200000)throw Error("Coordinator token expires too soon for parallel batch execution")'
           node ../tools/api-parity/plan-station-batches.mjs /tmp/station-plan/inventory.json /tmp/station-plan/plan.json
-          node ../tools/api-parity/limit-station-plan.mjs /tmp/station-plan/plan.json "1"
+          node ../tools/api-parity/limit-station-plan.mjs /tmp/station-plan/plan.json "${{ inputs.max_batches || '1' }}"
       - id: matrix
         run: node tools/api-parity/build-matrix-from-plan.mjs /tmp/station-plan/plan.json "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
@@ -89,6 +89,8 @@ jobs:
           ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
           path: api-collector
           persist-credentials: false
+      - name: Install durable OAuth session
+        run: cp src/auth/*.ts api-collector/src/auth/
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -106,6 +108,7 @@ jobs:
           umask 077
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
           node --input-type=module -e 'import fs from "node:fs";const p="/tmp/swc-private/tokens.json";const t=JSON.parse(fs.readFileSync(p,"utf8"));if(!t.accessToken||t.expiresAt<Date.now()+900000)throw Error("Token expiry guard");delete t.refreshToken;fs.writeFileSync(p,JSON.stringify(t),{mode:0o600})'
           cp /tmp/swc-private/tokens.json /tmp/swc-private/initial.json
       - name: Read assigned station details
@@ -127,6 +130,7 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           mkdir -p tools/api-parity
           cp ../tools/api-parity/full-station-audit.ts tools/api-parity/
+          cp ../tools/api-parity/station-fields.ts tools/api-parity/
           npx tsx tools/api-parity/full-station-audit.ts > /tmp/batch.log 2>&1 || { grep -E '^AUDIT_SUMMARY |^AUDIT_REVIEW ' /tmp/batch.log || true; exit 1; }
           grep -E '^AUDIT_SUMMARY |^AUDIT_REVIEW ' /tmp/batch.log || true
           cmp -s /tmp/swc-private/initial.json /tmp/swc-private/tokens.json || { echo "::error::Worker attempted OAuth rotation"; exit 1; }
@@ -141,7 +145,7 @@ jobs:
         run: rm -rf /tmp/swc-private
   validate:
     needs: [plan, collect]
-    if: always()
+    if: always() && needs.plan.result == 'success' && needs.collect.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -1,9 +1,6 @@
 name: SWC API Shadow - Inventory and Calculated Output Parity
 # Read-only full-system parity rerun after 38 confirmed inaccessible-container exclusions.
 on:
-  push:
-    branches: [feature/kashyyyk-parity-readonly]
-    paths: ['.github/workflows/swc-api-shadow-chamble-parity.yml']
   workflow_dispatch:
     inputs:
       scope:
@@ -16,7 +13,7 @@ permissions:
   contents: read
   id-token: write
 concurrency:
-  group: swc-all-systems-live-parity
+  group: swc-api-shadow-oauth
   cancel-in-progress: false
 jobs:
   compare:
@@ -41,6 +38,8 @@ jobs:
           ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
           path: collector
           persist-credentials: false
+      - name: Install durable OAuth session
+        run: cp parity/src/auth/*.ts collector/src/auth/
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -57,6 +56,7 @@ jobs:
           umask 077
           mkdir -p "$SWC_PRIVATE_DIR"
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > "$SWC_PRIVATE_DIR/tokens.json"
+          cp "$SWC_PRIVATE_DIR/tokens.json" "$SWC_PRIVATE_DIR/initial-tokens.json"
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
             const t=JSON.parse(readFileSync(process.env.SWC_PRIVATE_DIR+"/tokens.json","utf8"));

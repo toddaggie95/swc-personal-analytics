@@ -1,0 +1,19 @@
+name: SWC OAuth offline regression tests
+on:
+  push:
+    branches: [feature/kashyyyk-parity-readonly]
+    paths: ['src/auth/**', 'tools/api-parity/**', '.github/workflows/swc-*.yml']
+  pull_request:
+    paths: ['src/auth/**', 'tools/api-parity/**', '.github/workflows/swc-*.yml']
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tools/api-parity/oauth-session.test.mjs tools/api-parity/station-fields.test.mjs tools/api-parity/oauth-persistence.test.mjs
+      - run: node tools/api-parity/test-all-planning.mjs && node tools/api-parity/test-limit-station-plan.mjs

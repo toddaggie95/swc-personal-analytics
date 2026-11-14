@@ -18,13 +18,10 @@ on:
         default: tff
         type: choice
         options: [tff, tjo]
-  push:
-    branches: [feature/kashyyyk-parity-readonly]
-    paths: ['.github/workflows/swc-api-shadow-live-system-pilot.yml']
 permissions:
   contents: read
 concurrency:
-  group: swc-api-shadow-live-pilot
+  group: swc-api-shadow-oauth
   cancel-in-progress: false
 jobs:
   bounded-materials:
@@ -67,6 +64,7 @@ jobs:
           mkdir -p "$SWC_PRIVATE_DIR"
           test -n "$SWC_OAUTH_TOKENS_JSON"
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > "$SWC_PRIVATE_DIR/tokens.json"
+          cp "$SWC_PRIVATE_DIR/tokens.json" "$SWC_PRIVATE_DIR/initial-tokens.json"
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
             const t=JSON.parse(readFileSync(process.env.SWC_PRIVATE_DIR+"/tokens.json","utf8"));

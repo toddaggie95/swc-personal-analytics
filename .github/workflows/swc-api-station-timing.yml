@@ -1,13 +1,10 @@
 name: SWC API bounded station timing (read only)
 on:
-  push:
-    branches: [feature/kashyyyk-parity-readonly]
-    paths: ['.github/workflows/swc-api-station-timing.yml', 'tools/api-parity/full-station-audit.ts']
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: swc-api-shadow-station-timing
+  group: swc-api-shadow-oauth
   cancel-in-progress: false
 jobs:
   timing:
@@ -24,6 +21,8 @@ jobs:
           ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
           path: api-collector
           persist-credentials: false
+      - name: Install durable OAuth session
+        run: cp src/auth/*.ts api-collector/src/auth/
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -35,6 +34,7 @@ jobs:
           umask 077
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
       - name: Compare two concurrent 50-station workers on one GitHub runner
         working-directory: api-collector
         env:
@@ -58,10 +58,12 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           mkdir -p tools/api-parity
           cp ../tools/api-parity/full-station-audit.ts tools/api-parity/full-station-audit.ts
+          cp ../tools/api-parity/station-fields.ts tools/api-parity/
           echo 'Initializing OAuth credentials in one process before parallel reads'
           TARGET_OFFSET=175 TARGET_LIMIT=1 npx tsx tools/api-parity/full-station-audit.ts > /tmp/auth-prime.log 2>&1 || { cat /tmp/auth-prime.log; exit 1; }
           node --input-type=module -e 'import fs from "node:fs"; const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json","utf8")); if (!t.refreshToken || t.expiresAt < Date.now()+600000) { console.error("::error::OAuth access token not valid for the full benchmark; refusing parallel refresh"); process.exit(1); }'
           bash ../tools/api-parity/persist-swc-token.sh
+          node --input-type=module -e 'import fs from "node:fs";const p="/tmp/swc-private/tokens.json";const t=JSON.parse(fs.readFileSync(p));delete t.refreshToken;fs.writeFileSync(p,JSON.stringify(t),{mode:0o600})'
           cp /tmp/swc-private/tokens.json /tmp/swc-private/coordinator-tokens.json
           pids=()
           for offset in 0 50; do

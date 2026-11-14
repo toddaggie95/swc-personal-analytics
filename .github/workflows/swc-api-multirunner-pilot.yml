@@ -1,13 +1,10 @@
 name: SWC API multi-runner station pilot (read only)
 on:
-  push:
-    branches: [feature/kashyyyk-parity-readonly]
-    paths: ['.github/workflows/swc-api-multirunner-pilot.yml']
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: swc-api-shadow-multirunner
+  group: swc-api-shadow-oauth
   cancel-in-progress: false
 jobs:
   coordinator:
@@ -22,6 +19,8 @@ jobs:
           ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
           path: api-collector
           persist-credentials: false
+      - name: Install durable OAuth session
+        run: cp src/auth/*.ts api-collector/src/auth/
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -33,6 +32,7 @@ jobs:
           umask 077
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
       - name: Refresh if necessary and persist before worker launch
         working-directory: api-collector
         env:
@@ -53,6 +53,7 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           mkdir -p tools/api-parity
           cp ../tools/api-parity/full-station-audit.ts tools/api-parity/full-station-audit.ts
+          cp ../tools/api-parity/station-fields.ts tools/api-parity/
           trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then bash ../tools/api-parity/persist-swc-token.sh || status=1; fi; exit "$status"' EXIT
           npx tsx tools/api-parity/full-station-audit.ts > /tmp/coordinator.log 2>&1 || { cat /tmp/coordinator.log; exit 1; }
           node --input-type=module -e 'import fs from "node:fs"; const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json","utf8")); if(!t.refreshToken || t.expiresAt<Date.now()+900000)process.exit(1)'
@@ -77,6 +78,8 @@ jobs:
           ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
           path: api-collector
           persist-credentials: false
+      - name: Install durable OAuth session
+        run: cp src/auth/*.ts api-collector/src/auth/
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -88,6 +91,7 @@ jobs:
           umask 077
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
           node --input-type=module -e 'import fs from "node:fs";const t=JSON.parse(fs.readFileSync("/tmp/swc-private/tokens.json","utf8"));if(!t.accessToken||t.expiresAt<Date.now()+600000){console.error("::error::Token too close to expiry; worker must not refresh");process.exit(1)}'
           # Workers require only the access token; never expose rotating refresh credentials.
           node --input-type=module -e 'import fs from "node:fs"; const p="/tmp/swc-private/tokens.json";const t=JSON.parse(fs.readFileSync(p,"utf8"));delete t.refreshToken;fs.writeFileSync(p,JSON.stringify(t),{mode:0o600})'
@@ -110,6 +114,7 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           mkdir -p tools/api-parity
           cp ../tools/api-parity/full-station-audit.ts tools/api-parity/full-station-audit.ts
+          cp ../tools/api-parity/station-fields.ts tools/api-parity/
           status=0
           npx tsx tools/api-parity/full-station-audit.ts > /tmp/batch.log 2>&1 || status=$?
           grep -E '^AUDIT_SUMMARY |^AUDIT_REVIEW ' /tmp/batch.log || true

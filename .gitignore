@@ -1,0 +1,4 @@
+# Local offline validation dependencies and downloaded private audit evidence.
+.validation/
+station-pilot-evidence/
+station-pilot.zip
