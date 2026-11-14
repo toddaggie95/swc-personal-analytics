@@ -1,0 +1,86 @@
+name: SWC full material inventory parity (read only)
+on:
+  push:
+    branches: [feature/kashyyyk-parity-readonly]
+    paths: ['.github/workflows/swc-api-full-material-parity.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: swc-api-shadow-oauth
+  cancel-in-progress: false
+jobs:
+  capture:
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Capture full material inventories for read-only HAS parity'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: swc-api-shadow
+    env:
+      SWC_PRIVATE_DIR: /tmp/swc-private
+      SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+      SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+      SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+      SWC_APP_ACTIVATED: 'true'
+      SWC_SECRET_REGENERATED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install durable OAuth session
+        run: cp src/auth/*.ts collector/src/auth/
+      - name: Prepare private credentials
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$SWC_PRIVATE_DIR"
+          test -n "$SWC_SECRET_WRITER_TOKEN"
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > "$SWC_PRIVATE_DIR/tokens.json"
+          cp "$SWC_PRIVATE_DIR/tokens.json" "$SWC_PRIVATE_DIR/initial-tokens.json"
+      - name: Read complete faction materials and station inventory
+        working-directory: collector
+        run: |
+          set -euo pipefail
+          trap 'status=$?; bash ../tools/api-parity/persist-swc-token.sh || status=1; exit "$status"' EXIT
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          for faction in tff tjo; do
+            npx tsx src/cli/index.ts "sync:faction-materials:$faction" > /tmp/material-read.log 2>&1 || { echo '::error::Full material read failed; private log withheld'; exit 1; }
+            npx tsx src/cli/index.ts "sync:faction-station-inventory:$faction" > /tmp/station-read.log 2>&1 || { echo '::error::Station inventory read failed; private log withheld'; exit 1; }
+            echo "Completed full read-only faction inventory: $faction"
+          done
+      - name: Encrypt normalized capture for private comparison
+        run: |
+          set -euo pipefail
+          umask 077
+          cat > /tmp/audit-public-key.pem <<'KEY'
+          -----BEGIN PUBLIC KEY-----
+          MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAkMQk5AnIisqgW37o/nEs
+          Y5e64yg3dtHonw5r784/Xg0iZP+sR8i2ri1fA5D5cu/Cy7EHsqj30CAPM9YCfofO
+          c1ZBscyQuL8DEpIY/M6bpIk29kh0sf4K2dGIF98fd4nxcN6fKUzyWUYNaADcK5Od
+          IpGNCPM+RyXtrEyuNaoCESqKBXJ5yBElYWx14VOOWH4AHKR0VwTAYKmSaDv1aHTO
+          TxCkKTtqbuxiA8cKG+3mosvEltNVqic2bGBsZcKkeBn4dQKdI19/uI3ggj0x8KeN
+          byNdqhJi5xzpgb7HsN16nNJr5jc7VxJ67yEFJEjgBTcaaCphbRl37iIJ9tO8oIzC
+          tkMg2O0X3+/Dbi45pfkf/eMKmaUxZ+/Bb6EXJJzue50aGrhLplg4DDZ7rj0GNHjl
+          f9z1yK/K4/PaXpuylhsvrsjXSbpXjoblR1R0MFKSnxPyicNn9uKCbOJx8bOk8Bo3
+          ki0WdpQ4sXSyh+WpeIVkcz31zg3Kvwbluw3qiwFl4nOPAgMBAAE=
+          -----END PUBLIC KEY-----
+          KEY
+          tar -czf /tmp/normalized-audit.tar.gz -C "$SWC_PRIVATE_DIR" normalized
+          node tools/api-parity/private-audit-envelope.mjs encrypt /tmp/normalized-audit.tar.gz /tmp/audit-public-key.pem /tmp/material-audit.encrypted.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-full-material-capture
+          path: /tmp/material-audit.encrypted.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Remove private runner data
+        if: always()
+        run: rm -rf /tmp/swc-private /tmp/material-read.log /tmp/station-read.log /tmp/normalized-audit.tar.gz /tmp/audit-public-key.pem /tmp/material-audit.encrypted.json
