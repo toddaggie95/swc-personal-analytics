@@ -2,6 +2,9 @@ name: SWC API Shadow - OAuth Probe
 # Recheck after operator updated the OAuth environment secret (2026-11-03).
 
 on:
+  push:
+    branches: [feature/kashyyyk-parity-readonly]
+    paths: ['.github/workflows/swc-api-shadow-oauth-probe.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,6 +15,7 @@ concurrency:
 
 jobs:
   oauth-probe:
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Verify persisted OAuth credentials in a fresh read-only job'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: swc-api-shadow
