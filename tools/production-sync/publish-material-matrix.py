@@ -9,7 +9,7 @@ def matrix(snapshot):
     mats=b["materials"]
     systems=b["systems"]
     extra=b.get("inventoryOnlySystems",[])
-    all_systems=systems+extra
+    all_systems=sorted(systems+extra,key=lambda s:(s.get("sector","").casefold(),s["system"].casefold()))
     if snapshot["mode"]!="read_only" or len(mats)!=21 or len(systems)!=20:
         raise ValueError("Unexpected material balance scope")
     if len(set(mats))!=21 or len({s["system"] for s in all_systems})!=len(all_systems):
@@ -17,7 +17,8 @@ def matrix(snapshot):
     demand={m:sum(row["materials"][m]["required"] for row in systems) for m in mats}
     usage={m:sum(1 for o in snapshot.get("orders",[]) if not o.get("started") and (o.get("bill") or {}).get(m,0)>0) for m in mats}
     mats=sorted(mats,key=lambda m:(-demand[m],-usage[m],m))
-    # Mirror the dashboard: row 5 header; production systems at rows 6,8,...44.
+    # Keep dashboard spacing, but sort this matrix independently of production rows.
+    # Row 5 header; first 20 systems at rows 6,8,...44, then overflow at row 47.
     rows=[[""] for _ in range(57)]
     rows[4]=["Sector","System",*[m.title() for m in mats]]
     totals={k:{m:0 for m in mats} for k in ("missing","excess","net")}
@@ -32,9 +33,9 @@ def matrix(snapshot):
             if v["missing"]:
                 row.append(-v["missing"])
                 ratio=v["missing"]/v["required"] if v["required"] else 1
-                shades.append("green" if ratio<=.10 else "yellow" if ratio<=.30 else "red")
+                shades.append("yellow" if ratio<=.10 else "red")
             elif v["showExcess"] and v["excess"]:
-                row.append(v["excess"]);shades.append("lavender")
+                row.append(v["excess"]);shades.append("green")
             else:row.append("");shades.append(None)
         target=5+2*index if index<len(systems) else 46+(index-len(systems))
         rows[target]=row
