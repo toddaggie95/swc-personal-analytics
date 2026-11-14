@@ -47,7 +47,8 @@ def main():
         raise ValueError("invalid export batch identities")
     repo = os.environ["GITHUB_REPOSITORY"]
     token = os.environ["GH_TOKEN"]
-    url = "https://api.github.com/repos/" + repo + "/contents/" + STATE_PATH
+    state_path = "tools/production-sync/accepted-api-batch.json" if source == "api" else STATE_PATH
+    url = "https://api.github.com/repos/" + repo + "/contents/" + state_path
     existing = api(url, token)
     old = None
     sha = None

@@ -36,6 +36,9 @@ on:
         default: '5:56984'
 permissions:
   contents: read
+concurrency:
+  group: swc-api-shadow-oauth
+  cancel-in-progress: false
 jobs:
   diagnostic:
     runs-on: ubuntu-latest
@@ -51,6 +54,8 @@ jobs:
           ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
           path: api-collector
           persist-credentials: false
+      - name: Install durable OAuth session
+        run: cp src/auth/*.ts api-collector/src/auth/
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -61,6 +66,7 @@ jobs:
           umask 077
           mkdir -p /tmp/swc-private
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
       - name: Run targeted read-only station diagnostics
         working-directory: api-collector
         env:
@@ -80,11 +86,12 @@ jobs:
           TARGET_MODE: ${{ inputs.mode }}
         run: |
           set -euo pipefail
-          trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then gh secret set SWC_OAUTH_TOKENS_JSON --repo "$GITHUB_REPOSITORY" --env swc-api-shadow < /tmp/swc-private/tokens.json || echo "::error::OAuth rotation persistence failed"; fi; exit "$status"' EXIT
+          trap 'status=$?; if [ -s /tmp/swc-private/tokens.json ]; then bash ../tools/api-parity/persist-swc-token.sh || status=1; fi; exit "$status"' EXIT
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           mkdir -p tools/api-parity
           cp ../tools/api-parity/benchmark-targeted.ts tools/api-parity/benchmark-targeted.ts
           cp ../tools/api-parity/full-station-audit.ts tools/api-parity/full-station-audit.ts
+          cp ../tools/api-parity/station-fields.ts tools/api-parity/
           if [ "$TARGET_MODE" = 'audit-batch' ]; then
             npx tsx tools/api-parity/full-station-audit.ts
           else

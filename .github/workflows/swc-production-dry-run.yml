@@ -86,6 +86,12 @@ jobs:
           cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
           cp src/auth/*.ts api-collector/src/auth/
           cp tools/api-parity/collect-production-inputs.ts tools/api-parity/production-contract.mjs api-collector/tools/api-parity/
+      - name: Prepare encrypted accepted API handoff
+        if: matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+        run: node tools/api-parity/api-snapshot.mjs prepare-key /tmp/swc-private/accepted-public-key.pem
       - name: Collect complete API production inputs
         if: matrix.source == 'api'
         working-directory: api-collector
@@ -227,6 +233,17 @@ jobs:
           node tools/api-parity/prepare-sync-preview.mjs "${{ runner.temp }}/preview-workbook.json" "${{ runner.temp }}/audited-ledger.json" "${{ runner.temp }}/production-started-preflight.json" "${{ runner.temp }}/swc-exports" "${{ runner.temp }}/production-preview"
           node tools/production-sync/overview-shadow-audit.mjs --snapshot "${{ runner.temp }}/production-preview/projected-workbook.json" --overview "${{ runner.temp }}/production-preview/overview-readiness.json" --tff-stations "${{ runner.temp }}/swc-exports/tff-stations.csv" --tjo-stations "${{ runner.temp }}/swc-exports/tjo-stations.csv" --tff-materials "${{ runner.temp }}/swc-exports/tff-materials.csv" --tjo-materials "${{ runner.temp }}/swc-exports/tjo-materials.csv" --out "${{ runner.temp }}/production-preview/overview-shadow-audit.json"
           python3 tools/production-sync/overview-publish-preview.py "${{ runner.temp }}/production-preview/overview-readiness.json" "${{ runner.temp }}/production-preview/overview-shadow-audit.json" "${{ runner.temp }}/production-preview/overview-publish-preview.json"
+
+      - name: Seal exact accepted API inputs for downstream publishing
+        if: success() && matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
+        run: node tools/api-parity/api-snapshot.mjs seal "${{ runner.temp }}/swc-exports" /tmp/swc-private/accepted-public-key.pem "${{ runner.temp }}/accepted-api-snapshot.encrypted.json"
+      - name: Upload exact accepted API snapshot
+        if: success() && matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
+        uses: actions/upload-artifact@v4
+        with:
+          name: swc-accepted-api-snapshot
+          path: ${{ runner.temp }}/accepted-api-snapshot.encrypted.json
+          retention-days: 90
 
       - name: Apply and verify HAS updates (opt-in only)
         if: success() && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)

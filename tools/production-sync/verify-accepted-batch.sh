@@ -25,6 +25,15 @@ if [[ ! -s "$output/accepted-has/batch-acceptance-report.json" || ! -s "$output/
   echo "Missing accepted HAS report" >&2
   exit 1
 fi
+source=$(python3 - "$output/accepted-has/swc-exports/export-manifest.json" <<'PY_SOURCE'
+import json,sys
+print(json.load(open(sys.argv[1])).get('source','csv'))
+PY_SOURCE
+)
+if [[ "$source" == 'api' ]]; then
+  gh run download "$run" -R "$repo" -n swc-accepted-api-snapshot -D "$output/accepted-api"
+  node tools/api-parity/api-snapshot.mjs restore "$output/accepted-api/accepted-api-snapshot.encrypted.json" "$RUNNER_TEMP/swc-exports"
+fi
 python3 - "$output/accepted-has" <<'PY'
 import json,os,sys
 folder=sys.argv[1]

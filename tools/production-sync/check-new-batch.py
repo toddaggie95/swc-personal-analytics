@@ -13,8 +13,9 @@ def identity(files):
 def main():
     with open(sys.argv[1]) as f:
         current = json.load(f)
+    state_path = "accepted-api-batch.json" if current.get("source") == "api" else "accepted-batch.json"
     url = ("https://api.github.com/repos/" + os.environ["GITHUB_REPOSITORY"]
-           + "/contents/tools/production-sync/accepted-batch.json")
+           + "/contents/tools/production-sync/" + state_path)
     request = urllib.request.Request(url, headers={
         "Authorization": "Bearer " + os.environ["GH_TOKEN"],
         "Accept": "application/vnd.github+json"})

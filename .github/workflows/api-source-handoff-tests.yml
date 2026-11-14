@@ -1,0 +1,51 @@
+name: API source encrypted handoff validation
+on:
+  push:
+    branches: [feature/production-api-source-integration]
+    paths: ['.github/workflows/api-source-handoff-tests.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  seal:
+    environment: swc-api-shadow
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Prepare persistent encryption key
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+        run: node tools/api-parity/api-snapshot.mjs prepare-key "${{ runner.temp }}/public.pem"
+      - name: Seal four synthetic source files
+        run: |
+          node tools/api-parity/write-handoff-fixture.mjs "${{ runner.temp }}/fixture"
+          node tools/api-parity/api-snapshot.mjs seal "${{ runner.temp }}/fixture" "${{ runner.temp }}/public.pem" "${{ runner.temp }}/fixture.encrypted.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-handoff-fixture
+          path: ${{ runner.temp }}/fixture.encrypted.json
+          retention-days: 1
+  restore:
+    needs: seal
+    environment: swc-api-shadow
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: encrypted-handoff-fixture
+          path: ${{ runner.temp }}/encrypted
+      - name: Restore in a fresh job and verify exact bytes
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          FIXTURE_ROOT: ${{ runner.temp }}
+        run: |
+          node tools/api-parity/api-snapshot.mjs restore "$FIXTURE_ROOT/encrypted/fixture.encrypted.json" "$FIXTURE_ROOT/restored"
+          node --input-type=module -e 'import fs from "node:fs";for(const f of ["tff-stations","tff-materials","tjo-stations","tjo-materials"]){if(fs.readFileSync(process.env.FIXTURE_ROOT+"/restored/"+f+".csv","utf8")!=="uid,name\nfixture,Example\n")throw Error("Handoff bytes changed")};console.log("Fresh-job encrypted API handoff verified: four exact files")'
