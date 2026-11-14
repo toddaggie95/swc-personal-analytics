@@ -22,6 +22,10 @@ async function main(): Promise<void> {
   console.log('Token expiry category: ' + (old.expiresAt <= Date.now() + 300_000 ? 'refresh-needed' : 'not-near-expiry'));
   stage = 'OAuth client initialization';
   const auth = await loadAuth(config);
+  if (process.env.SWC_FORCE_REFRESH === 'true') {
+    stage = 'controlled OAuth refresh and durable persistence';
+    await auth.refresh();
+  }
   const run = new SnapshotRun(config.privateDir, 'github-auth-probe');
   const wrapped = {
     async accessToken() { stage = 'access token acquisition and possible refresh'; return auth.accessToken(); },

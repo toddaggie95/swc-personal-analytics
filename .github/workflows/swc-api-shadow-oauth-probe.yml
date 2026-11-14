@@ -2,6 +2,9 @@ name: SWC API Shadow - OAuth Probe
 # Recheck after operator updated the OAuth environment secret (2026-11-03).
 
 on:
+  push:
+    branches: [feature/kashyyyk-parity-readonly]
+    paths: ['.github/workflows/swc-api-shadow-oauth-probe.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,6 +15,7 @@ concurrency:
 
 jobs:
   oauth-probe:
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Validate one durable OAuth refresh after full station parity'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: swc-api-shadow
@@ -57,6 +61,7 @@ jobs:
           cp "$RUNNER_TEMP/swc-private/tokens.json" "$RUNNER_TEMP/swc-private/initial-tokens.json"
       - name: One-request read-only OAuth probe
         env:
+          SWC_FORCE_REFRESH: 'true'
           SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
           SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
           SWC_PRIVATE_DIR: ${{ runner.temp }}/swc-private
