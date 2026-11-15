@@ -28,10 +28,15 @@ for workbook checks and writes. OAuth refresh saves rotated credentials locally
 and to the isolated GitHub environment before further reads. All renewable
 credential workflows share the same concurrency group.
 
-The optimized collector uses a single shared quota budget, serial requests and a
-five-request reserve. It waits for a trustworthy reset rather than assigning a
-fresh budget to each endpoint or runner. Missing headers retain conservative
-pacing. Character/faction mapping is reused within the run.
+The optimized collector uses the validated fresh-runner batch design: one OAuth
+and inventory coordinator, at most 50 station details per separate runner, four
+workers concurrently, and exact assembly before canonical conversion. The 1,013
+tracked shipyards require 21 batches. All 48 prior full-audit runners independently
+started at 599 remaining and ended at 550 after 50 reads, including concurrent
+batches. Each runner conservatively shares its observed budget across endpoint
+groups, retains five requests, and honors reset times. Workers cannot refresh:
+their token files contain access tokens only, and they have no secret writer.
+Character/faction mapping is reused by the coordinator.
 
 Completed station operations are saved incrementally and retained in the
 authenticated encrypted `swc-api-progress` artifact. Set `api_resume_run_id` to a
@@ -41,8 +46,11 @@ changed or older-than-two-hour checkpoints stop collection. Complete coverage an
 freshness are required before canonical conversion. Partial evidence never
 authorizes sheet writes. This recovery artifact uses the retained environment
 snapshot key and excludes all OAuth storage.
-Collection has a 105-minute soft deadline within the 120-minute job, including
-quota waits, so normal deadline exits leave time to encrypt/upload progress.
+The coordinator has a 12-minute soft deadline in its 15-minute job; each worker
+has an eight-minute soft deadline in its ten-minute job. Encrypted per-batch
+artifacts retain successes independently; assembly also emits a merged resumable
+checkpoint when coverage is incomplete. The older serial collector retains its
+105-minute soft deadline within a 120-minute job for diagnostic use.
 Freshness is rechecked after comparisons and immediately before sealing, writes,
 and acceptance. Partial quota headers retain a previously observed reset time.
 

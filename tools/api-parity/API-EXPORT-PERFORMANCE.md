@@ -4,6 +4,17 @@ Reviewed 2026-11-14. This review uses source inspection and existing private cap
 
 ## Main finding
 
+Implementation update: revisiting all 48 successful audit batches confirmed that
+every fresh runner began at 599 remaining, including simultaneously active batches,
+and each 50-read batch ended at 550. The initial review was too conservative about
+using that evidence. Production now follows the proven fresh-runner design: one
+OAuth/inventory coordinator, 50-detail batches on separate runners, four concurrent
+workers, then exact encrypted assembly. The 1,013 production targets need 21
+batches; the full 2,375-station audit needs 48. Workers have access-only token files
+and no refresh implementation or secret-writer credentials. Each runner retains
+its own observed quota reserve and reset handling. The earlier single-runner
+findings below describe the serial baseline, not the new production scheduler.
+
 The export is dominated by request pacing, not local computation. Optimize recoverability and request selection first. Faster polling or more GitHub runners is not a substitute for understanding SWC's quota scope.
 
 The production collector already narrows detail reads to shipyards in the tracked systems: 1,013 details rather than all 2,375 stations, a 57.3% reduction. Its approximate minimum request budget is 1,056 reads: 1,013 details, 13 station pages, 26 material pages, and four character lookups. Retries and refresh calls are additional. Pagination already requests 200 items per page.

@@ -1,6 +1,8 @@
 name: SWC Production Sync
 
 on:
+  push:
+    branches: [feature/production-api-source-integration]
   workflow_dispatch:
     inputs:
       export_source:
@@ -40,12 +42,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  api-inputs:
+    if: (github.event_name == 'workflow_dispatch' && inputs.export_source == 'api') || github.event.head_commit.message == 'Validate batched API and Manual Export previews'
+    uses: ./.github/workflows/production-api-inputs.yml
+    with:
+      resume_run_id: ${{ inputs.api_resume_run_id || '' }}
+    secrets: inherit
   dry-run:
+    needs: api-inputs
+    if: always() && !cancelled() && (needs.api-inputs.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.export_source == 'csv'))
     environment: swc-api-shadow
     strategy:
       fail-fast: false
       matrix:
-        source: ${{ fromJSON(format('["{0}"]', inputs.export_source || 'api')) }}
+        source: ${{ fromJSON(github.event_name == 'push' && '["api","csv"]' || format('["{0}"]', inputs.export_source || 'api')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -57,68 +67,29 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Check out pinned API collector
+      - name: Download assembled API production inputs
         if: matrix.source == 'api'
-        uses: actions/checkout@v4
+        uses: actions/download-artifact@v4
         with:
-          repository: toddaggie95/swc-personal-analytics
-          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
-          path: api-collector
-          persist-credentials: false
-      - name: Prepare durable API collector
+          name: swc-api-inputs
+          path: /tmp/swc-api-inputs
+      - name: Restore exact canonical API inputs and freshness evidence
         if: matrix.source == 'api'
         env:
-          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
-          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
-        run: |
-          set -euo pipefail
-          umask 077
-          mkdir -p /tmp/swc-private api-collector/tools/api-parity
-          test -n "$SWC_SECRET_WRITER_TOKEN"
-          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
-          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
-          cp src/auth/*.ts api-collector/src/auth/
-          cp tools/api-parity/collect-production-inputs.ts tools/api-parity/production-contract.mjs tools/api-parity/collection-diagnostics.mjs tools/api-parity/production-progress.mjs tools/api-parity/private-audit-envelope.mjs api-collector/tools/api-parity/
-          cp tools/api-parity/production-read-pacer.ts api-collector/src/swc/read-pacer.ts
-      - name: Restore optional encrypted API progress
-        if: matrix.source == 'api' && inputs.api_resume_run_id
-        env:
-          GH_TOKEN: ${{ github.token }}
-          API_RESUME_RUN_ID: ${{ inputs.api_resume_run_id }}
           SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
         run: |
           set -euo pipefail
-          [[ "$API_RESUME_RUN_ID" =~ ^[0-9]+$ ]]
-          url=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$API_RESUME_RUN_ID/artifacts" --jq '.artifacts[] | select(.name == "swc-api-progress" and .expired == false) | .archive_download_url')
-          test -n "$url"
-          gh api "$url" > "$RUNNER_TEMP/api-progress.zip"
-          unzip -p "$RUNNER_TEMP/api-progress.zip" production-progress.encrypted.json > "$RUNNER_TEMP/production-progress.encrypted.json"
-          node tools/api-parity/production-progress.mjs restore "$RUNNER_TEMP/production-progress.encrypted.json" /tmp/swc-private/production-progress.json
+          umask 077
+          mkdir -p /tmp/swc-private
+          node tools/api-parity/api-snapshot.mjs restore /tmp/swc-api-inputs/api-inputs.encrypted.json "${{ runner.temp }}/swc-exports"
+          node tools/api-parity/production-progress.mjs restore /tmp/swc-api-inputs/production-progress.encrypted.json /tmp/swc-private/production-progress.json
+          node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json
       - name: Prepare encrypted accepted API handoff
         if: matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true
         env:
           SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
           SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
         run: node tools/api-parity/api-snapshot.mjs prepare-key /tmp/swc-private/accepted-public-key.pem
-      - name: Collect complete API production inputs
-        if: matrix.source == 'api'
-        working-directory: api-collector
-        env:
-          SWC_PRIVATE_DIR: /tmp/swc-private
-          SWC_SYSTEMS_FILE: ${{ github.workspace }}/tools/production-sync/systems.addresses.json
-          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
-          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
-          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
-          SWC_APP_ACTIVATED: 'true'
-          SWC_SECRET_REGENERATED: 'true'
-        run: |
-          set -euo pipefail
-          trap 'status=$?; bash ../tools/api-parity/persist-swc-token.sh || status=1; exit "$status"' EXIT
-          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
-          npx tsx tools/api-parity/collect-production-inputs.ts
-      - name: Convert API inventory into production inputs
-        if: matrix.source == 'api'
-        run: node tools/api-parity/export-canonical-csv.mjs /tmp/swc-private/normalized - "${{ runner.temp }}/swc-exports" tools/production-sync/systems.addresses.json
 
       - name: Authenticate Google Drive and Sheets
         id: google
@@ -336,19 +307,6 @@ jobs:
             "${{ runner.temp }}/batch-acceptance-report.json" \
             "${{ runner.temp }}/trash-report.json"
 
-      - name: Encrypt resumable API progress
-        if: always() && matrix.source == 'api'
-        env:
-          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
-        run: node tools/api-parity/production-progress.mjs seal /tmp/swc-private/production-progress.json "${{ runner.temp }}/production-progress.encrypted.json"
-      - name: Retain encrypted API progress
-        if: always() && matrix.source == 'api'
-        uses: actions/upload-artifact@v4
-        with:
-          name: swc-api-progress
-          path: ${{ runner.temp }}/production-progress.encrypted.json
-          retention-days: 1
-          if-no-files-found: warn
       - name: Preserve partial API progress without credentials
         if: always() && matrix.source == 'api' && inputs.enable_has_writes != true
         run: |
