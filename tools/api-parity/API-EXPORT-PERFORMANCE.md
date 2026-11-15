@@ -2,7 +2,42 @@
 
 Updated 2026-11-15 using existing GitHub Actions logs and retained audit timings. This review makes no additional SWC requests or spreadsheet changes.
 
-## Measured production comparison
+## Current optimization: twenty workers and compact publication state
+
+The final read-only comparison [43762988776](https://github.com/toddaggie95/swc-personal-analytics/actions/runs/43762988776) reached twenty simultaneous detail jobs and passed all 21 batches. It collected all 1,013 details with exactly 1,013 worker requests, no retries/failures, and 550 requests remaining on each full worker. The workbook preview again matched all 1,087 orders with zero validation errors and writes disabled.
+
+| Stage | Four workers, live baseline | Twelve workers, read-only | Twenty workers, read-only |
+|---|---:|---:|---:|
+| Planning job | 103s | 58s | 64s |
+| Detail job window | 387s | 140s | 92s |
+| Assembly job | 12s | 10s | 10s |
+| Complete API input window | 510s | 215s | 174s (2m54s) |
+| Full primary job window | 544s, including writes | 245s, no writes | 203s (3m23s), no writes |
+
+Twenty is the selected production cap: another 41 seconds (19%) faster for API inputs than twelve, with no observed retry/quota penalty. It is a cap; GitHub runner availability may reduce actual concurrency. Actual write-enabled end-to-end timing will be measured on the next production run. Roughly four to five minutes overall is an estimate, not a measured live total.
+
+### Twelve-worker comparison
+
+Read-only benchmark [43760123250](https://github.com/toddaggie95/swc-personal-analytics/actions/runs/43760123250) passed all 21 batches, exact coverage, and the full workbook preview. It read all 1,013 tracked details with exactly 1,013 worker requests, zero retries/failures, and 550 requests remaining on every full 50-read worker. All 1,087 orders and publication builders validated. Production sheet writes, acceptance and Drive cleanup were disabled.
+
+| Same stage measurement | First live four-worker run | Twelve-worker benchmark |
+|---|---:|---:|
+| Inventory/planning job | 103s | 58s |
+| Detail job window | 387s | 140s |
+| Assembly job | 12s | 10s |
+| Complete API input job window | 510s (8m30s) | 215s (3m35s) |
+
+The full read-only primary workflow job window was 245s (4m05s). This excludes actual production writes and downstream publication, so it is not a measured live end-to-end production runtime. The baseline coordinator had a cold npm cache; subsequent warm-cache behavior contributes to its improvement. The worker comparison is the clearer concurrency/pacing result.
+
+Reliable-budget pacing now measures the one-second minimum between request starts. Response latency fits inside that interval; the rate is not increased above one request start per second per runner. Missing headers retain the conservative full fallback. Twenty separate runners overlap the same 50-read bounds; no API observations are omitted and workers still cannot refresh OAuth.
+
+Metadata-only benchmark [43761632697](https://github.com/toddaggie95/swc-personal-analytics/actions/runs/43761632697) resolved known and new input fingerprints in 1.504s and 1.418s, versus the live 37s full-report archive scan. This measures the migration-seed path; later receipt downloads add a small request. New publication intents and receipts are tiny metadata artifacts, separate from the unchanged full report archives.
+
+Before any publisher writes, a durable intent invalidates older publication knowledge. A verified final/partial receipt records only known component states. Interrupted or unknown components require publication rather than inheriting older matches; Aâ†’Bâ†’A also republishes correctly. Alternating slots preserve prior retry state, and inherited completion markers are removed before forced writes. The legacy seed expires after the migration window; missing/expired evidence causes republication, never a stale skip. Artifact identity, trusted workflow origin, exact input hashes, ZIP contents and attempts are validated.
+
+Regression coverage: 157 JavaScript checks plus 78 Python checks, including 28 receipt/failure/retry/migration tests. The next write-enabled run will establish the new live end-to-end runtime.
+
+## Earlier serial-to-four-worker comparison
 
 The bounded parallel export assembled all 1,013 tracked production shipyards in **7m54s**, compared with **89m03s** for the successful serial collector: approximately **11.3 times faster**, or **91.1% less elapsed time**. These are collection-stage measurements; downstream Google Sheets comparisons and previews are excluded.
 
@@ -11,7 +46,7 @@ The bounded parallel export assembled all 1,013 tracked production shipyards in 
 | Validation run | [43677894333](https://github.com/toddaggie95/swc-personal-analytics/actions/runs/43677894333) | [43683569113](https://github.com/toddaggie95/swc-personal-analytics/actions/runs/43683569113) |
 | Production detail coverage | 1,013 | 1,013 |
 | Detail workers | One serial process | 21 fresh runners, maximum four concurrent |
-| Batch sizes | Entire target list | 20 × 50, then 13 |
+| Batch sizes | Entire target list | 20 Ã— 50, then 13 |
 | Collection elapsed | 5,343,116 ms | 474,448 ms including planning, setup, transfer and assembly |
 | Pacing wait | 5,030,177 ms, 94.1% of elapsed | 944,317 ms summed across parallel workers |
 | Large quota-reset waits | 495s + 3,585s = 68m | None in completed worker logs |
@@ -21,7 +56,7 @@ The bounded parallel export assembled all 1,013 tracked production shipyards in 
 
 The serial value comes from `PRODUCTION_API_COMPLETE` in job 132701949954. Its fetch time was 212,046 ms. Batched wall time uses the first plan-job log at **06:11:38.917 UTC** through the last assembly-job log at **06:19:33.366 UTC**, November 15. This includes more workflow overhead than the serial collector's internal timer, so it is a conservative comparison rather than identical timer boundaries.
 
-The coordinator job occupied 69.3s; assembly occupied 10.4s. Detail collection spanned approximately **06:12:59.128–06:19:12.890 UTC**, or **6m13.8s**, inferred from each batch's completion timestamp and elapsed time. Detail jobs occupied a 6m21.3s wall-clock window. Summed collection time across workers was 18m53.8s; summed job time was 22m34.6s. Setup, transfer and cleanup added about **3m40.8s in aggregate**, averaging **10.5s per worker**; overlapping workers mean this is not additive wall-clock delay. Full 50-read batches took 53.6–58.5s; median across all batches was 55.5s. The last 13-read batch took 14.6s.
+The coordinator job occupied 69.3s; assembly occupied 10.4s. Detail collection spanned approximately **06:12:59.128â€“06:19:12.890 UTC**, or **6m13.8s**, inferred from each batch's completion timestamp and elapsed time. Detail jobs occupied a 6m21.3s wall-clock window. Summed collection time across workers was 18m53.8s; summed job time was 22m34.6s. Setup, transfer and cleanup added about **3m40.8s in aggregate**, averaging **10.5s per worker**; overlapping workers mean this is not additive wall-clock delay. Full 50-read batches took 53.6â€“58.5s; median across all batches was 55.5s. The last 13-read batch took 14.6s.
 
 All 20 full workers ended with quota limit **600**, remaining **550**. The 13-read worker ended with **587** remaining. Every worker reported the same reset timestamp, while overlapping workers retained independent remaining counts. These production observations corroborate the prior 48-batch audit, where every fresh runner's first response reported 599 remaining and each 50-read batch ended at 550. The earlier review was too conservative about using that direct evidence. The implemented maximum-four fresh-runner design follows the repeatedly observed runner budgets; it does not assume unlimited capacity or increase concurrency beyond the validated setting. Each runner enforces its own observed reserve, reset and fallback rules.
 
@@ -31,12 +66,13 @@ The coordinator performs four paginated inventories once, with one cached charac
 
 | Impact | Change | Evidence and limits |
 |---|---|---|
-| Big | One OAuth/inventory coordinator, maximum-four fresh-runner detail batches, exact encrypted assembly | Live run 43683569113: all 21 workers and assembly passed, 1,013 completed, zero missing. Workers have no refresh token file, client secret or secret-writer credential. |
+| Big | One OAuth/inventory coordinator, maximum-twenty fresh-runner detail batches, exact encrypted assembly | Benchmark 43762988776: all 21 workers and assembly passed, 1,013 completed, zero missing. Workers have no refresh token file, client secret or secret-writer credential. |
 | Big | Validated partial checkpoints and resume | Worker successes are encrypted after each 25 details and on normal exit, uploaded on completion/failure, and assembled into compatible progress. Resume binds target identity, owner, contract and timestamps. Hard runner loss can still lose work not yet uploaded. |
 | Medium | Failure categories and performance telemetry | Fixed labels, request counts, elapsed time, pacing waits and quota summaries avoid exposing payloads or OAuth responses. |
 | Medium | Freshness gates | Two-hour observation limit, checked during plan selection/assembly and after sheet comparisons and before production sealing/writes/acceptance. Captures remain observations over time, not transactional snapshots. |
 | Small | Reuse character/faction mapping | Four inventory syncs share one character response, saving three data reads. |
 | Small | Cache npm download data against the pinned lockfile | Coordinator/detail jobs retain `npm ci`. Private data and tokens are excluded from dependency caches. |
+| Medium | Compact verified publication intents/receipts | Known/new lookups measured 1.4â€“1.5s; incomplete writes remain recoverable without trusting stale markers. |
 
 The production path already filters details to tracked shipyards: **1,013 instead of all 2,375 stations**, a 57.3% reduction. Complete station and material inventories remain available for registry and HAS validation. Pagination already uses 200 items per request.
 

@@ -145,12 +145,26 @@ jobs:
             "${{ runner.temp }}/overview-readiness.json" \
             "${{ runner.temp }}/overview-shadow-audit.json" \
             "${{ runner.temp }}/overview-publish-preview.json"
+      - name: Create durable publication intent before writes
+        id: publication_intent
+        if: success() && steps.accepted_batch.outputs.verified == 'true' && (steps.publish_gate.outputs.overview == 'true' || steps.publish_gate.outputs.matrix == 'true' || steps.publish_gate.outputs.changes == 'true' || inputs.force_republish == true)
+        run: python3 tools/production-sync/publication-receipts.py intent "${{ runner.temp }}"
+      - name: Retain publication intent
+        if: success() && steps.accepted_batch.outputs.verified == 'true' && (steps.publish_gate.outputs.overview == 'true' || steps.publish_gate.outputs.matrix == 'true' || steps.publish_gate.outputs.changes == 'true' || inputs.force_republish == true)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.publication_intent.outputs.artifact_name }}
+          path: ${{ runner.temp }}/publication-intent.json
+          overwrite: true
+          retention-days: 90
+          if-no-files-found: error
       - name: Publish faction-aware Production Overview (A3:L46 only)
         if: success() && steps.accepted_batch.outputs.verified == 'true' && (steps.publish_gate.outputs.overview == 'true' || inputs.force_republish == true)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           ENABLE_OVERVIEW_WRITES: 'true'
         run: |
+          rm -f "${{ runner.temp }}/published-overview.ok"
           python3 tools/production-sync/publish-overview-factions.py "${{ runner.temp }}/overview-publish-preview.json"
           touch "${{ runner.temp }}/published-overview.ok"
       - name: Publish material matrix beside dashboard (N:AI)
@@ -160,6 +174,7 @@ jobs:
           ACCEPTED_HAS_BATCH: 'true'
           ENABLE_MATERIAL_BALANCE_WRITES: 'true'
         run: |
+          rm -f "${{ runner.temp }}/published-matrix.ok"
           python3 tools/production-sync/publish-material-matrix.py "${{ runner.temp }}/overview-readiness.json"
           touch "${{ runner.temp }}/published-matrix.ok"
       - name: Restore prior successful production snapshot
@@ -190,13 +205,28 @@ jobs:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           ACCEPTED_HAS_BATCH: 'true'
         run: |
+          rm -f "${{ runner.temp }}/published-changes.ok"
           python3 tools/production-sync/publish-production-changes.py "${{ runner.temp }}/production-change-report.json"
           touch "${{ runner.temp }}/published-changes.ok"
+      - name: Record verified publication state
+        id: publication_receipt
+        if: always() && steps.accepted_batch.outputs.verified == 'true'
+        run: python3 tools/production-sync/publication-receipts.py create "${{ runner.temp }}"
+      - name: Retain compact publication receipt
+        if: always() && steps.accepted_batch.outputs.verified == 'true' && steps.publication_receipt.outputs.artifact_name != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.publication_receipt.outputs.artifact_name }}
+          path: ${{ runner.temp }}/publication-receipt.json
+          overwrite: true
+          retention-days: 90
+          if-no-files-found: error
       - name: Upload read-only readiness report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: swc-production-overview-readonly
+          overwrite: true
           path: |
             ${{ runner.temp }}/upstream-noop.json
             ${{ runner.temp }}/published-overview.ok

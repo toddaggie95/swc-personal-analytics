@@ -29,3 +29,21 @@ test('collector deadline stops before a long quota wait, leaving time for upload
  const waits=[];const pacer=new ReadPacer(async ms=>waits.push(ms),()=>0,6500,3660000,1000,300000);
  pacer.afterResponse('details',headers(5));await assert.rejects(pacer.beforeRequest('details'),/deadline/);assert.deepEqual(waits,[]);
 });
+test('response latency fits inside the minimum start-to-start gap',async()=>{
+ let now=0;const waits=[],starts=[];
+ const pacer=new ReadPacer(async ms=>{waits.push(ms);now+=ms;},()=>now);
+ await pacer.beforeRequest('stations');starts.push(now);now+=200;pacer.afterResponse('stations',headers(599));
+ await pacer.beforeRequest('materials');starts.push(now);now+=300;pacer.afterResponse('materials',headers(598));
+ await pacer.beforeRequest('details');starts.push(now);
+ assert.deepEqual(starts,[0,1000,2000]);assert.deepEqual(waits,[800,700]);
+});
+test('slow responses never add an unnecessary reliable-budget gap',async()=>{
+ let now=0;const waits=[];const pacer=new ReadPacer(async ms=>{waits.push(ms);now+=ms;},()=>now);
+ await pacer.beforeRequest('details');now=1700;pacer.afterResponse('details',headers(599));
+ await pacer.beforeRequest('details');assert.equal(now,1700);assert.deepEqual(waits,[]);
+});
+test('unknown quotas retain the full conservative fallback after the response',async()=>{
+ let now=0;const waits=[];const pacer=new ReadPacer(async ms=>{waits.push(ms);now+=ms;},()=>now);
+ await pacer.beforeRequest('details');now=200;pacer.afterResponse('details',new Headers());
+ await pacer.beforeRequest('details');assert.equal(now,6700);assert.deepEqual(waits,[6500]);
+});

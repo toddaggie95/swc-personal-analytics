@@ -12,6 +12,7 @@ export class ReadPacer {
  private next=0;
  private window:RateWindow={limit:null,remaining:null,resetAtMs:null};
  private waits=0;
+ private lastStart:number|undefined;
  private deadline:number;
  constructor(private sleep:(ms:number)=>Promise<void>=ms=>new Promise(r=>setTimeout(r,ms)),private now:()=>number=Date.now,
   private fallbackDelayMs=6500,private maxWaitMs=3_660_000,private minGapMs=1000,deadlineMs=Infinity){this.deadline=Math.min(deadlineMs,this.now()+105*60_000);}
@@ -26,6 +27,7 @@ export class ReadPacer {
   if(now+delay+30_000>=this.deadline){console.log('PRODUCTION_API_COLLECTION_DEADLINE');throw Error('Collection deadline reserves time for encrypted progress upload');}
   if(delay>this.maxWaitMs)throw Error('Quota wait exceeds collection bound');
   if(delay){this.waits+=delay;if(delay>60_000)console.log('PRODUCTION_API_QUOTA_WAIT '+JSON.stringify({waitSeconds:Math.ceil(delay/1000)}));await this.sleep(delay);}
+  this.lastStart=this.now();
   if(w.resetAtMs!==null&&this.now()>w.resetAtMs)this.window={limit:null,remaining:null,resetAtMs:null};
   this.next=this.now()+this.fallbackDelayMs;
  }
@@ -37,7 +39,8 @@ export class ReadPacer {
    if(this.window.resetAtMs!==null&&now<=this.window.resetAtMs&&this.window.remaining!==null){
     this.window={limit:Math.min(this.window.limit??observed.limit!,observed.limit!),remaining:Math.max(0,Math.min(this.window.remaining-1,observed.remaining!)),resetAtMs:Math.max(this.window.resetAtMs,observed.resetAtMs!)};
    }else this.window=observed;
-   this.next=now+this.minGapMs;
+   // Preserve a one-second request-start interval without adding transport latency.
+   this.next=Math.max(now,(this.lastStart??now)+this.minGapMs);
   }else{
    // Missing headers do not restore consumed quota or erase a known reserve.
    if(this.window.remaining!==null)this.window.remaining=Math.max(0,this.window.remaining-1);
