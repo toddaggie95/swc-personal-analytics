@@ -28,6 +28,20 @@ for workbook checks and writes. OAuth refresh saves rotated credentials locally
 and to the isolated GitHub environment before further reads. All renewable
 credential workflows share the same concurrency group.
 
+The optimized collector uses a single shared quota budget, serial requests and a
+five-request reserve. It waits for a trustworthy reset rather than assigning a
+fresh budget to each endpoint or runner. Missing headers retain conservative
+pacing. Character/faction mapping is reused within the run.
+
+Completed station operations are saved incrementally and retained in the
+authenticated encrypted `swc-api-progress` artifact. Set `api_resume_run_id` to a
+prior run to resume compatible progress: fresh inventories must produce the same
+exact target/owner/system/type plan and production contract. Duplicate, malformed,
+changed or older-than-two-hour checkpoints stop collection. Complete coverage and
+freshness are required before canonical conversion. Partial evidence never
+authorizes sheet writes. This recovery artifact uses the retained environment
+snapshot key and excludes all OAuth storage.
+
 ## Source fidelity downstream
 
 Manual Export retains `accepted-batch.json`. API uses `accepted-api-batch.json`.
@@ -60,6 +74,11 @@ token file after a hosted rotation.
   quantities, zero coordinates, source acceptance separation, snapshot integrity,
   write rejection, and projection without live mutation.
 - Full API production dry-run result is recorded in the PR before merge.
+- Optimized two-source preview: run 43677894333. Manual Export passed with all
+  2,898 hub and 420 System HAS cells matching, zero Started changes, and 1,087
+  reconciled orders. Actual faction dashboard, material matrix and grouped change
+  presentation builders also passed against its captured inputs with network
+  access explicitly forbidden. API collection remains under validation.
 
 The earlier station/material parity reports remain source validation evidence.
 Inventory snapshots are not simultaneous, and the nine known station-name

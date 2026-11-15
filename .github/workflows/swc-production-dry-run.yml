@@ -1,8 +1,6 @@
 name: SWC Production Sync
 
 on:
-  push:
-    branches: [feature/production-api-source-integration]
   workflow_dispatch:
     inputs:
       export_source:
@@ -43,12 +41,11 @@ concurrency:
 
 jobs:
   dry-run:
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Validate optimized API and Manual Export previews'
     environment: swc-api-shadow
     strategy:
       fail-fast: false
       matrix:
-        source: ${{ fromJSON(github.event_name == 'push' && '["api","csv"]' || format('["{0}"]', inputs.export_source || 'api')) }}
+        source: ${{ fromJSON(format('["{0}"]', inputs.export_source || 'api')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -270,6 +267,8 @@ jobs:
           prior=()
           if [ -s "${{ runner.temp }}/previous-production-snapshot.json" ]; then prior=(--previous "${{ runner.temp }}/previous-production-snapshot.json"); fi
           node tools/production-sync/production-change-cli.mjs "${prior[@]}" --overview "${{ runner.temp }}/production-preview/overview-readiness.json" --snapshot-out "${{ runner.temp }}/production-preview/production-change-snapshot.json" --report-out "${{ runner.temp }}/production-preview/production-change-report.json" --batch-id "preview-${{ github.run_id }}-${{ matrix.source }}"
+      - name: Validate actual dashboard and change presentation without network access
+        run: python3 tools/api-parity/validate-publication-preview.py "${{ runner.temp }}/production-preview"
       - name: Seal exact accepted API inputs for downstream publishing
         if: success() && matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         run: node tools/api-parity/api-snapshot.mjs seal "${{ runner.temp }}/swc-exports" /tmp/swc-private/accepted-public-key.pem "${{ runner.temp }}/accepted-api-snapshot.encrypted.json"

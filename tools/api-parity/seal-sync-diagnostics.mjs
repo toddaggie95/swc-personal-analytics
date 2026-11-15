@@ -11,6 +11,6 @@ function add(relative){
  else files.push({path:relative.replaceAll('\\','/'),data:fs.readFileSync(full).toString('base64')});
 }
 // Explicit allowlist: never include auth credential files or the private collector directory.
-for(const name of ['collector-progress','swc-exports','production-preview','audited-ledger.json','spreadsheet-comparison.json','system-has-audit.json','system-has-comparison.json','production-started-preflight.json','station-registry-audit.json','pile-trace.json'])add(name);
+for(const name of ['collector-progress','preview-workbook.json','swc-exports','production-preview','audited-ledger.json','spreadsheet-comparison.json','system-has-audit.json','system-has-comparison.json','production-started-preflight.json','station-registry-audit.json','pile-trace.json'])add(name);
 fs.writeFileSync(out,JSON.stringify(encrypt(Buffer.from(JSON.stringify({version:1,files})),fs.readFileSync(keyFile))),{mode:0o600});
 console.log('Encrypted diagnostic files: '+files.length);
