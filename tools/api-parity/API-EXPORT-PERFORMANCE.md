@@ -1,0 +1,47 @@
+# API export performance review
+
+Reviewed 2026-11-14. This review uses source inspection and existing private capture timings; it makes no new SWC requests or spreadsheet changes. Serial-collector observations refer to the failed integration run at commit c20c8a6646a7e9e5b131213a39e1ed844a8cd816.
+
+## Main finding
+
+The export is dominated by request pacing, not local computation. Optimize recoverability and request selection first. Faster polling or more GitHub runners is not a substitute for understanding SWC's quota scope.
+
+The production collector already narrows detail reads to shipyards in the tracked systems: 1,013 details rather than all 2,375 stations, a 57.3% reduction. Its approximate minimum request budget is 1,056 reads: 1,013 details, 13 station pages, 26 material pages, and four character lookups. Retries and refresh calls are additional. Pagination already requests 200 items per page.
+
+The pinned SDK comments describe a default limit of 600 requests per hour. The actual quota scope (application, token, user, IP, endpoint, or some combination) has not been established here. At 600/hour in a single shared scope, 1,013 detail reads alone consume about 101 minutes of sustained quota capacity. Actual elapsed time also depends on budget available at the beginning and the reset boundary; this is not a precise run-duration prediction.
+
+The successful full-station capture provides a measured reference, not a promised production runtime: 48 batches, 2,375 reads, approximately 12m41s between first and last HTTP request, with four worker slots. Summed worker elapsed time was 39m08s. Pacing waits were 32m42s (83.5% of summed worker elapsed), HTTP fetch time 5m35s (14.3%), and body reads 38s (1.6%). Median batch elapsed time was 49.1s. These batches used the bounded experimental 1-second pacer, not the production default. Their success does not establish that independent runners may multiply the overall quota.
+
+Sources: `collect-production-inputs.ts:17–31`; pinned collector `src/swc/read-client.ts:53–68`, `src/swc/sync.ts:61`; private timing reports under `.validation/parity/full-api/*/station-audit-*.json` in the research checkout. Only aggregate timing information is reproduced here.
+
+## Ranked opportunities
+
+| Priority | Improvement | Expected benefit | Conditions and validation |
+|---|---|---|---|
+| Big, implement first | Persist validated station results incrementally, encrypt and upload checkpoints on failure, resume only compatible incomplete captures | Prevents repeating hundreds of completed reads after an hour-long failure; no claim of faster successful first run | Manifest must bind owner, exact UID set, collector/contract version, observation times, and snapshot identity. Reject duplicates, missing results, ownership changes and tampering. Never checkpoint credentials. |
+| Big, investigate before enabling | Replace unconditional whole-window smoothing with a bounded, quota-aware batch scheduler | Reduces avoidable waiting when a small batch fits the observed available budget; existing 50-read experiments demonstrate low service latency | `ReadPacer.beforeRequest()` currently spaces requests over the entire remaining reset window even when only 50 are needed. Preserve minimum gaps, a quota reserve, missing-header fallback, 429 handling, and long-wait stop/resume. First establish quota scope; do not reset a shared budget by starting another worker. |
+| Big, later and conditional | Incremental detail refresh using a trustworthy change/version signal | Could reduce the dominant 1,013 reads on routine runs | No verified change feed or authoritative inventory version signal exists in the reviewed code. Station production can change while inventory metadata remains unchanged. Do not skip detail reads using names, coordinates, tooling, prior idle state or `working` alone. Require independently validated change semantics and periodic full reconciliation. |
+| Medium | Separate inventory/planning, bounded details, and assembly into recoverable phases | Shorter failure domains, explicit token lifetime checks, easier selective retry; improved observation-window reporting | One coordinator owns refresh/persistence. Workers use access-only credentials and stop before expiry. Parallelism improves wall-clock time only within verified shared quota rules. Assembly must require exact detail coverage before producing canonical CSVs. |
+| Medium | Add production timing and safe failure telemetry | Enables measured tuning and stops spending long runs on an unknown failure cause | Record request counts, pacing wait, fetch/body duration, retries, status/category and quota/reset summaries. Never log raw payloads, authorization headers, OAuth responses, token hashes or secrets. Existing audit collector already supplies a useful measured-fetch pattern. |
+| Medium | Define freshness bounds for resumable captures | Avoids an apparently successful export assembled from materially different observation periods | Record first/last observation and per-result timestamps; reject or explicitly restart captures beyond an agreed maximum age. Resume is a recovery optimization, not permission to reuse yesterday's production status. Inventory/materials/detail observations remain nontransactional. |
+| Small | Reuse the authenticated character/faction mapping within one run | Removes three of four `character/` reads, about 0.3% of the estimated request count | Scope cache to the one authenticated run; preserve exact faction UID validation. Do not cache between users or grants. |
+| Small | Cache npm package downloads against the pinned lockfile | Saves repeated setup time, especially with many bounded jobs; no reduction in SWC requests | Cache npm download data, not token files or private captures. Continue `npm ci` and pin the collector/lockfile. Measure setup time before adding complexity. |
+| Small | Reuse immutable parsed inputs and avoid repeated local normalization where profiling warrants it | Likely seconds or less at this dataset size | Existing export is about 7,279 inventory entities. Network pacing dominates. Keep full validation and private raw evidence; do not remove atomic writes or hashing to chase negligible gains. |
+
+## Concrete code observations
+
+- `tools/api-parity/collect-production-inputs.ts:17–31` serializes both factions, every target detail and materials. It only rewrites the faction inventory after the entire target list completes. TJO's 878 targets therefore create a particularly large recovery gap. Existing raw capture alone is insufficient when the workflow deletes the private directory without retaining an encrypted compatible checkpoint.
+- Pinned collector `src/swc/read-pacer.ts:44–46` computes `(resetAtMs - now) / remaining` before each request. This intentionally spreads the available budget across the remaining window. It does not account for how many reads are planned. `:49` refuses waits longer than 60 seconds, so exhaustion can end a long run instead of completing after reset. Resume is the appropriate companion to that conservative behavior.
+- Pinned collector `src/swc/read-client.ts:94` groups station details into one pacing resource, and other inventory by faction UID. That internal key does not prove the server's quota scope. A future concurrent scheduler must reconcile actual headers against a shared budget rather than assume these local groups are independent.
+- Pinned collector `src/swc/sync.ts:61` fetches the character for every inventory sync. Four invocations in the production collector make one small avoidable repeat.
+- `tools/api-parity/full-station-audit.ts:35–66` already measures fetch/body/pacer time and checks a bounded experimental quota reserve. Port the measurement concept into production; the experimental per-worker budget is not sufficient evidence for unrestricted concurrency.
+- `.github/workflows/swc-production-dry-run.yml:97` installs pinned collector dependencies afresh. This is secondary to pacing. Preserve the current ordering that authenticates Google after SWC collection, so a long export does not consume the Google access-token window before comparison begins.
+
+## Suggested implementation order
+
+1. Add safe error categories and encrypted durable checkpoints; prove an interrupted run resumes without rereading completed valid UIDs, and stale/incompatible checkpoints fail closed.
+2. Add aggregate timing and quota measurements to a bounded production-detail batch. Keep current production classification and canonical CSV validation unchanged.
+3. Establish actual quota scope, then choose a bounded scheduler and allowed concurrency from observed/documented limits. Compare identical UIDs and canonical output against the existing path, including low-budget, reset, missing-header, 429 and expired-token cases.
+4. Optimize small setup/cache costs after a complete API production preview passes. Investigate incremental API signals separately; do not trade current production-state correctness for an unverified cache shortcut.
+
+Initial follow-up implemented locally: fixed failure categories, atomic station-progress saves every 25 completed details and on exit, plus encrypted retention of normalized partial results on preview failures. Credentials remain excluded. This retains evidence; automatic compatible/fresh resume is still to be implemented and tested. Recommendations that need server quota or change-signal confirmation remain conditional.

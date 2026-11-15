@@ -1,6 +1,8 @@
 name: SWC Production Sync
 
 on:
+  push:
+    branches: [feature/production-api-source-integration]
   workflow_dispatch:
     inputs:
       export_source:
@@ -14,6 +16,11 @@ on:
         type: boolean
         required: true
         default: true
+      api_resume_run_id:
+        description: 'Optional prior run with encrypted API progress (maximum age: 2 hours)'
+        type: string
+        required: false
+        default: ''
       force_republish:
         description: 'Development override: reapply HAS and downstream reports for existing exports'
         type: boolean
@@ -36,11 +43,12 @@ concurrency:
 
 jobs:
   dry-run:
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Validate optimized API and Manual Export previews'
     environment: swc-api-shadow
     strategy:
       fail-fast: false
       matrix:
-        source: ${{ fromJSON(format('["{0}"]', inputs.export_source || 'api')) }}
+        source: ${{ fromJSON(github.event_name == 'push' && '["api","csv"]' || format('["{0}"]', inputs.export_source || 'api')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -73,7 +81,22 @@ jobs:
           printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
           cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
           cp src/auth/*.ts api-collector/src/auth/
-          cp tools/api-parity/collect-production-inputs.ts tools/api-parity/production-contract.mjs api-collector/tools/api-parity/
+          cp tools/api-parity/collect-production-inputs.ts tools/api-parity/production-contract.mjs tools/api-parity/collection-diagnostics.mjs tools/api-parity/production-progress.mjs tools/api-parity/private-audit-envelope.mjs api-collector/tools/api-parity/
+          cp tools/api-parity/production-read-pacer.ts api-collector/src/swc/read-pacer.ts
+      - name: Restore optional encrypted API progress
+        if: matrix.source == 'api' && inputs.api_resume_run_id
+        env:
+          GH_TOKEN: ${{ github.token }}
+          API_RESUME_RUN_ID: ${{ inputs.api_resume_run_id }}
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          [[ "$API_RESUME_RUN_ID" =~ ^[0-9]+$ ]]
+          url=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$API_RESUME_RUN_ID/artifacts" --jq '.artifacts[] | select(.name == "swc-api-progress" and .expired == false) | .archive_download_url')
+          test -n "$url"
+          gh api "$url" > "$RUNNER_TEMP/api-progress.zip"
+          unzip -p "$RUNNER_TEMP/api-progress.zip" production-progress.encrypted.json > "$RUNNER_TEMP/production-progress.encrypted.json"
+          node tools/api-parity/production-progress.mjs restore "$RUNNER_TEMP/production-progress.encrypted.json" /tmp/swc-private/production-progress.json
       - name: Prepare encrypted accepted API handoff
         if: matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true
         env:
@@ -306,6 +329,26 @@ jobs:
             "${{ runner.temp }}/batch-acceptance-report.json" \
             "${{ runner.temp }}/trash-report.json"
 
+      - name: Encrypt resumable API progress
+        if: always() && matrix.source == 'api'
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+        run: node tools/api-parity/production-progress.mjs seal /tmp/swc-private/production-progress.json "${{ runner.temp }}/production-progress.encrypted.json"
+      - name: Retain encrypted API progress
+        if: always() && matrix.source == 'api'
+        uses: actions/upload-artifact@v4
+        with:
+          name: swc-api-progress
+          path: ${{ runner.temp }}/production-progress.encrypted.json
+          retention-days: 1
+          if-no-files-found: warn
+      - name: Preserve partial API progress without credentials
+        if: always() && matrix.source == 'api' && inputs.enable_has_writes != true
+        run: |
+          if [ -d /tmp/swc-private/normalized ]; then
+            mkdir -p "${{ runner.temp }}/collector-progress"
+            find /tmp/swc-private/normalized -maxdepth 1 -type f -name '*.json' -exec cp {} "${{ runner.temp }}/collector-progress/" \;
+          fi
       - name: Seal private dry-run diagnostics
         if: always() && inputs.enable_has_writes != true
         run: node tools/api-parity/seal-sync-diagnostics.mjs "${{ runner.temp }}" tools/api-parity/production-audit-public-key.pem "${{ runner.temp }}/sync-preview.encrypted.json"
