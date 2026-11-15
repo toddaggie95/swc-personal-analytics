@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {allowedEndpoint,collectPilot,fieldPaths,validatePage} from './capability-pilot.mjs';
+import {allowedEndpoint,collectPilot,collectCityPilot,fieldPaths,validatePage} from './capability-pilot.mjs';
 
 const wrap=v=>({swcapi:{result:v}});
 const ref=id=>({attributes:{uid:id}});
@@ -13,7 +13,7 @@ async function run(options={}){
   if(options.override){const r=options.override(endpoint);if(r)return r;}
   let data={uid:endpoint.split('/').at(-1),name:'test'};
   if(endpoint==='character/')data={factions:[{value:'Faction',...ref('20:1')}]};
-  else if(endpoint.startsWith('galaxy/planets/'))data={uid:'8:1',name:'Planet One',cities:{city:[ref('13:2')]}};
+  else if(endpoint.startsWith('galaxy/planets/'))data={uid:'8:1',name:'Planet One',cities:{city:[ref('7:2')]}};
   else if(endpoint.endsWith('/facilities/owner'))data=page([facility],201);
   else if(endpoint==='inventory/facilities/4:1')data={...facility,ispowered:'Yes',facilityincome:{income:123}};
   else if(endpoint.endsWith('/cities/owner'))return {status:403,body:{}};
@@ -27,7 +27,7 @@ test('pilot records partial ownership coverage and unknown generation epoch',asy
  assert.equal(report.status,'completed');assert.equal(report.completePhysicalPlanet,false);
  assert.deepEqual(report.facilityCoverage,{total:201,returned:1,completeOwnedList:false,allOwners:false});
  assert.equal(report.generationTimeKnown,false);
- assert.ok(calls.some(c=>c.endpoint==='galaxy/cities/13:2'));
+ assert.ok(calls.some(c=>c.endpoint==='galaxy/cities/7:2'));
  assert.equal(calls.filter(c=>c.endpoint.includes('/facilities/owner')).length,1);
  assert.ok(report.resources.find(r=>r.label==='facility_detail').fields.includes('facilityincome.income'));
 });
@@ -67,4 +67,11 @@ test('field evidence preserves zero and false without treating omission as zero'
 test('an unresolved planet cannot cause a faction-wide inventory request',async()=>{
  const {calls,error}=await run({override:e=>e.startsWith('galaxy/planets/')?{status:200,body:wrap({uid:'8:2',name:'Other'})}:null});
  assert.ok(error);assert.equal(calls.length,2);
+});
+test('referenced city probe makes one read without repeating inventories',async()=>{
+ const calls=[];let report;
+ await collectCityPilot(async e=>{calls.push(e);return {status:200,body:wrap({uid:'7:2',layout:'opaque'})};},
+  {cityUid:'7:2',save:r=>{report=r;}});
+ assert.deepEqual(calls,['galaxy/cities/7:2']);assert.equal(report.status,'completed');
+ assert.ok(report.resources[0].fields.includes('layout'));
 });

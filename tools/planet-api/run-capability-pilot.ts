@@ -1,15 +1,17 @@
 import {createPublicKey, randomUUID} from 'node:crypto';
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {loadConfig,requireLive,API_BASE} from '../../src/config/index.js';
 import {loadAuth} from '../../src/auth/session.js';
 import {withLock} from '../../src/storage/files.js';
 import {encrypt} from '../api-parity/private-audit-envelope.mjs';
-import {collectPilot,allowedEndpoint} from './capability-pilot.mjs';
+import {collectPilot,collectCityPilot,allowedEndpoint} from './capability-pilot.mjs';
 
 async function main(){
  const config=loadConfig();requireLive(config);
- const key=createPublicKey(process.env.SWC_API_SNAPSHOT_PRIVATE_KEY!);
+ const key=process.env.SWC_PILOT_PUBLIC_KEY_FILE
+  ? createPublicKey(await readFile(process.env.SWC_PILOT_PUBLIC_KEY_FILE))
+  : createPublicKey(process.env.SWC_API_SNAPSHOT_PRIVATE_KEY!);
  const output=process.env.SWC_PILOT_OUTPUT!;
  if(!output)throw Error('output');
  await mkdir(output,{recursive:true,mode:0o700});
@@ -33,8 +35,9 @@ async function main(){
    let body;try{body=JSON.parse(bytes.toString('utf8'));}catch{throw Error('non-json');}
    return {status:response.status,body};
   };
-  await collectPilot(request,{planetName:process.env.SWC_PILOT_PLANET||'Chamble I',factionName:'The Faerytail Family',
-   save:(report:unknown)=>save('capability-report',report)});
+  const saveReport=(report:unknown)=>save('capability-report',report);
+  if(process.env.SWC_PILOT_CITY_UID)await collectCityPilot(request,{cityUid:process.env.SWC_PILOT_CITY_UID,save:saveReport});
+  else await collectPilot(request,{planetName:process.env.SWC_PILOT_PLANET||'Chamble I',factionName:'The Faerytail Family',save:saveReport});
  });
  console.log('Read-only capability pilot completed; all data and field evidence encrypted.');
 }

@@ -37,8 +37,8 @@ export function validatePage(data, planetUid, ownerUid, entityPrefix) {
 export function allowedEndpoint(endpoint) {
   try {if(decodeURIComponent(endpoint).split('/').some(p=>p==='.'||p==='..'))return false;}catch{return false;}
   return endpoint === 'character/' || /^galaxy\/planets\/[A-Za-z0-9%._~-]+\/$/.test(endpoint) ||
-    /^galaxy\/cities\/13:\d+$/.test(endpoint) || /^inventory\/planets\/8:\d+$/.test(endpoint) ||
-    /^inventory\/cities\/13:\d+$/.test(endpoint) || /^inventory\/facilities\/4:\d+$/.test(endpoint) ||
+    /^galaxy\/cities\/7:\d+$/.test(endpoint) || /^inventory\/planets\/8:\d+$/.test(endpoint) ||
+    /^inventory\/cities\/7:\d+$/.test(endpoint) || /^inventory\/facilities\/4:\d+$/.test(endpoint) ||
     /^inventory\/20:\d+\/(facilities|cities)\/owner$/.test(endpoint) ||
     endpoint === 'types/facilities/' || /^types\/facilities\/\d+:\d+$/.test(endpoint);
 }
@@ -83,13 +83,13 @@ export async function collectPilot(request, {planetName, factionName, save}) {
     const cities=await read('city_list','inventory/'+ownerUid+'/cities/owner',query);
     let cityUid;
     if(cities){
-      const page=validatePage(cities,planetUid,ownerUid,'13');
+      const page=validatePage(cities,planetUid,ownerUid,'7');
       report.cityCoverage={total:page.total,returned:page.returned,completeOwnedList:page.complete,allOwners:false};
       cityUid=uid(page.rows[0]);
       if(cityUid){const detail=await read('inventory_city','inventory/cities/'+cityUid);if(detail&&uid(detail)!==cityUid)throw Error('city-identity');}
     }
     if(!cityUid){const refs=record(planet.cities).city;cityUid=Array.isArray(refs)?uid(refs[0]):undefined;}
-    if(/^13:\d+$/.test(cityUid)){const detail=await read('galaxy_city','galaxy/cities/'+cityUid);if(detail&&uid(detail)!==cityUid)throw Error('city-identity');}
+    if(/^7:\d+$/.test(cityUid)){const detail=await read('galaxy_city','galaxy/cities/'+cityUid);if(detail&&uid(detail)!==cityUid)throw Error('city-identity');}
     await read('facility_type_list','types/facilities/',{start_index:1,item_count:200});
     report.gaps.push('Owner inventories do not establish all-owner planetary coverage.',
       'Payout generation time and collection-time operator skill require separate evidence.',
@@ -101,6 +101,22 @@ export async function collectPilot(request, {planetName, factionName, save}) {
     report.failureCategory=categories.has(error?.message)?error.message:'transport-or-session';
     throw Error('Pilot stopped; encrypted diagnostics retained.');
   }
+  finally {report.observedTo=new Date().toISOString();await save(report);}
+  return report;
+}
+
+export async function collectCityPilot(request,{cityUid,save}) {
+  if(!/^7:\d+$/.test(cityUid))throw Error('city-identity');
+  const endpoint='galaxy/cities/'+cityUid;
+  const report={schemaVersion:1,mode:'one_referenced_city',completePhysicalPlanet:false,
+    observedFrom:new Date().toISOString(),resources:[],generationTimeKnown:false};
+  try {
+    const result=await request(endpoint,{});
+    const entry={label:'galaxy_city',endpoint,status:result.status,fields:[]};report.resources.push(entry);
+    if(result.status===200){const data=unwrap(result.body);if(uid(data)!==cityUid)throw Error('city-identity');entry.fields=fieldPaths(data);}
+    else if(![403,404].includes(result.status))throw Error('request-stopped');
+    report.status='completed';
+  } catch {report.status='stopped';throw Error('City probe stopped; encrypted diagnostics retained.');}
   finally {report.observedTo=new Date().toISOString();await save(report);}
   return report;
 }
