@@ -51,8 +51,16 @@ async function main(): Promise<void> {
   }));
   if (rotated && process.env.GITHUB_ACTIONS !== 'true') throw new SafeError('Refresh token rotated. Stop: durable persistence is required before another hosted collection.');
 }
-main().catch(() => {
+main().catch((error: unknown) => {
   // Do not expose SDK or API errors in CI, including accidental secrets in exception messages.
   console.error('SWC authentication probe failed during: ' + stage + '. No sensitive error details printed.');
+  const message=error instanceof Error?error.message:'';
+  const category=message.startsWith('OAuth refresh rejected by server')?'oauth-refresh-rejected':
+    message.startsWith('OAuth refresh forbidden')?'oauth-refresh-forbidden':
+    message.startsWith('OAuth refresh rate-limited')?'oauth-refresh-rate-limited':
+    message.startsWith('OAuth refresh network')?'oauth-refresh-network':
+    message.startsWith('OAuth refresh failed due to server')?'oauth-refresh-server':
+    /persist|secret writer/i.test(message)?'token-persistence':'unclassified';
+  console.error('AUTH_FAILURE_CATEGORY '+category);
   process.exitCode = 1;
 });
