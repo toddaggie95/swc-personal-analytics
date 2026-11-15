@@ -1,64 +1,62 @@
 # API export performance review
 
-Reviewed 2026-11-14. This review uses source inspection and existing private capture timings; it makes no new SWC requests or spreadsheet changes. Serial-collector observations refer to the failed integration run at commit c20c8a6646a7e9e5b131213a39e1ed844a8cd816.
+Updated 2026-11-15 using existing GitHub Actions logs and retained audit timings. This review makes no additional SWC requests or spreadsheet changes.
 
-## Main finding
+## Measured production comparison
 
-Implementation update: revisiting all 48 successful audit batches confirmed that
-every fresh runner began at 599 remaining, including simultaneously active batches,
-and each 50-read batch ended at 550. The initial review was too conservative about
-using that evidence. Production now follows the proven fresh-runner design: one
-OAuth/inventory coordinator, 50-detail batches on separate runners, four concurrent
-workers, then exact encrypted assembly. The 1,013 production targets need 21
-batches; the full 2,375-station audit needs 48. Workers have access-only token files
-and no refresh implementation or secret-writer credentials. Each runner retains
-its own observed quota reserve and reset handling. The earlier single-runner
-findings below describe the serial baseline, not the new production scheduler.
+The bounded parallel export assembled all 1,013 tracked production shipyards in **7m54s**, compared with **89m03s** for the successful serial collector: approximately **11.3 times faster**, or **91.1% less elapsed time**. These are collection-stage measurements; downstream Google Sheets comparisons and previews are excluded.
 
-The export is dominated by request pacing, not local computation. Optimize recoverability and request selection first. Faster polling or more GitHub runners is not a substitute for understanding SWC's quota scope.
+| Measurement | Serial baseline | Bounded production export |
+|---|---:|---:|
+| Validation run | [43677894333](https://github.com/toddaggie95/swc-personal-analytics/actions/runs/43677894333) | [43683569113](https://github.com/toddaggie95/swc-personal-analytics/actions/runs/43683569113) |
+| Production detail coverage | 1,013 | 1,013 |
+| Detail workers | One serial process | 21 fresh runners, maximum four concurrent |
+| Batch sizes | Entire target list | 20 × 50, then 13 |
+| Collection elapsed | 5,343,116 ms | 474,448 ms including planning, setup, transfer and assembly |
+| Pacing wait | 5,030,177 ms, 94.1% of elapsed | 944,317 ms summed across parallel workers |
+| Large quota-reset waits | 495s + 3,585s = 68m | None in completed worker logs |
+| Detail requests | 1,013, within 1,053 total data requests | Exactly 1,013 across detail workers; no retries |
+| Assembly | Serial completion | 1,013 completed, zero missing, 21/21 batches |
+| Worker OAuth refresh | Serial coordinator may refresh | Zero by design: access-only token files and a refresh method that always refuses |
 
-The production collector already narrows detail reads to shipyards in the tracked systems: 1,013 details rather than all 2,375 stations, a 57.3% reduction. Its approximate minimum request budget is 1,056 reads: 1,013 details, 13 station pages, 26 material pages, and four character lookups. Retries and refresh calls are additional. Pagination already requests 200 items per page.
+The serial value comes from `PRODUCTION_API_COMPLETE` in job 132701949954. Its fetch time was 212,046 ms. Batched wall time uses the first plan-job log at **06:11:38.917 UTC** through the last assembly-job log at **06:19:33.366 UTC**, November 15. This includes more workflow overhead than the serial collector's internal timer, so it is a conservative comparison rather than identical timer boundaries.
 
-The pinned SDK comments describe a default limit of 600 requests per hour. The actual quota scope (application, token, user, IP, endpoint, or some combination) has not been established here. At 600/hour in a single shared scope, 1,013 detail reads alone consume about 101 minutes of sustained quota capacity. Actual elapsed time also depends on budget available at the beginning and the reset boundary; this is not a precise run-duration prediction.
+The coordinator job occupied 69.3s; assembly occupied 10.4s. Detail collection spanned approximately **06:12:59.128–06:19:12.890 UTC**, or **6m13.8s**, inferred from each batch's completion timestamp and elapsed time. Detail jobs occupied a 6m21.3s wall-clock window. Summed collection time across workers was 18m53.8s; summed job time was 22m34.6s. Setup, transfer and cleanup added about **3m40.8s in aggregate**, averaging **10.5s per worker**; overlapping workers mean this is not additive wall-clock delay. Full 50-read batches took 53.6–58.5s; median across all batches was 55.5s. The last 13-read batch took 14.6s.
 
-The successful full-station capture provides a measured reference, not a promised production runtime: 48 batches, 2,375 reads, approximately 12m41s between first and last HTTP request, with four worker slots. Summed worker elapsed time was 39m08s. Pacing waits were 32m42s (83.5% of summed worker elapsed), HTTP fetch time 5m35s (14.3%), and body reads 38s (1.6%). Median batch elapsed time was 49.1s. These batches used the bounded experimental 1-second pacer, not the production default. Their success does not establish that independent runners may multiply the overall quota.
+All 20 full workers ended with quota limit **600**, remaining **550**. The 13-read worker ended with **587** remaining. Every worker reported the same reset timestamp, while overlapping workers retained independent remaining counts. These production observations corroborate the prior 48-batch audit, where every fresh runner's first response reported 599 remaining and each 50-read batch ended at 550. The earlier review was too conservative about using that direct evidence. The implemented maximum-four fresh-runner design follows the repeatedly observed runner budgets; it does not assume unlimited capacity or increase concurrency beyond the validated setting. Each runner enforces its own observed reserve, reset and fallback rules.
 
-Sources: `collect-production-inputs.ts:17–31`; pinned collector `src/swc/read-client.ts:53–68`, `src/swc/sync.ts:61`; private timing reports under `.validation/parity/full-api/*/station-audit-*.json` in the research checkout. Only aggregate timing information is reproduced here.
+The coordinator performs four paginated inventories once, with one cached character/faction lookup. At the validated inventory counts this requires 40 data reads: 13 station pages, 26 material pages and one character lookup. Together with worker reads, the planned data budget remains **1,053**, matching the measured serial baseline. Coordinator request count is derived from pagination and source inspection; workers' 1,013 calls are directly logged. The speedup comes from eliminating long shared-runner waits and overlapping bounded batches, not omitting required observations. OAuth exchanges are separate from this count.
 
-## Ranked opportunities
+## Implemented improvements
 
-| Priority | Improvement | Expected benefit | Conditions and validation |
-|---|---|---|---|
-| Big, implement first | Persist validated station results incrementally, encrypt and upload checkpoints on failure, resume only compatible incomplete captures | Prevents repeating hundreds of completed reads after an hour-long failure; no claim of faster successful first run | Manifest must bind owner, exact UID set, collector/contract version, observation times, and snapshot identity. Reject duplicates, missing results, ownership changes and tampering. Never checkpoint credentials. |
-| Big, investigate before enabling | Replace unconditional whole-window smoothing with a bounded, quota-aware batch scheduler | Reduces avoidable waiting when a small batch fits the observed available budget; existing 50-read experiments demonstrate low service latency | `ReadPacer.beforeRequest()` currently spaces requests over the entire remaining reset window even when only 50 are needed. Preserve minimum gaps, a quota reserve, missing-header fallback, 429 handling, and long-wait stop/resume. First establish quota scope; do not reset a shared budget by starting another worker. |
-| Big, later and conditional | Incremental detail refresh using a trustworthy change/version signal | Could reduce the dominant 1,013 reads on routine runs | No verified change feed or authoritative inventory version signal exists in the reviewed code. Station production can change while inventory metadata remains unchanged. Do not skip detail reads using names, coordinates, tooling, prior idle state or `working` alone. Require independently validated change semantics and periodic full reconciliation. |
-| Medium | Separate inventory/planning, bounded details, and assembly into recoverable phases | Shorter failure domains, explicit token lifetime checks, easier selective retry; improved observation-window reporting | One coordinator owns refresh/persistence. Workers use access-only credentials and stop before expiry. Parallelism improves wall-clock time only within verified shared quota rules. Assembly must require exact detail coverage before producing canonical CSVs. |
-| Medium | Add production timing and safe failure telemetry | Enables measured tuning and stops spending long runs on an unknown failure cause | Record request counts, pacing wait, fetch/body duration, retries, status/category and quota/reset summaries. Never log raw payloads, authorization headers, OAuth responses, token hashes or secrets. Existing audit collector already supplies a useful measured-fetch pattern. |
-| Medium | Define freshness bounds for resumable captures | Avoids an apparently successful export assembled from materially different observation periods | Record first/last observation and per-result timestamps; reject or explicitly restart captures beyond an agreed maximum age. Resume is a recovery optimization, not permission to reuse yesterday's production status. Inventory/materials/detail observations remain nontransactional. |
-| Small | Reuse the authenticated character/faction mapping within one run | Removes three of four `character/` reads, about 0.3% of the estimated request count | Scope cache to the one authenticated run; preserve exact faction UID validation. Do not cache between users or grants. |
-| Small | Cache npm package downloads against the pinned lockfile | Saves repeated setup time, especially with many bounded jobs; no reduction in SWC requests | Cache npm download data, not token files or private captures. Continue `npm ci` and pin the collector/lockfile. Measure setup time before adding complexity. |
-| Small | Reuse immutable parsed inputs and avoid repeated local normalization where profiling warrants it | Likely seconds or less at this dataset size | Existing export is about 7,279 inventory entities. Network pacing dominates. Keep full validation and private raw evidence; do not remove atomic writes or hashing to chase negligible gains. |
+| Impact | Change | Evidence and limits |
+|---|---|---|
+| Big | One OAuth/inventory coordinator, maximum-four fresh-runner detail batches, exact encrypted assembly | Live run 43683569113: all 21 workers and assembly passed, 1,013 completed, zero missing. Workers have no refresh token file, client secret or secret-writer credential. |
+| Big | Validated partial checkpoints and resume | Worker successes are encrypted after each 25 details and on normal exit, uploaded on completion/failure, and assembled into compatible progress. Resume binds target identity, owner, contract and timestamps. Hard runner loss can still lose work not yet uploaded. |
+| Medium | Failure categories and performance telemetry | Fixed labels, request counts, elapsed time, pacing waits and quota summaries avoid exposing payloads or OAuth responses. |
+| Medium | Freshness gates | Two-hour observation limit, checked during plan selection/assembly and after sheet comparisons and before production sealing/writes/acceptance. Captures remain observations over time, not transactional snapshots. |
+| Small | Reuse character/faction mapping | Four inventory syncs share one character response, saving three data reads. |
+| Small | Cache npm download data against the pinned lockfile | Coordinator/detail jobs retain `npm ci`. Private data and tokens are excluded from dependency caches. |
 
-## Concrete code observations
+The production path already filters details to tracked shipyards: **1,013 instead of all 2,375 stations**, a 57.3% reduction. Complete station and material inventories remain available for registry and HAS validation. Pagination already uses 200 items per request.
 
-- `tools/api-parity/collect-production-inputs.ts:17–31` serializes both factions, every target detail and materials. It only rewrites the faction inventory after the entire target list completes. TJO's 878 targets therefore create a particularly large recovery gap. Existing raw capture alone is insufficient when the workflow deletes the private directory without retaining an encrypted compatible checkpoint.
-- Pinned collector `src/swc/read-pacer.ts:44–46` computes `(resetAtMs - now) / remaining` before each request. This intentionally spreads the available budget across the remaining window. It does not account for how many reads are planned. `:49` refuses waits longer than 60 seconds, so exhaustion can end a long run instead of completing after reset. Resume is the appropriate companion to that conservative behavior.
-- Pinned collector `src/swc/read-client.ts:94` groups station details into one pacing resource, and other inventory by faction UID. That internal key does not prove the server's quota scope. A future concurrent scheduler must reconcile actual headers against a shared budget rather than assume these local groups are independent.
-- Pinned collector `src/swc/sync.ts:61` fetches the character for every inventory sync. Four invocations in the production collector make one small avoidable repeat.
-- `tools/api-parity/full-station-audit.ts:35–66` already measures fetch/body/pacer time and checks a bounded experimental quota reserve. Port the measurement concept into production; the experimental per-worker budget is not sufficient evidence for unrestricted concurrency.
-- `.github/workflows/swc-production-dry-run.yml:97` installs pinned collector dependencies afresh. This is secondary to pacing. Preserve the current ordering that authenticates Google after SWC collection, so a long export does not consume the Google access-token window before comparison begins.
+Relevant code: `collect-production-batches.ts`, `production-batches.mjs`, `assemble-production-batches.mjs`, `production-progress.mjs`, `production-read-pacer.ts`, and `.github/workflows/production-api-inputs.yml`. Production Sync owns the OAuth lock; the reusable collection workflow does not reacquire it. Coordinator-only refreshes persist before API reads continue. Workers stop before token expiry and cannot refresh.
 
-## Suggested implementation order
+## Remaining opportunities
 
-1. Add safe error categories and encrypted durable checkpoints; prove an interrupted run resumes without rereading completed valid UIDs, and stale/incompatible checkpoints fail closed.
-2. Add aggregate timing and quota measurements to a bounded production-detail batch. Keep current production classification and canonical CSV validation unchanged.
-3. Establish actual quota scope, then choose a bounded scheduler and allowed concurrency from observed/documented limits. Compare identical UIDs and canonical output against the existing path, including low-budget, reset, missing-header, 429 and expired-token cases.
-4. Optimize small setup/cache costs after a complete API production preview passes. Investigate incremental API signals separately; do not trade current production-state correctness for an unverified cache shortcut.
+| Impact | Opportunity | Recommendation |
+|---|---|---|
+| Big, conditional | Incremental refresh from an authoritative change/version signal | No verified change feed exists in the reviewed code. Production can change without inventory metadata changing. Do not skip details based on names, coordinates, tooling, prior idle state or `working` alone. Validate change semantics and periodic full reconciliation first. |
+| Medium | Limit observation skew on larger captures | Retain timestamps and freshness gates. Inventory, materials and detail are captured at different times. Resume is recovery, not permission to reuse yesterday's production status. |
+| Small | Reduce setup/transfer overhead | Measured average is 10.5s per worker. Profile dependency installation and whole-plan transfer if more improvement is needed. Preserve validation and encryption. |
+| Small | Reuse local parsing/normalization | About 7,279 inventory entities are small relative to network waits. Preserve atomic writes, hashes, raw private evidence and canonical validation. |
 
-Follow-up implemented on the integration branch: fixed failure categories; atomic station-progress saves every 25 completed details and on exit; authenticated encrypted progress artifacts; optional resume from a prior run; and exact plan/owner/contract/freshness validation. An interrupted-collector fixture proves completed UIDs are not reread, materials are withheld until detail coverage is complete, and character mapping is reused once per run. Checkpoints older than two hours fail closed.
+The pinned SDK's 600-per-hour comment does not fully document server quota keying. Runtime headers provide empirical evidence for the current bounded layout. Retain reserve/reset checks and stop on unexpected behavior rather than extrapolating unlimited independent capacity.
 
-Production pacing now uses one conservative shared budget across all endpoint groups. With trustworthy quota headers it uses a one-second serial minimum gap instead of spreading requests over the whole remaining window. It retains five requests as a reserve and waits for the observed reset, bounded at 61 minutes; missing headers retain 6.5-second fallback pacing and cannot replenish an observed budget. Endpoint changes cannot replenish that shared budget either. There is no worker/IP multiplication. Tests cover reserve/reset, endpoint changes, missing headers and low quota without a usable reset. Aggregate counts, fetch time, pacing waits and quota summaries are logged without payloads or credentials.
+## Historical audit reference
 
-Follow-up review added tests for partial quota headers retaining a known reset, a 105-minute collector deadline that leaves artifact-upload time within the 120-minute job, and freshness rechecks after sheet comparisons and before sealing/writes/acceptance. A hard runner termination can still lose local progress; the soft deadline protects normal time-bound exits, not infrastructure loss.
+The earlier full-station capture read 2,375 stations in 48 bounded batches, with **12m41s** between first and last HTTP request. Summed worker elapsed was 39m08s: pacing 32m42s (83.5%), fetch 5m35s (14.3%), body reads 38s (1.6%). Median batch elapsed was 49.1s. Those figures describe the research audit, not the current 1,013-target production capture.
 
-Live two-source preview validation: run 43677894333. Manual Export passed all 2,898 hub HAS cells and 420 System HAS cells with zero differences; all 1,087 orders reconciled. API collection is still being evaluated. Recommendations that need server quota or change-signal confirmation remain conditional.
+The failed serial integration at c20c8a6646a7e9e5b131213a39e1ed844a8cd816 lacked durable artifacts and safe failure categories. These were fixed before the successful serial baseline and parallel validation. The older description of one shared budget with no runner parallelism is superseded by the measured coordinator/worker design above.
+
+Final validation: run 43683569113 passed both downstream API and Manual Export previews. All 1,087 orders match across sources, including ship, quantity, Started, status and readiness. All 2,375 compared station identities/metadata match; tracked shipyard operation fields match. The newer API snapshot has 13 hub HAS and 18 System HAS deltas versus the older exports; all reconcile exactly to source lot changes. Validation performed no production sheet writes, Drive cleanup or batch acceptance. Detailed private lot traces are retained locally.

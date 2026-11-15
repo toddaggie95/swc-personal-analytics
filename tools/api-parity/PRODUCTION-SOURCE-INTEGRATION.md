@@ -90,7 +90,23 @@ token file after a hosted rotation.
   2,898 hub and 420 System HAS cells matching, zero Started changes, and 1,087
   reconciled orders. Actual faction dashboard, material matrix and grouped change
   presentation builders also passed against its captured inputs with network
-  access explicitly forbidden. API collection remains under validation.
+  access explicitly forbidden.
+- Full batched Production Sync previews: run 43683569113 passed both API and CSV.
+  All 21 batches and 1,013 tracked details passed exact assembly. API input
+  collection/assembly took 7m54s versus the 89m03s serial baseline (11.3x faster).
+  Both modes reconciled all 1,087 orders and proposed zero Started changes.
+  API proposed 13 hub HAS and 18 System HAS changes relative to the older exports;
+  all 31 changes reconcile exactly to 27 changed/added/removed material lot records.
+  All 2,375 station identities and compared metadata fields match the web exports.
+  All tracked tooling, active production state and active quantities match.
+  No source substitutions, sheet writes, Drive cleanup or batch acceptance occurred.
+  Detailed lot traces remain in the private local validation report.
+
+The production adapter collects operation fields for the 1,013 shipyards in the
+20 tracked systems. Operation fields on other station types and the 12 outside
+shipyards are outside this production contract. They are not used for Started
+synchronization or readiness. The earlier 48-batch audit remains the separate
+full-detail reference for all 2,375 stations.
 
 The earlier station/material parity reports remain source validation evidence.
 Inventory snapshots are not simultaneous, and the nine known station-name

@@ -1,8 +1,6 @@
 name: SWC Production Sync
 
 on:
-  push:
-    branches: [feature/production-api-source-integration]
   workflow_dispatch:
     inputs:
       export_source:
@@ -43,7 +41,7 @@ concurrency:
 
 jobs:
   api-inputs:
-    if: (github.event_name == 'workflow_dispatch' && inputs.export_source == 'api') || github.event.head_commit.message == 'Validate batched API and Manual Export previews'
+    if: inputs.export_source == 'api'
     uses: ./.github/workflows/production-api-inputs.yml
     with:
       resume_run_id: ${{ inputs.api_resume_run_id || '' }}
@@ -55,7 +53,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        source: ${{ fromJSON(github.event_name == 'push' && '["api","csv"]' || format('["{0}"]', inputs.export_source || 'api')) }}
+        source: ${{ fromJSON(format('["{0}"]', inputs.export_source || 'api')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:

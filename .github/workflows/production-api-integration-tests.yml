@@ -3,7 +3,7 @@ on:
   push:
     branches: [feature/production-api-source-integration]
   pull_request:
-    paths: ['tools/production-sync/**', 'tools/api-parity/**', 'src/auth/**', '.github/workflows/swc-production-dry-run.yml']
+    paths: ['tools/production-sync/**', 'tools/api-parity/**', 'src/auth/**', '.github/workflows/swc-production-dry-run.yml', '.github/workflows/production-api-inputs.yml']
 permissions:
   contents: read
 jobs:
