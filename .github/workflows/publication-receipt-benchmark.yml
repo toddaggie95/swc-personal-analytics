@@ -1,0 +1,46 @@
+name: Publication receipt lookup benchmark (read only)
+on:
+  push:
+    branches: [feature/api-export-efficiency-v2]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  lookup:
+    if: github.event.head_commit.message == 'Benchmark compact publication lookup (read only)'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check known and new manifest lookups without production credentials
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib,subprocess,time
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'receipt-benchmark'
+          seed=json.loads(pathlib.Path('tools/production-sync/legacy-publication-receipt.json').read_text())
+          results=[]
+          for case in ('known','new'):
+              target=root/case
+              (target/'swc-exports').mkdir(parents=True,exist_ok=True)
+              manifest={'source':seed['source'],'files':json.loads(json.dumps(seed['files']))}
+              if case=='new':manifest['files'][0]['sha256']='f'*64
+              (target/'swc-exports/export-manifest.json').write_text(json.dumps(manifest))
+              output=target/'outputs.txt'
+              start=time.perf_counter()
+              subprocess.run(['python3','tools/production-sync/publication-receipts.py','resolve',str(target)],env={**os.environ,'GITHUB_OUTPUT':str(output)},check=True)
+              elapsed=time.perf_counter()-start
+              flags=dict(line.split('=',1) for line in output.read_text().splitlines())
+              expected='false' if case=='known' else 'true'
+              assert flags==dict.fromkeys(('overview','matrix','changes'),expected)
+              for component in flags:assert (target/('published-'+component+'.ok')).exists()==(case=='known')
+              results.append({'case':case,'elapsedSeconds':round(elapsed,3),'flags':flags})
+          (root/'timing.json').write_text(json.dumps(results,indent=2))
+          print(json.dumps({'readOnly':True,'results':results}))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: publication-lookup-benchmark
+          path: ${{ runner.temp }}/receipt-benchmark/timing.json
+          retention-days: 7
