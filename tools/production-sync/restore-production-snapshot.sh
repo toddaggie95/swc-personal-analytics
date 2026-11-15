@@ -44,8 +44,8 @@ import json,sys
 def identity(path):
     with open(path) as f: files=json.load(f)["files"]
     return sorted((x["owner"],x["kind"],x["sha256"]) for x in files)
-assert len(identity(sys.argv[1])) == 4
-assert identity(sys.argv[1]) == identity(sys.argv[2])
+current, previous = identity(sys.argv[1]), identity(sys.argv[2])
+raise SystemExit(0 if len(current) == 4 and current == previous else 1)
 PY
     then
       echo "Skipping snapshot from identical export batch in run $previous"
