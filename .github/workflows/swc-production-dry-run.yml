@@ -1,6 +1,8 @@
 name: SWC Production Sync
 
 on:
+  push:
+    branches: [feature/api-export-efficiency-v2]
   workflow_dispatch:
     inputs:
       export_source:
@@ -41,7 +43,7 @@ concurrency:
 
 jobs:
   api-inputs:
-    if: inputs.export_source == 'api'
+    if: inputs.export_source == 'api' || github.event.head_commit.message == 'Benchmark twenty bounded API workers (read only)'
     uses: ./.github/workflows/production-api-inputs.yml
     with:
       resume_run_id: ${{ inputs.api_resume_run_id || '' }}
