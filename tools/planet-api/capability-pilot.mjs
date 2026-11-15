@@ -95,7 +95,12 @@ export async function collectPilot(request, {planetName, factionName, save}) {
       'Payout generation time and collection-time operator skill require separate evidence.',
       'No event endpoint or complete planet crawl is included in this pilot.');
     report.status='completed';
-  } catch {report.status='stopped';throw Error('Pilot stopped; encrypted diagnostics retained.');}
+  } catch(error) {
+    report.status='stopped';
+    const categories=new Set(['envelope','api-error','pagination','coverage','endpoint','request-stopped','faction-identity','planet-identity','detail-identity','city-identity','bound','response-size','non-json']);
+    report.failureCategory=categories.has(error?.message)?error.message:'transport-or-session';
+    throw Error('Pilot stopped; encrypted diagnostics retained.');
+  }
   finally {report.observedTo=new Date().toISOString();await save(report);}
   return report;
 }
