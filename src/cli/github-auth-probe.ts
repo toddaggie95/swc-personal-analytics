@@ -22,6 +22,10 @@ async function main(): Promise<void> {
   console.log('Token expiry category: ' + (old.expiresAt <= Date.now() + 300_000 ? 'refresh-needed' : 'not-near-expiry'));
   stage = 'OAuth client initialization';
   const auth = await loadAuth(config);
+  if (process.env.SWC_FORCE_REFRESH === 'true') {
+    stage = 'controlled OAuth refresh and durable persistence';
+    await auth.refresh();
+  }
   const run = new SnapshotRun(config.privateDir, 'github-auth-probe');
   const wrapped = {
     async accessToken() { stage = 'access token acquisition and possible refresh'; return auth.accessToken(); },
@@ -43,12 +47,20 @@ async function main(): Promise<void> {
     accessTokenRefreshed: refreshed,
     refreshTokenChanged: rotated,
     refreshTokenAvailable: Boolean(updated.refreshToken),
-    nextRunRequiresPersistence: rotated,
+    nextRunRequiresPersistence: rotated && process.env.GITHUB_ACTIONS !== 'true',
   }));
-  if (rotated) throw new SafeError('Refresh token rotated. Stop: durable persistence is required before another hosted collection.');
+  if (rotated && process.env.GITHUB_ACTIONS !== 'true') throw new SafeError('Refresh token rotated. Stop: durable persistence is required before another hosted collection.');
 }
-main().catch(() => {
+main().catch((error: unknown) => {
   // Do not expose SDK or API errors in CI, including accidental secrets in exception messages.
   console.error('SWC authentication probe failed during: ' + stage + '. No sensitive error details printed.');
+  const message=error instanceof Error?error.message:'';
+  const category=message.startsWith('OAuth refresh rejected by server')?'oauth-refresh-rejected':
+    message.startsWith('OAuth refresh forbidden')?'oauth-refresh-forbidden':
+    message.startsWith('OAuth refresh rate-limited')?'oauth-refresh-rate-limited':
+    message.startsWith('OAuth refresh network')?'oauth-refresh-network':
+    message.startsWith('OAuth refresh failed due to server')?'oauth-refresh-server':
+    /persist|secret writer/i.test(message)?'token-persistence':'unclassified';
+  console.error('AUTH_FAILURE_CATEGORY '+category);
   process.exitCode = 1;
 });

@@ -34,6 +34,7 @@ concurrency:
 
 jobs:
   overview:
+    environment: swc-api-shadow
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -57,7 +58,15 @@ jobs:
         run: |
           echo "Upstream HAS workflow did not succeed; refusing downstream publication."
           exit 1
+      - name: Inspect accepted input source
+        id: source
+        if: github.event_name == 'workflow_run' || inputs.accepted_batch_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCEPTED_RUN_ID: ${{ github.event.workflow_run.id || inputs.accepted_batch_run_id }}
+        run: python3 tools/production-sync/inspect-accepted-source.py "${{ runner.temp }}/accepted-source"
       - name: Download latest four exports
+        if: steps.source.outputs.source != 'api'
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
@@ -70,6 +79,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           ACCEPTED_RUN_ID: ${{ github.event.workflow_run.id || inputs.accepted_batch_run_id }}
           ALLOW_UNACCEPTED_NOOP: ${{ github.event_name == 'workflow_run' }}
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
         run: bash tools/production-sync/verify-accepted-batch.sh "${{ runner.temp }}"
       - name: Check whether accepted batch was already published
         id: publish_gate

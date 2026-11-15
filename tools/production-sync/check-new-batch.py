@@ -13,8 +13,9 @@ def identity(files):
 def main():
     with open(sys.argv[1]) as f:
         current = json.load(f)
+    state_path = "accepted-api-batch.json" if current.get("source") == "api" else "accepted-batch.json"
     url = ("https://api.github.com/repos/" + os.environ["GITHUB_REPOSITORY"]
-           + "/contents/tools/production-sync/accepted-batch.json")
+           + "/contents/tools/production-sync/" + state_path)
     request = urllib.request.Request(url, headers={
         "Authorization": "Bearer " + os.environ["GH_TOKEN"],
         "Accept": "application/vnd.github+json"})
@@ -26,7 +27,7 @@ def main():
         if error.code != 404:
             raise
         previous = None
-    changed = previous is None or identity(current["files"]) != identity(previous["files"])
+    changed = previous is None or (current.get("source", "csv"), identity(current["files"])) != (previous.get("source", "csv"), identity(previous["files"]))
     with open(os.environ["GITHUB_OUTPUT"], "a") as f:
         f.write("new_batch=" + str(changed).lower() + "\n")
     print("New export batch:", changed)

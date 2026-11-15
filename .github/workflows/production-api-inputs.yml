@@ -1,0 +1,188 @@
+name: Collect bounded production API inputs
+on:
+  workflow_call:
+    inputs:
+      resume_run_id:
+        type: string
+        required: false
+        default: ''
+permissions:
+  contents: read
+  actions: read
+# The calling Production Sync owns swc-api-shadow-oauth for this entire workflow.
+# Taking the same lock here would deadlock the caller and its reusable workflow.
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: swc-api-shadow
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: collector/package-lock.json
+      - name: Prepare sole OAuth coordinator
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$SWC_API_SNAPSHOT_PRIVATE_KEY"
+          test -n "$SWC_SECRET_WRITER_TOKEN"
+          mkdir -p /tmp/swc-private collector/tools/api-parity
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
+          cp src/auth/*.ts collector/src/auth/
+          cp tools/api-parity/{collect-production-batches.ts,production-batches.mjs,production-progress.mjs,production-contract.mjs,private-audit-envelope.mjs,collection-diagnostics.mjs} collector/tools/api-parity/
+          cp tools/api-parity/production-read-pacer.ts collector/src/swc/read-pacer.ts
+      - name: Restore compatible prior progress when requested
+        if: inputs.resume_run_id
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          [[ "$RESUME_RUN_ID" =~ ^[0-9]+$ ]]
+          url=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESUME_RUN_ID/artifacts" --jq '.artifacts[] | select(.name == "swc-api-progress" and .expired == false) | .archive_download_url')
+          test -n "$url"
+          gh api "$url" > "$RUNNER_TEMP/progress.zip"
+          unzip -p "$RUNNER_TEMP/progress.zip" production-progress.encrypted.json > "$RUNNER_TEMP/progress.encrypted.json"
+          node tools/api-parity/production-progress.mjs restore "$RUNNER_TEMP/progress.encrypted.json" /tmp/swc-private/production-progress.json
+      - name: Read inventories and plan bounded workers
+        id: plan
+        working-directory: collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_SYSTEMS_FILE: ${{ github.workspace }}/tools/production-sync/systems.addresses.json
+          SWC_BATCH_OUTPUT: /tmp/swc-api-plan
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+        run: |
+          set -euo pipefail
+          trap 'status=$?; bash ../tools/api-parity/persist-swc-token.sh || status=1; exit "$status"' EXIT
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          npx tsx tools/api-parity/collect-production-batches.ts plan
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swc-api-plan
+          path: /tmp/swc-api-plan/plan.encrypted.json
+          retention-days: 1
+      - if: always()
+        run: rm -rf /tmp/swc-private
+  details:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: swc-api-shadow
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: collector/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: swc-api-plan
+          path: /tmp/swc-api-plan
+      - name: Prepare access-only worker
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private collector/tools/api-parity
+          node --input-type=module -e 'import fs from "node:fs";try{const t=JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON);if(typeof t.accessToken!=="string"||!t.accessToken||!Number.isFinite(t.expiresAt)||t.expiresAt<Date.now()+900000)throw Error();fs.writeFileSync("/tmp/swc-private/tokens.json",JSON.stringify({accessToken:t.accessToken,expiresAt:t.expiresAt}),{mode:0o600})}catch{console.error("Worker credential preparation failed; private details suppressed");process.exit(1)}'
+          cp tools/api-parity/{collect-production-batches.ts,production-batches.mjs,production-progress.mjs,production-contract.mjs,private-audit-envelope.mjs,collection-diagnostics.mjs} collector/tools/api-parity/
+          cp tools/api-parity/production-read-pacer.ts collector/src/swc/read-pacer.ts
+      - name: Read at most fifty station details without OAuth refresh
+        working-directory: collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_BATCH_OUTPUT: /tmp/swc-api-batch
+          SWC_BATCH_PLAN: /tmp/swc-api-plan/plan.encrypted.json
+          SWC_BATCH_ID: ${{ matrix.id }}
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          npx tsx tools/api-parity/collect-production-batches.ts worker
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swc-api-batch-${{ matrix.id }}
+          path: /tmp/swc-api-batch/batch-${{ matrix.id }}.encrypted.json
+          retention-days: 1
+          overwrite: true
+          if-no-files-found: warn
+      - if: always()
+        run: rm -rf /tmp/swc-private
+  assemble:
+    needs: [plan, details]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: swc-api-plan
+          path: /tmp/swc-api-plan
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: swc-api-batch-*
+          path: /tmp/swc-api-batches
+      - name: Require exact fresh coverage and seal canonical inputs
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+        run: node tools/api-parity/assemble-production-batches.mjs /tmp/swc-api-plan/plan.encrypted.json /tmp/swc-api-batches /tmp/swc-api-inputs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swc-api-progress
+          path: /tmp/swc-api-inputs/production-progress.encrypted.json
+          retention-days: 1
+          overwrite: true
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swc-api-inputs
+          path: |
+            /tmp/swc-api-inputs/api-inputs.encrypted.json
+            /tmp/swc-api-inputs/production-progress.encrypted.json
+            /tmp/swc-api-inputs/api-input-evidence.encrypted.json
+          retention-days: 7
+          overwrite: true

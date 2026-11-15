@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import {csv,MATERIALS} from './production-sync.mjs';
+const inaccessibleContainers=new Set(JSON.parse(fs.readFileSync(new URL('./inaccessible-containers.json',import.meta.url),'utf8')).containerUids);
 export function systemInventory(stations,materials,manifest){
  const owned=new Map(),piles=new Map(),errors=[],systemTotals={},productionTotals={};
  const zeros=()=>Object.fromEntries(MATERIALS.map(m=>[m,0]));
@@ -7,12 +8,13 @@ export function systemInventory(stations,materials,manifest){
  const systems=[...new Set(manifest.destinations.map(d=>d.system))].sort();
  for(const sys of systems){systemTotals[sys]=zeros();productionTotals[sys]=zeros()}
  for(const s of stations){if(!s.uid)throw Error('Station without UID');const prev=owned.get(s.uid);if(prev&&(prev.system!==s.system||prev.sysX!==s.sysX||prev.sysY!==s.sysY))throw Error('Station conflict '+s.uid);owned.set(s.uid,s)}
- const unassigned={},excluded={shipsAndOtherContainers:0,inaccessibleStations:0,outsideTrackedSystems:0,unresolvedFacilityLocation:0},facilities={};
+ const unassigned={},excluded={shipsAndOtherContainers:0,inaccessibleStations:0,outsideTrackedSystems:0,unresolvedFacilityLocation:0,confirmedInaccessibleContainers:0},facilities={};
  const unresolvedFacilities=[];
  for(const p of materials){
   if(!p.uid)throw Error('Pile missing UID');
   const sig=[p.type_name,p.quantity,p.system,p.container_type_name,p.container_uid].join('|');
   if(piles.has(p.uid)){if(piles.get(p.uid)!==sig)throw Error('Conflicting pile '+p.uid);continue}piles.set(p.uid,sig);
+  if(p.container_type_name==='Facilities'&&inaccessibleContainers.has(String(p.container_uid))){excluded.confirmedInaccessibleContainers++;continue}
   if(p.container_type_name==='Facilities'){
    // Facility exports are ownership-scoped TFF/TJO material piles. A facility
    // need not appear in the station registry; its material row identifies its system.

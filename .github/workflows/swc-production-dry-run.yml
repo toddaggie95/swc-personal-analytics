@@ -3,11 +3,22 @@ name: SWC Production Sync
 on:
   workflow_dispatch:
     inputs:
+      export_source:
+        description: 'Input source: API or Manual Export (CSV)'
+        type: choice
+        options: [api, csv]
+        required: true
+        default: api
       enable_has_writes:
-        description: 'Write validated HAS changes to Google Sheets (default: true)'
+        description: 'Apply validated HAS and production updates (unchecked = preview only)'
         type: boolean
         required: true
         default: true
+      api_resume_run_id:
+        description: 'Optional prior run with encrypted API progress (maximum age: 2 hours)'
+        type: string
+        required: false
+        default: ''
       force_republish:
         description: 'Development override: reapply HAS and downstream reports for existing exports'
         type: boolean
@@ -20,17 +31,31 @@ on:
         default: true
 
 permissions:
+  actions: read
   contents: write
   id-token: write
 
 concurrency:
-  group: swc-production-dry-run
+  group: swc-api-shadow-oauth
   cancel-in-progress: false
 
 jobs:
+  api-inputs:
+    if: inputs.export_source == 'api'
+    uses: ./.github/workflows/production-api-inputs.yml
+    with:
+      resume_run_id: ${{ inputs.api_resume_run_id || '' }}
+    secrets: inherit
   dry-run:
+    needs: api-inputs
+    if: always() && !cancelled() && (needs.api-inputs.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.export_source == 'csv'))
+    environment: swc-api-shadow
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(format('["{0}"]', inputs.export_source || 'api')) }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 120
     steps:
       - name: Check out audited branch
         uses: actions/checkout@v4
@@ -38,7 +63,31 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
+
+      - name: Download assembled API production inputs
+        if: matrix.source == 'api'
+        uses: actions/download-artifact@v4
+        with:
+          name: swc-api-inputs
+          path: /tmp/swc-api-inputs
+      - name: Restore exact canonical API inputs and freshness evidence
+        if: matrix.source == 'api'
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private
+          node tools/api-parity/api-snapshot.mjs restore /tmp/swc-api-inputs/api-inputs.encrypted.json "${{ runner.temp }}/swc-exports"
+          node tools/api-parity/production-progress.mjs restore /tmp/swc-api-inputs/production-progress.encrypted.json /tmp/swc-private/production-progress.json
+          node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json
+      - name: Prepare encrypted accepted API handoff
+        if: matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+        run: node tools/api-parity/api-snapshot.mjs prepare-key /tmp/swc-private/accepted-public-key.pem
 
       - name: Authenticate Google Drive and Sheets
         id: google
@@ -50,6 +99,7 @@ jobs:
           access_token_scopes: https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/spreadsheets
 
       - name: Download four exports from private Drive folder
+        if: matrix.source == 'csv'
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
@@ -159,24 +209,71 @@ jobs:
             "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
             "${{ runner.temp }}/production-started-preflight.json" false
 
+      - name: Capture production preview workbook (read only)
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
+        run: python3 tools/production-sync/capture-overview-snapshot.py tools/production-sync/audited-workbook-layout.json tools/production-sync/audited-production-orders.json "${{ runner.temp }}/preview-workbook.json"
+      - name: Prepare projected production preview without writes
+        run: |
+          node tools/api-parity/prepare-sync-preview.mjs "${{ runner.temp }}/preview-workbook.json" "${{ runner.temp }}/audited-ledger.json" "${{ runner.temp }}/production-started-preflight.json" "${{ runner.temp }}/swc-exports" "${{ runner.temp }}/production-preview"
+          node tools/production-sync/overview-shadow-audit.mjs --snapshot "${{ runner.temp }}/production-preview/projected-workbook.json" --overview "${{ runner.temp }}/production-preview/overview-readiness.json" --tff-stations "${{ runner.temp }}/swc-exports/tff-stations.csv" --tjo-stations "${{ runner.temp }}/swc-exports/tjo-stations.csv" --tff-materials "${{ runner.temp }}/swc-exports/tff-materials.csv" --tjo-materials "${{ runner.temp }}/swc-exports/tjo-materials.csv" --out "${{ runner.temp }}/production-preview/overview-shadow-audit.json"
+          python3 tools/production-sync/overview-publish-preview.py "${{ runner.temp }}/production-preview/overview-readiness.json" "${{ runner.temp }}/production-preview/overview-shadow-audit.json" "${{ runner.temp }}/production-preview/overview-publish-preview.json"
+
+      - name: Validate material matrix preview without writes
+        env:
+          ENABLE_MATERIAL_BALANCE_WRITES: 'false'
+          ACCEPTED_HAS_BATCH: 'false'
+        run: python3 tools/production-sync/publish-material-matrix.py "${{ runner.temp }}/production-preview/overview-readiness.json"
+      - name: Restore accepted production history for change preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCEPTED_HISTORY_ONLY: 'true'
+          PRODUCTION_HISTORY_REF: main
+        run: bash tools/production-sync/restore-production-snapshot.sh "${{ runner.temp }}"
+      - name: Preview Production Changes without publishing
+        run: |
+          prior=()
+          if [ -s "${{ runner.temp }}/previous-production-snapshot.json" ]; then prior=(--previous "${{ runner.temp }}/previous-production-snapshot.json"); fi
+          node tools/production-sync/production-change-cli.mjs "${prior[@]}" --overview "${{ runner.temp }}/production-preview/overview-readiness.json" --snapshot-out "${{ runner.temp }}/production-preview/production-change-snapshot.json" --report-out "${{ runner.temp }}/production-preview/production-change-report.json" --batch-id "preview-${{ github.run_id }}-${{ matrix.source }}"
+      - name: Validate actual dashboard and change presentation without network access
+        run: python3 tools/api-parity/validate-publication-preview.py "${{ runner.temp }}/production-preview"
+      - name: Recheck API observation freshness after sheet comparisons
+        if: matrix.source == 'api'
+        run: node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json
+      - name: Seal exact accepted API inputs for downstream publishing
+        if: success() && matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
+        run: |
+          node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json
+          node tools/api-parity/api-snapshot.mjs seal "${{ runner.temp }}/swc-exports" /tmp/swc-private/accepted-public-key.pem "${{ runner.temp }}/accepted-api-snapshot.encrypted.json"
+      - name: Upload exact accepted API snapshot
+        if: success() && matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
+        uses: actions/upload-artifact@v4
+        with:
+          name: swc-accepted-api-snapshot
+          path: ${{ runner.temp }}/accepted-api-snapshot.encrypted.json
+          retention-days: 90
+
       - name: Apply and verify HAS updates (opt-in only)
-        if: success() && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
           SWC_ENABLE_HAS_WRITES: 'true'
         run: |
+          if [ "${{ matrix.source }}" = api ]; then node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json; fi
           python3 tools/production-sync/write-verified-has.py \
             "${{ runner.temp }}/spreadsheet-comparison.json" \
             "${{ runner.temp }}/system-has-comparison.json" \
             "${{ runner.temp }}/has-write-report.json"
 
       - name: Synchronize and verify production Started flags from station exports
-        if: success() && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
         run: |
+          if [ "${{ matrix.source }}" = api ]; then node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json; fi
           python3 tools/production-sync/sync-production-started.py \
             tools/production-sync/audited-workbook-layout.json \
             "${{ runner.temp }}/swc-exports/tff-stations.csv" \
@@ -184,18 +281,19 @@ jobs:
             "${{ runner.temp }}/production-started-write-report.json" true
 
       - name: Accept verified export batch (no cleanup)
-        if: success() && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
+          if [ "${{ matrix.source }}" = api ]; then node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json; fi
           python3 tools/production-sync/accept-export-batch.py \
             "${{ runner.temp }}/swc-exports/export-manifest.json" \
             "${{ runner.temp }}/has-write-report.json" \
             "${{ runner.temp }}/batch-acceptance-report.json"
 
       - name: Rename superseded and accepted exports (opt-in, after verification)
-        if: success() && inputs.enable_has_writes == true && inputs.trash_superseded_exports == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && matrix.source == 'csv' && inputs.trash_superseded_exports == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_EXPORT_FOLDER_ID: '1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28'
@@ -207,12 +305,33 @@ jobs:
             "${{ runner.temp }}/batch-acceptance-report.json" \
             "${{ runner.temp }}/trash-report.json"
 
-      - name: Upload dry-run ledger or diagnostics
-        if: always()
+      - name: Preserve partial API progress without credentials
+        if: always() && matrix.source == 'api' && inputs.enable_has_writes != true
+        run: |
+          if [ -d /tmp/swc-private/normalized ]; then
+            mkdir -p "${{ runner.temp }}/collector-progress"
+            find /tmp/swc-private/normalized -maxdepth 1 -type f -name '*.json' -exec cp {} "${{ runner.temp }}/collector-progress/" \;
+          fi
+      - name: Seal private dry-run diagnostics
+        if: always() && inputs.enable_has_writes != true
+        run: node tools/api-parity/seal-sync-diagnostics.mjs "${{ runner.temp }}" tools/api-parity/production-audit-public-key.pem "${{ runner.temp }}/sync-preview.encrypted.json"
+      - name: Upload encrypted dry-run preview
+        if: always() && inputs.enable_has_writes != true
         uses: actions/upload-artifact@v4
         with:
-          name: swc-audited-ledger
+          name: swc-dry-run-${{ matrix.source }}
           path: |
+            ${{ runner.temp }}/sync-preview.encrypted.json
+            ${{ runner.temp }}/production-preview/preview-summary.json
+          retention-days: 7
+      - name: Upload dry-run ledger or diagnostics
+        if: always() && inputs.enable_has_writes == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event_name == 'push' && format('swc-dry-run-{0}', matrix.source) || 'swc-audited-ledger' }}
+          path: |
+            ${{ runner.temp }}/production-preview/preview-summary.json
+            ${{ runner.temp }}/production-preview/overview-publish-preview.json
             ${{ runner.temp }}/swc-exports/export-manifest.json
             ${{ runner.temp }}/swc-exports/cleanup-plan.json
             ${{ runner.temp }}/tooling-infotext-report.json
@@ -230,3 +349,7 @@ jobs:
             ${{ runner.temp }}/trash-report.json
           retention-days: 90
           if-no-files-found: warn
+
+      - name: Remove private API credentials
+        if: always() && matrix.source == 'api'
+        run: rm -rf /tmp/swc-private

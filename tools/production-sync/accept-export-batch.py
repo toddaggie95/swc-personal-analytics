@@ -36,6 +36,9 @@ def main():
         write_report = json.load(handle)
     if write_report.get("status") != "verified":
         raise ValueError("HAS updates have not been verified")
+    source = manifest.get("source", "csv")
+    if source not in ("csv", "api"):
+        raise ValueError("unknown export source")
     files = manifest["files"]
     keys = {(item["owner"], item["kind"]) for item in files}
     ids = {item["id"] for item in files}
@@ -44,7 +47,8 @@ def main():
         raise ValueError("invalid export batch identities")
     repo = os.environ["GITHUB_REPOSITORY"]
     token = os.environ["GH_TOKEN"]
-    url = "https://api.github.com/repos/" + repo + "/contents/" + STATE_PATH
+    state_path = "tools/production-sync/accepted-api-batch.json" if source == "api" else STATE_PATH
+    url = "https://api.github.com/repos/" + repo + "/contents/" + state_path
     existing = api(url, token)
     old = None
     sha = None
@@ -59,6 +63,9 @@ def main():
                 raise ValueError("previously accepted export was mutated")
     state = {
         "schemaVersion": 1,
+        "source": source,
+        "snapshotId": manifest.get("snapshotId"),
+        "collectedAt": manifest.get("collectedAt"),
         "acceptedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "workflowRunId": os.environ.get("GITHUB_RUN_ID"),
         "verification": "verified",
@@ -74,6 +81,7 @@ def main():
     api(url, token, "PUT", payload)
     report = {
         "status": "accepted",
+        "source": source,
         "acceptedFiles": [item["id"] for item in files],
         "previousBatchFiles": [item["id"] for item in old["files"]] if old else [],
         "archivePerformed": False,
