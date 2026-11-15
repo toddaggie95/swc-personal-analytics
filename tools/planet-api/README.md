@@ -23,7 +23,27 @@ filtered inventory support. Official endpoint documentation was inaccessible on
 Candidate SDK scopes include faction_inv_cities_read and faction_inv_planets_read,
 but no reauthorization is justified until current access is tested.
 
-Offline: `node --test tools/planet-api/capability-pilot.test.mjs`.
+Offline: `node --test tools/planet-api/*.test.mjs` (Node 24).
 Live: the dedicated workflow on the reviewed branch. Inspect the encrypted report
 before expanding page counts, faction coverage or enrichment. Income observation
 time is not treated as generation time; missing data is never silently zero.
+
+## One consolidated authorization
+
+The latest session supports `SWC_OAUTH_READ_PROFILE=planning` or `all-read` during
+`npm run auth:start`. With no profile, existing scope behavior is unchanged.
+`planning` retains production inventory permissions and adds city/planet reads,
+personal facilities/materials and character skill/privilege/event evidence.
+`all-read` explicitly requests the published character/faction read permissions,
+messages, every personal/faction inventory category and tag reads. It includes
+private messages, finances, Force information and combat reports; choose it only
+when that breadth is intended. No `_all` umbrella or mutation scope is requested.
+
+Both use the normal `auth:finish` hidden-input flow. Run from an existing configured
+collector installation after updating `src/auth/session.ts` and adding its sibling
+`read-scopes.ts`. The pinned source alone does not contain these new profiles.
+This change does not start authorization, refresh tokens, or change existing grants.
+OAuth scope does not override the character's actual faction privileges, expand
+API field availability, reveal unpublished game constants, or timestamp old payouts.
+After authorization, install the complete new tokens JSON in the existing hosted
+environment before launching hosted jobs; avoid overlapping authorization with runs.

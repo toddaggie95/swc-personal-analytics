@@ -8,10 +8,10 @@ on:
         default: Chamble I
         required: true
   push:
-    branches: [main, feature/planet-api-capability-pilot]
-    paths: ['tools/planet-api/**', '.github/workflows/swc-planet-capability-pilot.yml']
+    branches: [main]
+    paths: ['tools/planet-api/**', 'src/auth/**', '.github/workflows/swc-planet-capability-pilot.yml']
   pull_request:
-    paths: ['tools/planet-api/**', '.github/workflows/swc-planet-capability-pilot.yml']
+    paths: ['tools/planet-api/**', 'src/auth/**', '.github/workflows/swc-planet-capability-pilot.yml']
 permissions:
   contents: read
 concurrency:
@@ -25,10 +25,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node --test tools/planet-api/capability-pilot.test.mjs
+      - run: node --test tools/planet-api/*.test.mjs tools/api-parity/oauth-session.test.mjs tools/api-parity/oauth-persistence.test.mjs tools/api-parity/private-audit-envelope.test.mjs
   pilot:
     needs: tests
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Inspect one referenced city (read only)'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: swc-api-shadow
@@ -63,8 +63,6 @@ jobs:
           SWC_PRIVATE_DIR: /tmp/swc-private
           SWC_PILOT_OUTPUT: /tmp/swc-planet-pilot
           SWC_PILOT_PLANET: ${{ inputs.planet || 'Chamble I' }}
-          SWC_PILOT_CITY_UID: ${{ github.event_name == 'push' && '7:9176' || '' }}
-          SWC_PILOT_PUBLIC_KEY_FILE: ${{ github.event_name == 'push' && '../tools/planet-api/inspection-public-key.pem' || '' }}
           SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
           SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
           SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}

@@ -3,7 +3,8 @@ export const record = v => v && typeof v === 'object' && !Array.isArray(v) ? v :
 export function unwrap(value) {
   if (!value || typeof value !== 'object' || !value.swcapi) throw Error('envelope');
   const root = record(value.swcapi);
-  if ('error' in root) throw Error('api-error');
+  if ('error' in root || 'error_code' in root || 'error_message' in root) throw Error('api-error');
+  if ('entities' in root) return root;
   return Object.keys(root).length === 1 ? record(Object.values(root)[0]) : root;
 }
 export function uid(value) {
