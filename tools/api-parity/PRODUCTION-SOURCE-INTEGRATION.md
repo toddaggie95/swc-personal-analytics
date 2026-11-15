@@ -41,6 +41,10 @@ changed or older-than-two-hour checkpoints stop collection. Complete coverage an
 freshness are required before canonical conversion. Partial evidence never
 authorizes sheet writes. This recovery artifact uses the retained environment
 snapshot key and excludes all OAuth storage.
+Collection has a 105-minute soft deadline within the 120-minute job, including
+quota waits, so normal deadline exits leave time to encrypt/upload progress.
+Freshness is rechecked after comparisons and immediately before sealing, writes,
+and acceptance. Partial quota headers retain a previously observed reset time.
 
 ## Source fidelity downstream
 

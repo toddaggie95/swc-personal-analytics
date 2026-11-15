@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {planIdentity,newProgress,validateProgress,MAX_AGE_MS} from './production-progress.mjs';
+import {planIdentity,newProgress,validateProgress,validateFreshness,MAX_AGE_MS} from './production-progress.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -23,6 +23,12 @@ test('changed plan, contract, owner, duplicates and stale progress fail closed',
  assert.throws(()=>validateProgress(p,identity,[{...stations[0],ownerUid:'20:2'}],now));
  assert.throws(()=>validateProgress({...p,entries:[{...entry,operations:{...entry.operations,observedAt:'bad'}}]},identity,stations,now));
  assert.throws(()=>validateProgress({...p,entries:[{...entry,operations:{...entry.operations,productionStatus:'running',productionQuantity:'0'}}]},identity,stations,now));
+});
+test('freshness is enforced at the exact boundary and can expire after collection',()=>{
+ const p={...newProgress(identity,now),entries:[entry]};
+ assert.doesNotThrow(()=>validateFreshness(p,now+MAX_AGE_MS));
+ assert.throws(()=>validateFreshness(p,now+MAX_AGE_MS+1));
+ assert.throws(()=>validateFreshness(p,now-1));
 });
 test('checkpoint CLI encrypts and restores exact data, rejecting tampered ciphertext',()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'swc-resume-'));

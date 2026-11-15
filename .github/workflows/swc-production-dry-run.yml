@@ -269,9 +269,14 @@ jobs:
           node tools/production-sync/production-change-cli.mjs "${prior[@]}" --overview "${{ runner.temp }}/production-preview/overview-readiness.json" --snapshot-out "${{ runner.temp }}/production-preview/production-change-snapshot.json" --report-out "${{ runner.temp }}/production-preview/production-change-report.json" --batch-id "preview-${{ github.run_id }}-${{ matrix.source }}"
       - name: Validate actual dashboard and change presentation without network access
         run: python3 tools/api-parity/validate-publication-preview.py "${{ runner.temp }}/production-preview"
+      - name: Recheck API observation freshness after sheet comparisons
+        if: matrix.source == 'api'
+        run: node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json
       - name: Seal exact accepted API inputs for downstream publishing
         if: success() && matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
-        run: node tools/api-parity/api-snapshot.mjs seal "${{ runner.temp }}/swc-exports" /tmp/swc-private/accepted-public-key.pem "${{ runner.temp }}/accepted-api-snapshot.encrypted.json"
+        run: |
+          node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json
+          node tools/api-parity/api-snapshot.mjs seal "${{ runner.temp }}/swc-exports" /tmp/swc-private/accepted-public-key.pem "${{ runner.temp }}/accepted-api-snapshot.encrypted.json"
       - name: Upload exact accepted API snapshot
         if: success() && matrix.source == 'api' && github.event_name == 'workflow_dispatch' && inputs.enable_has_writes == true && (steps.batch_gate.outputs.new_batch == 'true' || inputs.force_republish == true)
         uses: actions/upload-artifact@v4
@@ -287,6 +292,7 @@ jobs:
           SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
           SWC_ENABLE_HAS_WRITES: 'true'
         run: |
+          if [ "${{ matrix.source }}" = api ]; then node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json; fi
           python3 tools/production-sync/write-verified-has.py \
             "${{ runner.temp }}/spreadsheet-comparison.json" \
             "${{ runner.temp }}/system-has-comparison.json" \
@@ -298,6 +304,7 @@ jobs:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
         run: |
+          if [ "${{ matrix.source }}" = api ]; then node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json; fi
           python3 tools/production-sync/sync-production-started.py \
             tools/production-sync/audited-workbook-layout.json \
             "${{ runner.temp }}/swc-exports/tff-stations.csv" \
@@ -310,6 +317,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
+          if [ "${{ matrix.source }}" = api ]; then node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json; fi
           python3 tools/production-sync/accept-export-batch.py \
             "${{ runner.temp }}/swc-exports/export-manifest.json" \
             "${{ runner.temp }}/has-write-report.json" \

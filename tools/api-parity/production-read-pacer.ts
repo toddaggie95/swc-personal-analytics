@@ -12,8 +12,9 @@ export class ReadPacer {
  private next=0;
  private window:RateWindow={limit:null,remaining:null,resetAtMs:null};
  private waits=0;
+ private deadline:number;
  constructor(private sleep:(ms:number)=>Promise<void>=ms=>new Promise(r=>setTimeout(r,ms)),private now:()=>number=Date.now,
-  private fallbackDelayMs=6500,private maxWaitMs=3_660_000,private minGapMs=1000){}
+  private fallbackDelayMs=6500,private maxWaitMs=3_660_000,private minGapMs=1000,deadlineMs=Infinity){this.deadline=Math.min(deadlineMs,this.now()+105*60_000);}
  async beforeRequest(_resource:string):Promise<void>{
   const now=this.now(),w=this.window;
   let next=this.next;
@@ -22,6 +23,7 @@ export class ReadPacer {
    next=Math.max(next,w.resetAtMs+1000);
   }
   const delay=Math.max(0,next-now);
+  if(now+delay+30_000>=this.deadline){console.log('PRODUCTION_API_COLLECTION_DEADLINE');throw Error('Collection deadline reserves time for encrypted progress upload');}
   if(delay>this.maxWaitMs)throw Error('Quota wait exceeds collection bound');
   if(delay){this.waits+=delay;if(delay>60_000)console.log('PRODUCTION_API_QUOTA_WAIT '+JSON.stringify({waitSeconds:Math.ceil(delay/1000)}));await this.sleep(delay);}
   if(w.resetAtMs!==null&&this.now()>w.resetAtMs)this.window={limit:null,remaining:null,resetAtMs:null};
@@ -39,7 +41,9 @@ export class ReadPacer {
   }else{
    // Missing headers do not restore consumed quota or erase a known reserve.
    if(this.window.remaining!==null)this.window.remaining=Math.max(0,this.window.remaining-1);
-   if(observed.remaining!==null&&(this.window.remaining===null||observed.remaining<this.window.remaining))this.window={...observed};
+   if(observed.remaining!==null&&(this.window.remaining===null||observed.remaining<this.window.remaining))this.window={
+    limit:this.window.limit??observed.limit,remaining:observed.remaining,
+    resetAtMs:this.window.resetAtMs===null?observed.resetAtMs:observed.resetAtMs===null?this.window.resetAtMs:Math.max(this.window.resetAtMs,observed.resetAtMs)};
    this.next=now+this.fallbackDelayMs;
   }
   return observed;

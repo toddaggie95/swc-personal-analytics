@@ -20,3 +20,12 @@ test('missing headers keep conservative fallback and untrustworthy reset fails c
  const {pacer,waits}=fixture();pacer.afterResponse('details',new Headers());await pacer.beforeRequest('details');assert.deepEqual(waits,[6500]);
  pacer.afterResponse('details',new Headers({'x-ratelimit-remaining':'0'}));await assert.rejects(pacer.beforeRequest('details'),/without reset/);
 });
+test('partial headers preserve a previously observed reliable reset',async()=>{
+ const {pacer,waits}=fixture();pacer.afterResponse('details',headers(20));
+ pacer.afterResponse('materials',new Headers({'x-ratelimit-remaining':'5'}));
+ await pacer.beforeRequest('details');assert.deepEqual(waits,[3601000]);
+});
+test('collector deadline stops before a long quota wait, leaving time for upload',async()=>{
+ const waits=[];const pacer=new ReadPacer(async ms=>waits.push(ms),()=>0,6500,3660000,1000,300000);
+ pacer.afterResponse('details',headers(5));await assert.rejects(pacer.beforeRequest('details'),/deadline/);assert.deepEqual(waits,[]);
+});

@@ -12,9 +12,15 @@ export function planIdentity(stations,contract){
  return hash(JSON.stringify({rows,contract:hash(contract)}));
 }
 export function newProgress(identity,now=Date.now()){return {version:1,identity,createdAt:new Date(now).toISOString(),entries:[]};}
-export function validateProgress(progress,identity,stations,now=Date.now()){
+export function validateFreshness(progress,now=Date.now()){
  const created=Date.parse(progress?.createdAt);
- if(progress?.version!==1||progress.identity!==identity||!Number.isFinite(created)||created>now||now-created>MAX_AGE_MS||!Array.isArray(progress.entries))throw Error('Incompatible or stale production checkpoint');
+ if(progress?.version!==1||!Number.isFinite(created)||created>now||now-created>MAX_AGE_MS||!Array.isArray(progress.entries))throw Error('Stale or invalid production checkpoint');
+ for(const entry of progress.entries){const at=Date.parse(entry.operations?.observedAt);if(!Number.isFinite(at)||at<created||at>now||now-at>MAX_AGE_MS)throw Error('Stale production observation');}
+ return created;
+}
+export function validateProgress(progress,identity,stations,now=Date.now()){
+ const created=validateFreshness(progress,now);
+ if(progress.identity!==identity)throw Error('Incompatible production checkpoint');
  const targets=new Map(stations.map(s=>[s.uid,s])),seen=new Map();
  for(const entry of progress.entries){
   const target=targets.get(entry.uid),at=Date.parse(entry.operations?.observedAt);
@@ -26,6 +32,11 @@ export function validateProgress(progress,identity,stations,now=Date.now()){
 }
 function main(){
  const [mode,input,output]=process.argv.slice(2);
+ if(mode==='check-fresh'){
+  const progress=JSON.parse(fs.readFileSync(input,'utf8'));validateFreshness(progress);
+  if(!progress.entries.length)throw Error('Empty production progress');
+  console.log('Production observation freshness validated.');return;
+ }
  const key=process.env.SWC_API_SNAPSHOT_PRIVATE_KEY;
  if(!key)throw Error('Checkpoint encryption key unavailable');
  if(mode==='seal'){
