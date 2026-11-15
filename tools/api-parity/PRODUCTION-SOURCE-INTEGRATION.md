@@ -29,7 +29,7 @@ and to the isolated GitHub environment before further reads. All renewable
 credential workflows share the same concurrency group.
 
 The optimized collector uses the validated fresh-runner batch design: one OAuth
-and inventory coordinator, at most 50 station details per separate runner, twelve
+and inventory coordinator, at most 50 station details per separate runner, twenty
 workers concurrently, and exact assembly before canonical conversion. The 1,013
 tracked shipyards require 21 batches. All 48 prior full-audit runners independently
 started at 599 remaining and ended at 550 after 50 reads, including concurrent
@@ -111,8 +111,13 @@ token file after a hosted rotation.
 - Efficiency benchmark 43760123250 passed with twelve workers and writes disabled:
   3m35s for API inputs, 4m05s for the full primary preview, exact 1,013-detail
   coverage, zero retries/errors. Metadata-only lookup benchmark 43761632697 passed
-  known/new states in 1.4–1.5s. Actual write-enabled end-to-end timing remains to
+  known/new states in 1.4â€“1.5s. Actual write-enabled end-to-end timing remains to
   be measured on the next production run.
+- Final comparison 43762988776 passed at twenty simultaneous workers: API inputs
+  in 2m54s and the full primary preview in 3m23s. All 1,013 details and 1,087
+  production orders validated with no retries/errors. Twenty is the selected cap;
+  actual concurrency depends on GitHub runner availability. Sheet writes remained
+  disabled throughout the comparison.
 
 The production adapter collects operation fields for the 1,013 shipyards in the
 20 tracked systems. Operation fields on other station types and the 12 outside
