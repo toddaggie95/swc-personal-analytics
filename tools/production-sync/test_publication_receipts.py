@@ -112,6 +112,7 @@ class PublicationReceiptTests(unittest.TestCase):
 
     def test_seed_never_fills_unknown_components_of_newer_attempt(self):
         seed = receipt("15")
+        seed["legacyValidUntil"] = "2099-01-01T00:00:00+00:00"
         (self.root / "legacy-publication-receipt.json").write_text(json.dumps(seed))
         def add_seed(_artifacts, _archives, runs):
             runs["15"] = {"id": "15", "path": receipts.WORKFLOW_PATH, "name": receipts.WORKFLOW_NAME, "status": "completed",
@@ -121,6 +122,7 @@ class PublicationReceiptTests(unittest.TestCase):
 
     def test_seed_is_fallback_only_when_no_trusted_artifact_exists(self):
         seed = receipt("15")
+        seed["legacyValidUntil"] = "2099-01-01T00:00:00+00:00"
         seed.pop("runAttempt")
         (self.root / "legacy-publication-receipt.json").write_text(json.dumps(seed))
         def add_seed(_artifacts, _archives, runs):
@@ -299,6 +301,42 @@ class PublicationReceiptTests(unittest.TestCase):
     def test_missing_attempt_environment_defaults_to_one(self):
         os.environ.pop("GITHUB_RUN_ATTEMPT")
         self.assertEqual(receipts.attempt(), 1)
+
+    def test_expired_seed_cannot_skip_publication_or_fetch_seed_metadata(self):
+        seed = receipt("15")
+        seed["legacyValidUntil"] = "2000-01-01T00:00:00+00:00"
+        (self.root / "legacy-publication-receipt.json").write_text(json.dumps(seed))
+        calls = self.resolve()
+        self.assert_outputs(True, True, True)
+        self.assertFalse(any("/actions/runs/" in args[2] for args in calls))
+
+    def test_seed_requires_valid_utc_expiry_but_artifact_receipts_do_not(self):
+        seed_path = self.root / "legacy-publication-receipt.json"
+        for expiry in (None, "malformed", "2099-01-01T00:00:00", "2099-01-01T00:00:00+02:00"):
+            seed = receipt("15")
+            if expiry is not None:
+                seed["legacyValidUntil"] = expiry
+            seed_path.write_text(json.dumps(seed))
+            with self.subTest(expiry=expiry), self.assertRaises(ValueError):
+                self.resolve()
+        seed_path.unlink()
+        self.resolve([receipt()])
+        self.assert_outputs(False, False, False)
+
+    def test_seed_expiry_boundary_is_exclusive(self):
+        fixed = receipts.datetime.fromisoformat("2026-11-15T20:00:00+00:00")
+        def add_seed(_artifacts, _archives, runs):
+            runs["15"] = {"id": "15", "path": receipts.WORKFLOW_PATH, "name": receipts.WORKFLOW_NAME, "status": "completed",
+                          "head_repository": {"full_name": "owner/repo"}, "event": "workflow_dispatch"}
+        for expiry, publish in (("2026-11-15T20:00:00+00:00", True), ("2026-11-15T20:00:01Z", False)):
+            seed = receipt("15")
+            seed["legacyValidUntil"] = expiry
+            (self.root / "legacy-publication-receipt.json").write_text(json.dumps(seed))
+            self.output.unlink(missing_ok=True)
+            with patch.object(receipts, "datetime", wraps=receipts.datetime) as clock:
+                clock.now.return_value = fixed
+                self.resolve([], add_seed)
+            self.assert_outputs(publish, publish, publish)
 
     def test_network_error_fails_closed_with_fixed_message(self):
         with patch.object(receipts.subprocess, "run", side_effect=RuntimeError("sensitive remote response")), patch.object(receipts.sys, "argv", ["publication-receipts.py", "resolve", str(self.root)]), contextlib.redirect_stderr(io.StringIO()) as error:

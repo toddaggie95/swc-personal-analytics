@@ -33,5 +33,6 @@
     "matrix": true,
     "changes": true
   },
-  "runAttempt": 1
+  "runAttempt": 1,
+  "legacyValidUntil": "2026-11-16T20:00:00+00:00"
 }

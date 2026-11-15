@@ -6,6 +6,7 @@ Creation emits artifact_name/slot outputs. Each phase alternates between two fix
 slots using GITHUB_RUN_ATTEMPT (default 1), preserving the prior attempt on retry.
 """
 import hashlib
+from datetime import datetime, timedelta, timezone
 import io
 import json
 import os
@@ -164,10 +165,17 @@ def resolve(output):
     seed = Path(__file__).with_name("legacy-publication-receipt.json")
     if latest is None and seed.exists():
         receipt = json.loads(seed.read_text(encoding="utf-8-sig"))
-        receipt.setdefault("runAttempt", 1)
-        run_id = numeric(receipt.get("reportRunId"))
-        if trusted(run_id):
-            latest = validate_receipt(receipt, run_id, "complete")
+        expiry = receipt.get("legacyValidUntil")
+        if not isinstance(expiry, str):
+            raise ValueError("Missing legacy receipt expiry")
+        valid_until = datetime.fromisoformat(expiry)
+        if valid_until.tzinfo is None or valid_until.utcoffset() != timedelta(0):
+            raise ValueError("Legacy receipt expiry must be timezone-aware UTC")
+        if valid_until > datetime.now(timezone.utc):
+            receipt.setdefault("runAttempt", 1)
+            run_id = numeric(receipt.get("reportRunId"))
+            if trusted(run_id):
+                latest = validate_receipt(receipt, run_id, "complete")
     lines = []
     for component in COMPONENTS:
         matched = latest is not None and latest["fingerprint"] == current and latest["components"][component]
