@@ -1,0 +1,83 @@
+name: SWC Planet API capability pilot (read only)
+on:
+  workflow_dispatch:
+    inputs:
+      planet:
+        description: 'One planet for bounded capability discovery'
+        type: string
+        default: Chamble I
+        required: true
+  push:
+    branches: [feature/planet-api-capability-pilot]
+permissions:
+  contents: read
+concurrency:
+  group: swc-api-shadow-oauth
+  cancel-in-progress: false
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tools/planet-api/capability-pilot.test.mjs
+  pilot:
+    needs: tests
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Run bounded planet capability pilot (read only)'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: collector/package-lock.json
+      - name: Prepare sole OAuth coordinator
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private collector/tools/{api-parity,planet-api}
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
+          cp src/auth/*.ts collector/src/auth/
+          cp tools/planet-api/*.{mjs,ts} collector/tools/planet-api/
+          cp tools/api-parity/private-audit-envelope.mjs collector/tools/api-parity/
+      - name: Collect bounded encrypted capability evidence
+        working-directory: collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_PILOT_OUTPUT: /tmp/swc-planet-pilot
+          SWC_PILOT_PLANET: ${{ inputs.planet || 'Chamble I' }}
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+        run: |
+          set -euo pipefail
+          trap 'status=$?; bash ../tools/api-parity/persist-swc-token.sh || status=1; exit "$status"' EXIT
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          npx tsx tools/planet-api/run-capability-pilot.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swc-planet-capability-encrypted
+          path: /tmp/swc-planet-pilot/*.encrypted.json
+          retention-days: 7
+          overwrite: true
+          if-no-files-found: warn
+      - if: always()
+        run: rm -rf /tmp/swc-private /tmp/swc-planet-pilot
