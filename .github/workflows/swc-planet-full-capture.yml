@@ -8,14 +8,14 @@ on:
         default: Chamble I
         required: true
   push:
-    branches: [main, feature/planet-fleet-reconciliation]
+    branches: [main]
     paths: ['tools/planet-api/**', '.github/workflows/swc-planet-full-capture.yml']
   pull_request:
     paths: ['tools/planet-api/**', '.github/workflows/swc-planet-full-capture.yml']
 permissions:
   contents: read
 concurrency:
-  group: ${{ (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Collect Chamble IV actual inventory baseline') && 'swc-api-shadow-oauth' || format('planet-full-capture-tests-{0}', github.ref) }}
+  group: ${{ github.event_name == 'workflow_dispatch' && 'swc-api-shadow-oauth' || format('planet-full-capture-tests-{0}', github.ref) }}
   cancel-in-progress: false
 jobs:
   tests:
@@ -28,7 +28,7 @@ jobs:
       - run: node --test tools/planet-api/*.test.mjs
   plan:
     needs: tests
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Collect Chamble IV actual inventory baseline'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment: swc-api-shadow
@@ -65,7 +65,7 @@ jobs:
         env:
           SWC_PRIVATE_DIR: /tmp/swc-private
           SWC_CAPTURE_OUTPUT: /tmp/swc-planet-plan
-          SWC_CAPTURE_PLANET: ${{ inputs.planet || 'Chamble IV' }}
+          SWC_CAPTURE_PLANET: ${{ inputs.planet || 'Chamble I' }}
           SWC_CAPTURE_ANALYSIS_PUBLIC_KEY: ${{ github.workspace }}/tools/planet-api/snapshot-analysis-public-key.pem
           SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
           SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
