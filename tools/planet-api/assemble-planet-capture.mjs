@@ -9,9 +9,11 @@ try{
  const classifications=Object.fromEntries(inventory.factions.map(f=>[f.uid,{group:f.name==='The Faerytail Family'?'TFF':f.name==='The Faerytail Family: The Je`daii Order'?'TJO':'other_TFF_affiliate',evidence:'authenticated faction membership and exact API name'}]));
  const snapshot=assembleSnapshot(inventory,plan,batches,{ownerClassifications:classifications});
  const archiveKey=createPublicKey(process.env.SWC_API_SNAPSHOT_PRIVATE_KEY),report=snapshotReport(snapshot);
+ const fullCatalog={schemaVersion:1,kind:'facility_type_catalog',runId:plan.runId,observedTo:snapshot.observationWindow.to,
+  index:inventory.typeIndex,entries:batches.filter(b=>b.kind==='types').flatMap(b=>b.entries)};
  for(const [recipient,key]of[['archive',archiveKey],['analysis',plan.analysisPublicKey]]){
   for(const[name,bytes]of[['planet-snapshot',Buffer.from(JSON.stringify(snapshot))],['planet-report',Buffer.from(report)],
-   ['facility-type-catalog',Buffer.from(JSON.stringify({schemaVersion:1,observedAt:snapshot.observationWindow.to,entries:snapshot.catalog}))]])
+   ['facility-type-catalog',Buffer.from(JSON.stringify(fullCatalog))]])
    writeFileSync(join(output,name+'.'+recipient+'.encrypted.json'),JSON.stringify(encrypt(bytes,key)),{mode:0o600});
  }
  console.log('Versioned planetary snapshot assembled; reconciliation status and all data remain encrypted.');

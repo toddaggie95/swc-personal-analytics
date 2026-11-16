@@ -9,7 +9,7 @@ export async function newPacer(deadline){
 export function captureEndpoint(endpoint){
  try{if(decodeURIComponent(endpoint).split('/').some(p=>p==='.'||p==='..'))return false;}catch{return false;}
  return endpoint==='character/'||/^galaxy\/planets\/[A-Za-z0-9%._~-]+\/$/.test(endpoint)||
-  /^inventory\/20:\d+\/(facilities|cities)\/owner$/.test(endpoint)||/^inventory\/cities\/7:\d+$/.test(endpoint)||/^inventory\/facilities\/4:\d+$/.test(endpoint)||
+  /^inventory\/20:\d+\/(facilities|cities)\/owner$/.test(endpoint)||/^inventory\/cities\/7:\d+$/.test(endpoint)||
   endpoint==='types/facilities/'||/^types\/facilities\/4:\d+$/.test(endpoint);
 }
 export function makeCaptureTransport({auth,pacer,save,phase,limit,deadline,fetcher=fetch}){

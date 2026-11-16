@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import{inventoryPage,fullInventory,fullTypeIndex,makeCapturePlan,collectBatch,hash,verifyPlan}from'./planet-capture.mjs';
-import{assembleSnapshot,compareSnapshots,verifySnapshot}from'./planet-snapshot.mjs';
+import{assembleSnapshot,compareSnapshots,verifySnapshot,appendReconciliationEvidence}from'./planet-snapshot.mjs';
 const ref=uid=>({attributes:{uid},value:uid});
 const source=(id)=>({id,observedAt:new Date().toISOString(),sha256:'a'.repeat(64)});
 const wrap=data=>({swcapi:{result:data}});
@@ -93,4 +93,13 @@ test('transfers are distinguished from construction or disappearance and hashes 
  after.snapshotId='later';after.facilities[0].ownerUid='20:9';delete after.contentSha256;after.contentSha256=hash(after);
  const diff=compareSnapshots(before,after);assert.equal(diff.transferred.length,1);assert.deepEqual(diff.added,[]);assert.deepEqual(diff.noLongerObserved,[]);
  after.facilities[0].ownerUid='20:10';assert.throws(()=>verifySnapshot(after));
+});
+test('reconciliation revisions retain immutable parent evidence and cannot silently certify historical controls',()=>{
+ const f=fixture(),original=assembleSnapshot(f.inventory,f.plan,f.batches),originalText=JSON.stringify(original);
+ const revision=appendReconciliationEvidence(original,{controls:[{source:'historical sheet',currency:'historical',jobs:50}],
+  ownerClassifications:{'20:1':{group:'TFF',evidence:'confirmed identity'}}},'synthetic-r2');
+ assert.equal(JSON.stringify(original),originalText);assert.equal(revision.parentSnapshotSha256,original.contentSha256);
+ assert.equal(revision.optimizationReady,false);assert.equal(revision.reconciliation.status,'pending_independent_controls');
+ assert.equal(revision.byOwner.find(o=>o.uid==='20:1').classification.group,'TFF');assert.equal(verifySnapshot(revision),revision);
+ assert.equal(compareSnapshots(original,revision).transferred.length,0);
 });

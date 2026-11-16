@@ -1,5 +1,10 @@
 # Durable planetary baselines
 
+`appendReconciliationEvidence` creates a new revision linked to the immutable
+parent hash. It can attach dated controls and evidenced owner classifications;
+it cannot silently change physical observations or certify historical controls.
+The original capture and each reconciliation revision remain separate files.
+
 One capture creates a versioned `planet_reconciliation_snapshot` JSON document,
 a readable report and a sourced facility-type catalog. Raw source responses and
 partial detail batches are preserved separately. Everything uploaded is encrypted

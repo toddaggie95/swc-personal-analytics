@@ -123,6 +123,9 @@ export function snapshotReport(snapshot){
   `Plans are separate from observed construction. Historical or manually supplied foreign inventory must carry its own date and evidence.`,
   `Every physical facility has source references and a recorded contribution decision. Transfers do not create or delete physical facilities.`,
   `Source and catalog hashes permit offline reproduction without another API run. Income generation dates remain unknown.`,``,
+  `Parent snapshot hash: ${s.parentSnapshotSha256??'original observation'}.`,
+  `Independent evidence records: ${s.reconciliation.independentControls.length}. Historical controls do not certify a current match.`,
+  ...s.reconciliation.notes.map(note=>'- '+note),``,
   `Snapshot hash: ${s.contentSha256}`,``].join('\n');
 }
 export function verifySnapshot(snapshot){
@@ -143,4 +146,18 @@ export function compareSnapshots(before,after){
  return {schemaVersion:1,planetUid:before.planet.uid,before:before.snapshotId,after:after.snapshotId,added,noLongerObserved,transferred,constructionCompleted,otherStateChanges,
   totals:{before:before.totals.includedCompleted,after:after.totals.includedCompleted},
   caveat:'No longer observed does not prove demolition; inspect source coverage and conflicts.'};
+}
+export function appendReconciliationEvidence(snapshot,{controls=[],ownerClassifications={},notes=[]},revisionId){
+ verifySnapshot(snapshot);
+ if(typeof revisionId!=='string'||!revisionId||revisionId===snapshot.snapshotId)throw Error('revision-id');
+ const next=structuredClone(snapshot);next.snapshotId=revisionId;next.revision=(snapshot.revision??1)+1;
+ next.parentSnapshotSha256=snapshot.contentSha256;next.optimizationReady=false;
+ for(const control of controls)if(!control.source||!['historical','current','assumption'].includes(control.currency))throw Error('control-provenance');
+ for(const [id,classification]of Object.entries(ownerClassifications)){
+  if(!['TFF','TJO','other_TFF_affiliate','non_TFF','unclassified'].includes(classification.group)||!classification.evidence)throw Error('owner-classification-evidence');
+  const owner=next.byOwner.find(o=>o.uid===id);if(!owner)throw Error('unknown-owner-classification');owner.classification=classification;
+ }
+ next.reconciliation.independentControls.push(...structuredClone(controls));next.reconciliation.notes.push(...notes);
+ if(next.reconciliation.status==='matched')next.reconciliation.status='pending_independent_controls';
+ delete next.contentSha256;next.contentSha256=hash(next);return next;
 }

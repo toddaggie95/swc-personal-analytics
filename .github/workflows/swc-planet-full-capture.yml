@@ -8,13 +8,14 @@ on:
         default: Chamble I
         required: true
   push:
-    branches: [feature/planet-snapshot-capture]
+    branches: [main]
+    paths: ['tools/planet-api/**', '.github/workflows/swc-planet-full-capture.yml']
   pull_request:
     paths: ['tools/planet-api/**', '.github/workflows/swc-planet-full-capture.yml']
 permissions:
   contents: read
 concurrency:
-  group: ${{ (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Capture Chamble I planetary baseline (read only)') && 'swc-api-shadow-oauth' || format('planet-full-capture-tests-{0}', github.ref) }}
+  group: ${{ github.event_name == 'workflow_dispatch' && 'swc-api-shadow-oauth' || format('planet-full-capture-tests-{0}', github.ref) }}
   cancel-in-progress: false
 jobs:
   tests:
@@ -27,7 +28,7 @@ jobs:
       - run: node --test tools/planet-api/*.test.mjs
   plan:
     needs: tests
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Capture Chamble I planetary baseline (read only)'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment: swc-api-shadow
