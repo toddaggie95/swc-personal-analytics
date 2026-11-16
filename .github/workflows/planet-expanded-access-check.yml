@@ -1,0 +1,32 @@
+name: Check expanded read-only access
+on:
+  push:
+    branches: [feature/planet-access-validation]
+permissions:
+  contents: read
+concurrency:
+  group: swc-api-shadow-oauth
+  cancel-in-progress: false
+jobs:
+  check:
+    if: github.event.head_commit.message == 'Check expanded grant without retrying denied planet detail'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tools/planet-api/check-expanded-access.test.mjs
+      - name: Check access with existing unrefreshed token
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: node tools/planet-api/run-expanded-access.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: expanded-access-encrypted
+          path: ${{ runner.temp }}/expanded-access/*.encrypted.json
+          retention-days: 1
+          if-no-files-found: warn
