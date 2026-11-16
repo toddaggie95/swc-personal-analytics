@@ -43,7 +43,7 @@ export function allowedEndpoint(endpoint) {
     /^inventory\/20:\d+\/(facilities|cities)\/owner$/.test(endpoint) ||
     endpoint === 'types/facilities/' || /^types\/facilities\/\d+:\d+$/.test(endpoint);
 }
-export async function collectPilot(request, {planetName, factionName, save}) {
+export async function collectPilot(request, {planetName, factionName, save, includePlanetInventory=false}) {
   if (!planetName || planetName.length > 100 || !/^[A-Za-z0-9 .'-]+$/.test(planetName)) throw Error('planet-name');
   const report = {schemaVersion:1, mode:'bounded_capability_pilot', completePhysicalPlanet:false,
     observedFrom:new Date().toISOString(), resources:[], gaps:[], generationTimeKnown:false};
@@ -67,7 +67,8 @@ export async function collectPilot(request, {planetName, factionName, save}) {
     const planetUid = uid(planet);
     if (!/^8:\d+$/.test(planetUid) || planet.name?.toLowerCase()!==planetName.toLowerCase()) throw Error('planet-identity');
     report.planet={uid:planetUid,name:planet.name};report.ownerUid=ownerUid;
-    await read('inventory_planet','inventory/planets/'+planetUid);
+    if(includePlanetInventory)await read('inventory_planet','inventory/planets/'+planetUid);
+    else report.gaps.push('Private planet inventory detail not requested; establish endpoint-specific access separately.');
     const query={start_index:1,item_count:200,'filter_type[0]':'planet','filter_value[0]':planetUid,'filter_inclusion[0]':'includes'};
     const facilities=await read('facility_list','inventory/'+ownerUid+'/facilities/owner',query);
     if(facilities){

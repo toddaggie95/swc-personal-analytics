@@ -10,6 +10,13 @@ details, two distinct facility types, one city detail from available references,
 the planet's public and inventory views, and one facility type catalog page.
 It does not claim complete all-owner coverage or a complete planetary capture.
 
+Private planet inventory detail is opt-in (`include_planet_inventory`), default
+false. The expanded grant was verified on 2026-11-15, but a planet detail and a
+faction planet-list request still returned 401 while city/facility reads worked.
+Do not treat those resource-specific failures as proof that the refresh grant is
+invalid, repeatedly retry them, or require reauthorization without new evidence.
+Any requested 401 still stops the normal pilot; it is not ignored globally.
+
 At most 18 GET requests, serial 6.5-second pacing, no automatic data retries,
 240-second request-start deadline, 30-second per-request timeout. HTTP 401/429
 stops the run; 403/404 record a capability gap without retrying that resource.
