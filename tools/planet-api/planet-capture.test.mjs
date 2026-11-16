@@ -80,6 +80,14 @@ test('missing catalog economics stay unknown rather than becoming zero',()=>{
  assert.equal(s.facilities.find(f=>f.uid==='4:100').contribution.reason,'missing_type_economics');
  assert.equal(s.catalog.find(t=>t.uid==='4:1').jobs,null);
 });
+test('basic city building references remain identifiable unresolved observations',()=>{
+ const f=fixture();const city=f.batches.find(b=>b.kind==='cities').entries[0].data;
+ city.buildings.building.push({uid:'4:400',name:'Basic only',images:{small:'https://example.test/image.gif'},attributes:{x:3,y:4}});
+ const s=assembleSnapshot(f.inventory,f.plan,f.batches),basic=s.facilities.find(f=>f.uid==='4:400');
+ assert.equal(s.coverage.uniqueFacilities,4);assert.equal(s.totals.unresolvedFacilities,1);
+ assert.equal(basic.typeUid,null);assert.equal(basic.ownerUid,null);assert.equal(basic.x,3);assert.equal(basic.name,'Basic only');
+ assert.equal(basic.contribution.reason,'missing_type');assert.equal(s.reconciliation.status,'incomplete_coverage');
+});
 test('transfers are distinguished from construction or disappearance and hashes detect tampering',()=>{
  const f=fixture();const before=assembleSnapshot(f.inventory,f.plan,f.batches),after=structuredClone(before);
  after.snapshotId='later';after.facilities[0].ownerUid='20:9';delete after.contentSha256;after.contentSha256=hash(after);

@@ -10,7 +10,7 @@ const name=ref=>typeof ref?.value==='string'?ref.value:null;
 function facilityFacts(row,city=null){
  const location=record(row.location),ground=record(record(record(location.coordinates).ground).attributes);
  const coords=city?record(row.attributes):ground;
- return {uid:uid(row),typeUid:uid(row.type)??null,typeName:name(row.type),ownerUid:uid(row.owner)??null,ownerName:name(row.owner),
+ return {uid:uid(row),name:row.name??null,images:row.images??null,typeUid:uid(row.type)??null,typeName:name(row.type),ownerUid:uid(row.owner)??null,ownerName:name(row.owner),
   cityUid:city??uid(location.city)??null,x:n(coords.x),y:n(coords.y),orientation:row.orientation??null,
   underConstruction:flag(row.underconstruction),wrecked:flag(row.wrecked),powered:flag(row.ispowered),
   managerUid:uid(row.commander)??null,operatorUid:uid(row.pilot)??null,
@@ -44,7 +44,7 @@ export function assembleSnapshot(inventory,plan,batches,{ownerClassifications={}
  const catalog=new Map(entries.types.filter(e=>e.status==='observed').map(e=>[e.uid,catalogFacts(e.data,e.source)]));
  const facilities=new Map(),conflicts=[];
  const addObservation=(row,source,city=null)=>{
-  const facts=facilityFacts(row,city);if(!/^4:\d+$/.test(facts.uid)||!facts.typeUid||!facts.ownerUid)throw Error('physical-facility-identity');
+  const facts=facilityFacts(row,city);if(!/^4:\d+$/.test(facts.uid))throw Error('physical-facility-identity');
   const old=facilities.get(facts.uid);
   if(old){
    for(const field of ['typeUid','ownerUid','cityUid','x','y','orientation','underConstruction','wrecked'])
@@ -80,17 +80,18 @@ export function assembleSnapshot(inventory,plan,batches,{ownerClassifications={}
   if(reason){facility.contribution={included:false,reason,potential:type?{jobs:type.jobs,flats:type.flats,area:type.area}:null};
    (reason==='under_construction'?excluded:unresolved).push(facility.uid);continue;}
   facility.contribution={included:true,jobs:type.jobs,flats:type.flats,area:type.area,typeSource: type.source.id};
-  if(!byOwner.has(facility.ownerUid))byOwner.set(facility.ownerUid,{uid:facility.ownerUid,name:facility.ownerName,
-   classification:ownerClassifications[facility.ownerUid]??{group:'unclassified',evidence:null},total:emptyTotals()});
+  const ownerKey=facility.ownerUid??'unknown';
+  if(!byOwner.has(ownerKey))byOwner.set(ownerKey,{uid:ownerKey,name:facility.ownerName,
+   classification:ownerClassifications[ownerKey]??{group:'unclassified',evidence:null},total:emptyTotals()});
   if(!byType.has(facility.typeUid))byType.set(facility.typeUid,{uid:facility.typeUid,name:type.name,total:emptyTotals()});
-  add(total,facility.contribution);add(byOwner.get(facility.ownerUid).total,facility.contribution);add(byType.get(facility.typeUid).total,facility.contribution);
+  add(total,facility.contribution);add(byOwner.get(ownerKey).total,facility.contribution);add(byType.get(facility.typeUid).total,facility.contribution);
  }
  const totals=display(total),observedTo=[inventory.createdAt,...inventory.sources.map(s=>s.observedAt),...entries.cities.map(e=>e.source.observedAt),...entries.types.map(e=>e.source.observedAt)].sort().at(-1);
  checkFresh(inventory.createdAt,Date.parse(observedTo));
  const missingCities=cities.filter(c=>c.status==='unavailable'||!c.buildingCollectionKnown).map(c=>c.uid);
  const sources=[...inventory.sources,...entries.cities.map(e=>e.source),...entries.types.map(e=>e.source)];
  const sourceIds=sources.map(s=>s.id);if(sourceIds.length!==new Set(sourceIds).size)throw Error('duplicate-source-id');
- const snapshot={schemaVersion:1,kind:'planet_reconciliation_snapshot',snapshotId:plan.runId,planet:{uid:plan.planetUid,name:inventory.planet.name,
+ const snapshot={schemaVersion:1,kind:'planet_reconciliation_snapshot',snapshotId:plan.runId,optimizationReady:false,planet:{uid:plan.planetUid,name:inventory.planet.name,
    publicControls:{size:inventory.planet.size??null,civilisationlevel:inventory.planet.civilisationlevel??null,taxlevel:inventory.planet.taxlevel??null,population:inventory.planet.population??null},
    privateControls:{status:'not_available_known_resource_restriction'}},
   observationWindow:{from:inventory.createdAt,to:observedTo,consistency:'paginated observations; not a transactional snapshot'},
@@ -101,7 +102,7 @@ export function assembleSnapshot(inventory,plan,batches,{ownerClassifications={}
   accountingPolicy:{id:'completed-nonwrecked-v1',jobsScale:1000000,underConstruction:'excluded with potential contributions retained',
    plannedFacilities:'not included in this observed snapshot',incomeGenerationTime:'unknown'},
   totals:{includedCompleted:totals,excludedUnderConstruction:excluded.length,unresolvedFacilities:unresolved.length,
-   employmentRate:totals.jobs/(totals.flats+0.1),civilisationLevelFromKnownCompleted:null},
+   employmentRateFromKnownCompleted:totals.jobs/(totals.flats+0.1),civilisationLevelFromKnownCompleted:null},
   byOwner:[...byOwner.values()].map(o=>({...o,total:display(o.total)})).sort((a,b)=>a.uid.localeCompare(b.uid)),
   byType:[...byType.values()].map(t=>({...t,total:display(t.total)})).sort((a,b)=>a.uid.localeCompare(b.uid)),
   cities,facilities:[...facilities.values()].sort((a,b)=>a.uid.localeCompare(b.uid)),catalog:[...catalog.values()],

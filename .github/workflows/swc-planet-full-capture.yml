@@ -14,7 +14,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: swc-api-shadow-oauth
+  group: ${{ (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Capture Chamble I planetary baseline (read only)') && 'swc-api-shadow-oauth' || format('planet-full-capture-tests-{0}', github.ref) }}
   cancel-in-progress: false
 jobs:
   tests:
@@ -78,6 +78,12 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           npx tsx tools/planet-api/run-planet-plan.ts
       - uses: actions/upload-artifact@v4
+        with:
+          name: planet-capture-worker-plan-encrypted
+          path: /tmp/swc-planet-plan/worker-plan.archive.encrypted.json
+          retention-days: 90
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: planet-capture-plan-encrypted
@@ -102,7 +108,7 @@ jobs:
           node-version: '24'
       - uses: actions/download-artifact@v4
         with:
-          name: planet-capture-plan-encrypted
+          name: planet-capture-worker-plan-encrypted
           path: /tmp/swc-planet-plan
       - name: Prepare access-only worker
         env:
