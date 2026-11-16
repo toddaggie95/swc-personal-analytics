@@ -1,0 +1,36 @@
+name: Repack saved planetary survey evidence (offline)
+on:
+  push:
+    branches: [feature/planet-fleet-reconciliation]
+    paths: ['tools/planet-api/**', '.github/workflows/planet-survey-offline-recovery.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  repack:
+    if: github.event.head_commit.message == 'Inspect saved owner survey checkpoints'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: planetary-owner-survey-encrypted
+          run-id: '43812850011'
+          github-token: ${{ github.token }}
+          path: /tmp/saved-survey
+      - name: Repack existing evidence without OAuth or SWC requests
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_CAPTURE_ANALYSIS_PUBLIC_KEY: ${{ github.workspace }}/tools/planet-api/snapshot-analysis-public-key.pem
+        run: node --max-old-space-size=6144 tools/planet-api/repack-survey-evidence.mjs /tmp/saved-survey /tmp/repacked-survey
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repacked-owner-survey-encrypted
+          path: /tmp/repacked-survey/*.encrypted.json
+          retention-days: 90
+          if-no-files-found: error
