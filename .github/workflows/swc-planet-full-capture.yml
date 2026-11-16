@@ -1,0 +1,161 @@
+name: SWC Planet snapshot capture (read only)
+on:
+  workflow_dispatch:
+    inputs:
+      planet:
+        description: 'Planet for complete accessible inventory and city capture'
+        type: string
+        default: Chamble I
+        required: true
+  push:
+    branches: [feature/planet-snapshot-capture]
+  pull_request:
+    paths: ['tools/planet-api/**', '.github/workflows/swc-planet-full-capture.yml']
+permissions:
+  contents: read
+concurrency:
+  group: swc-api-shadow-oauth
+  cancel-in-progress: false
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tools/planet-api/*.test.mjs
+  plan:
+    needs: tests
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Capture Chamble I planetary baseline (read only)'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: swc-api-shadow
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: collector/package-lock.json
+      - name: Prepare sole OAuth coordinator
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private collector/tools/{api-parity,planet-api}
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
+          cp src/auth/*.ts collector/src/auth/
+          cp tools/planet-api/*.{mjs,ts} collector/tools/planet-api/
+          cp tools/api-parity/{private-audit-envelope.mjs,production-read-pacer.ts} collector/tools/api-parity/
+      - name: Collect exact owner inventories and plan bounded detail batches
+        id: plan
+        working-directory: collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_CAPTURE_OUTPUT: /tmp/swc-planet-plan
+          SWC_CAPTURE_PLANET: ${{ inputs.planet || 'Chamble I' }}
+          SWC_CAPTURE_ANALYSIS_PUBLIC_KEY: ${{ github.workspace }}/tools/planet-api/snapshot-analysis-public-key.pem
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+        run: |
+          set -euo pipefail
+          trap 'status=$?; bash ../tools/api-parity/persist-swc-token.sh || status=1; exit "$status"' EXIT
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          npx tsx tools/planet-api/run-planet-plan.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: planet-capture-plan-encrypted
+          path: /tmp/swc-planet-plan/*.encrypted.json
+          retention-days: 90
+          if-no-files-found: warn
+      - if: always()
+        run: rm -rf /tmp/swc-private /tmp/swc-planet-plan
+  details:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment: swc-api-shadow
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: planet-capture-plan-encrypted
+          path: /tmp/swc-planet-plan
+      - name: Prepare access-only worker
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private
+          node --input-type=module -e 'import fs from "node:fs";try{const t=JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON);if(typeof t.accessToken!=="string"||!t.accessToken||!Number.isFinite(t.expiresAt)||t.expiresAt<Date.now()+900000)throw Error();fs.writeFileSync("/tmp/swc-private/access.json",JSON.stringify({accessToken:t.accessToken,expiresAt:t.expiresAt}),{mode:0o600})}catch{console.error("Access-only preparation failed; private details suppressed");process.exit(1)}'
+      - name: Read at most twenty-five city or type details
+        env:
+          SWC_ACCESS_TOKEN_FILE: /tmp/swc-private/access.json
+          SWC_CAPTURE_PLAN: /tmp/swc-planet-plan/worker-plan.archive.encrypted.json
+          SWC_CAPTURE_BATCH: ${{ matrix.id }}
+          SWC_CAPTURE_OUTPUT: /tmp/swc-planet-batch
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+        run: node tools/planet-api/run-planet-worker.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: planet-capture-${{ matrix.id }}-encrypted
+          path: /tmp/swc-planet-batch/*.encrypted.json
+          retention-days: 90
+          if-no-files-found: warn
+      - if: always()
+        run: rm -rf /tmp/swc-private /tmp/swc-planet-batch
+  assemble:
+    needs: [plan, details]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: planet-capture-plan-encrypted
+          path: /tmp/swc-planet-plan
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: planet-capture-*-encrypted
+          path: /tmp/swc-planet-batches
+      - name: Assemble versioned, deduplicated observed baseline
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+        run: node tools/planet-api/assemble-planet-capture.mjs /tmp/swc-planet-plan /tmp/swc-planet-batches /tmp/swc-planet-snapshot
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: planet-snapshot-encrypted
+          path: /tmp/swc-planet-snapshot/*.encrypted.json
+          retention-days: 90
+          if-no-files-found: warn
