@@ -37,7 +37,8 @@ async function main(){
   };
   const saveReport=(report:unknown)=>save('capability-report',report);
   if(process.env.SWC_PILOT_CITY_UID)await collectCityPilot(request,{cityUid:process.env.SWC_PILOT_CITY_UID,save:saveReport});
-  else await collectPilot(request,{planetName:process.env.SWC_PILOT_PLANET||'Chamble I',factionName:'The Faerytail Family',save:saveReport});
+  else await collectPilot(request,{planetName:process.env.SWC_PILOT_PLANET||'Chamble I',factionName:'The Faerytail Family',save:saveReport,
+   includePlanetInventory:process.env.SWC_PILOT_INCLUDE_PLANET_INVENTORY==='true'});
  });
  console.log('Read-only capability pilot completed; all data and field evidence encrypted.');
 }

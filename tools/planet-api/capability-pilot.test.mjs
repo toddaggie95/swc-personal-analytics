@@ -19,7 +19,7 @@ async function run(options={}){
   else if(endpoint.endsWith('/cities/owner'))return {status:403,body:{}};
   return {status:200,body:wrap(data)};
  };
- const promise=collectPilot(request,{planetName:'Planet One',factionName:'Faction',save:r=>{report=r;}});
+ const promise=collectPilot(request,{planetName:'Planet One',factionName:'Faction',includePlanetInventory:options.includePlanetInventory??true,save:r=>{report=r;}});
  try {await promise;return {calls,report};}catch(error){return {calls,report,error};}
 }
 test('pilot records partial ownership coverage and unknown generation epoch',async()=>{
@@ -74,4 +74,11 @@ test('referenced city probe makes one read without repeating inventories',async(
   {cityUid:'7:2',save:r=>{report=r;}});
  assert.deepEqual(calls,['galaxy/cities/7:2']);assert.equal(report.status,'completed');
  assert.ok(report.resources[0].fields.includes('layout'));
+});
+test('restricted private planet detail can be omitted while city and facility discovery continue',async()=>{
+ const {calls,report,error}=await run({includePlanetInventory:false,override:e=>e.startsWith('inventory/planets/')?{status:401,body:{}}:null});
+ assert.equal(error,undefined);assert.equal(report.status,'completed');
+ assert.ok(!calls.some(c=>c.endpoint.startsWith('inventory/planets/')));
+ assert.ok(calls.some(c=>c.endpoint.endsWith('/cities/owner')));
+ assert.ok(calls.some(c=>c.endpoint.endsWith('/facilities/owner')));
 });

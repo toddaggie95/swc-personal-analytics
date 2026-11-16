@@ -7,6 +7,11 @@ on:
         type: string
         default: Chamble I
         required: true
+      include_planet_inventory:
+        description: 'Also test private planet detail (requires separate access; a denied request stops the pilot)'
+        type: boolean
+        default: false
+        required: true
   push:
     branches: [main]
     paths: ['tools/planet-api/**', 'src/auth/**', '.github/workflows/swc-planet-capability-pilot.yml']
@@ -63,6 +68,7 @@ jobs:
           SWC_PRIVATE_DIR: /tmp/swc-private
           SWC_PILOT_OUTPUT: /tmp/swc-planet-pilot
           SWC_PILOT_PLANET: ${{ inputs.planet || 'Chamble I' }}
+          SWC_PILOT_INCLUDE_PLANET_INVENTORY: ${{ inputs.include_planet_inventory && 'true' || 'false' }}
           SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
           SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
           SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
