@@ -12,3 +12,9 @@ test('total drift stops a worker and preserves partial results instead of mixing
  const{plan}=await planFleetPages(async(e)=>e.includes('facilities')?response([row(1)],3,1):response([],0,1),[{uid:'20:1'}],{runId:'test',analysisPublicKey:'key'});
  let saved;await assert.rejects(collectFleetPages(async()=>response([row(2)],4,2),plan,'pages-000',async r=>{saved=r;}));assert.equal(saved.complete,false);
 });
+test('partial worker recovery requests only the missing suffix and retains parent provenance',async()=>{
+ const{plan}=await planFleetPages(async(e)=>e.includes('facilities')?response([row(1)],3,1):response([],0,1),[{uid:'20:1'}],{runId:'test',analysisPublicKey:'key'});
+ let saved,calls=0;await assert.rejects(collectFleetPages(async(_e,q)=>{if(++calls===2)throw Object.assign(Error('timeout'),{name:'TimeoutError'});return response([row(q.start_index)],3,q.start_index);},plan,'pages-000',async r=>{saved=r;}));
+ const starts=[];const recovered=await collectFleetPages(async(_e,q)=>{starts.push(q.start_index);return response([row(q.start_index)],3,q.start_index);},plan,'pages-000',async()=>{},saved);
+ assert.deepEqual(starts,[3]);assert.equal(recovered.entries.length,2);assert.equal(recovered.parentPartialSha256.length,64);assert.equal(saved.failureCategory,'TimeoutError');
+});

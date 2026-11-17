@@ -20,15 +20,19 @@ export function verifyFleetPlan(plan){
  const seen=new Set();for(const b of plan.batches){if(!/^pages-\d{3}$/.test(b.id)||seen.has(b.id)||!b.targets.length||b.targets.length>25)throw Error('fleet-batch-bound');seen.add(b.id);for(const t of b.targets){const k=t.ownerUid+':'+t.kind+':'+t.start;if(seen.has(k)||!/^20:\d+$/.test(t.ownerUid)||!['facilities','cities'].includes(t.kind)||!Number.isSafeInteger(t.start)||t.start<2||!Number.isSafeInteger(t.expectedCount)||t.expectedCount<1||t.expectedCount>200)throw Error('fleet-target');seen.add(k);}}
  return plan;
 }
-export async function collectFleetPages(read,plan,id,save){
+export async function collectFleetPages(read,plan,id,save,resume=null){
  verifyFleetPlan(plan);const b=plan.batches.find(b=>b.id===id);if(!b)throw Error('fleet-batch');
  const result={schemaVersion:1,runId:plan.runId,planIdentity:plan.identity,id,complete:false,entries:[]};
- try{for(const t of b.targets){
+ if(resume){if(resume.runId!==plan.runId||resume.planIdentity!==plan.identity||resume.id!==id||!Array.isArray(resume.entries)||resume.entries.length>b.targets.length)throw Error('fleet-resume-integrity');
+  for(let i=0;i<resume.entries.length;i++){const t=b.targets[i],e=resume.entries[i];if(['ownerUid','kind','start','total','expectedCount'].some(k=>e[k]!==t[k])||e.rows.length!==t.expectedCount)throw Error('fleet-resume-prefix');}
+  result.entries=structuredClone(resume.entries);result.parentPartialSha256=hash(resume);
+ }
+ try{for(const t of b.targets.slice(result.entries.length)){
   verifyFleetPlan(plan);const r=await read(`inventory/${t.ownerUid}/${t.kind}/owner`,{start_index:t.start,item_count:200});
   if(r.status!==200)throw Error('fleet-page-http');
   const p=fleetPage(r.body,{ownerUid:t.ownerUid,kind:t.kind,start:t.start,total:t.total});if(p.rows.length!==t.expectedCount)throw Error('fleet-page-count');
   result.entries.push({...t,rows:p.rows,source:r.source});
- }result.complete=true;}finally{await save(result);}return result;
+ }result.complete=true;}catch(error){result.failureCategory=/^fleet-[a-z-]+$/.test(error.message)?error.message:['TimeoutError','AbortError','TypeError'].includes(error.name)?error.name:'collection-stopped';throw error;}finally{await save(result);}return result;
 }
 export function assembleFleetPages(plan,seeds,batches){
  verifyFleetPlan(plan);if(hash(seeds)!==plan.seedHash)throw Error('fleet-seed-integrity');

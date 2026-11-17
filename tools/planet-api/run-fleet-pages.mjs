@@ -1,4 +1,4 @@
-import{readFileSync,writeFileSync,mkdirSync,readdirSync}from'node:fs';import{join}from'node:path';import{createPublicKey}from'node:crypto';
+import{readFileSync,writeFileSync,mkdirSync,readdirSync,existsSync}from'node:fs';import{join}from'node:path';import{createPublicKey,randomUUID}from'node:crypto';
 import{sealJson,openJson}from'./private-json-artifact.mjs';import{collectFleetPages,assembleFleetPages,verifyFleetPlan}from'./fleet-pages.mjs';import{newPacer,makeCaptureTransport}from'./capture-transport.mjs';
 const open=p=>openJson(JSON.parse(readFileSync(p,'utf8')),process.env.SWC_API_SNAPSHOT_PRIVATE_KEY);
 const files=p=>readdirSync(p,{withFileTypes:true}).flatMap(d=>d.isDirectory()?files(join(p,d.name)):[join(p,d.name)]);
@@ -9,10 +9,14 @@ async function main(){
  if(mode==='worker'){
   const token=JSON.parse(readFileSync(process.env.SWC_ACCESS_TOKEN_FILE,'utf8'));if(!token.accessToken||token.refreshToken||!Number.isFinite(token.expiresAt)||token.expiresAt<Date.now()+15*60000)throw Error('access-lifetime');
   const auth={async accessToken(){if(token.expiresAt<Date.now()+5*60000)throw Error('access-expiry');return token.accessToken;}};
-  const deadline=Date.now()+6*60000,id=process.env.SWC_CAPTURE_BATCH,transport=makeCaptureTransport({auth,pacer:await newPacer(deadline),save,phase:plan.runId+'-'+id,limit:25,deadline});
-  try{await collectFleetPages(transport.read,plan,id,r=>save('batch-'+id,r));}finally{await save('telemetry-'+id,transport.summary());}
+  const resume=process.env.SWC_FLEET_RESUME_BATCH?open(process.env.SWC_FLEET_RESUME_BATCH):null;
+  const deadline=Date.now()+6*60000,id=process.env.SWC_CAPTURE_BATCH,transport=makeCaptureTransport({auth,pacer:await newPacer(deadline),save,phase:plan.runId+'-'+id+(resume?'-resume-'+randomUUID():''),limit:25,deadline});
+  try{await collectFleetPages(transport.read,plan,id,r=>save('batch-'+id,r),resume);}finally{await save('telemetry-'+id,transport.summary());}
  }else if(mode==='assemble'){
-  const seeds=open(join(args[0],'fleet-page-seeds.archive.encrypted.json')),batches=files(args[1]).filter(p=>/batch-pages-\d{3}\.archive\.encrypted\.json$/.test(p)).map(open);
+  const seeds=open(join(args[0],'fleet-page-seeds.archive.encrypted.json'));let batches=files(args[1]).filter(p=>/batch-pages-\d{3}\.archive\.encrypted\.json$/.test(p)).map(open);
+  if(process.env.SWC_FLEET_REPLACEMENT_DIR){const replacements=files(process.env.SWC_FLEET_REPLACEMENT_DIR).filter(p=>/batch-pages-\d{3}\.archive\.encrypted\.json$/.test(p)).map(open);
+   for(const replacement of replacements){const original=batches.find(b=>b.id===replacement.id);if(!original||original.complete||!replacement.complete||replacement.parentPartialSha256!==(await import('./planet-capture.mjs')).hash(original))throw Error('replacement-provenance');batches=batches.filter(b=>b.id!==replacement.id);batches.push(replacement);}
+  }
   const result=assembleFleetPages(plan,seeds,batches);await save('fleet-owner-inventory',result.inventory);await save('fleet-index',result.index);
  }else throw Error('mode');
  console.log('Bounded owner page evidence sealed; private contents encrypted.');

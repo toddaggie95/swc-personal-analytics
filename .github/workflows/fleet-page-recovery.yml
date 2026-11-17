@@ -1,0 +1,96 @@
+name: Recover saved inventory page suffix
+on:
+  push:
+    branches: [feature/planet-fleet-reconciliation]
+    paths: ['tools/planet-api/**', '.github/workflows/fleet-page-recovery.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: swc-api-shadow-oauth
+  cancel-in-progress: false
+jobs:
+  recover:
+    if: github.event.head_commit.message == 'Complete missing inventory page from saved evidence'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: fleet-worker-plan-encrypted
+          run-id: '44129687058'
+          github-token: ${{ github.token }}
+          path: /tmp/fleet-plan
+      - uses: actions/download-artifact@v4
+        with:
+          name: fleet-capture-pages-001-encrypted
+          run-id: '44129687058'
+          github-token: ${{ github.token }}
+          path: /tmp/fleet-partial
+      - name: Prepare access-only worker
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          node --input-type=module -e 'import fs from "node:fs";try{const t=JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON);if(!t.accessToken||!Number.isFinite(t.expiresAt)||t.expiresAt<Date.now()+900000)throw Error();fs.writeFileSync("/tmp/fleet-access.json",JSON.stringify({accessToken:t.accessToken,expiresAt:t.expiresAt}),{mode:0o600})}catch{console.error("Access-only preparation stopped; no refresh attempted");process.exit(1)}'
+      - name: Read only the missing page
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_ACCESS_TOKEN_FILE: /tmp/fleet-access.json
+          SWC_CAPTURE_PLAN: /tmp/fleet-plan/fleet-page-plan.archive.encrypted.json
+          SWC_CAPTURE_BATCH: pages-001
+          SWC_FLEET_RESUME_BATCH: /tmp/fleet-partial/batch-pages-001.archive.encrypted.json
+          SWC_CAPTURE_OUTPUT: /tmp/fleet-recovered
+        run: node tools/planet-api/run-fleet-pages.mjs worker
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recovered-inventory-page-encrypted
+          path: /tmp/fleet-recovered/*.encrypted.json
+          retention-days: 90
+          if-no-files-found: warn
+      - if: always()
+        run: rm -f /tmp/fleet-access.json
+  assemble:
+    needs: recover
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: fleet-page-plan-encrypted
+          run-id: '44129687058'
+          github-token: ${{ github.token }}
+          path: /tmp/fleet-plan
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fleet-capture-*-encrypted
+          run-id: '44129687058'
+          github-token: ${{ github.token }}
+          path: /tmp/fleet-batches
+      - uses: actions/download-artifact@v4
+        with:
+          name: recovered-inventory-page-encrypted
+          path: /tmp/fleet-replacement
+      - name: Assemble only with exact saved-page and replacement provenance
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_FLEET_REPLACEMENT_DIR: /tmp/fleet-replacement
+        run: node --max-old-space-size=6144 tools/planet-api/run-fleet-pages.mjs assemble /tmp/fleet-plan /tmp/fleet-batches /tmp/fleet-final
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fleet-owner-inventory-encrypted
+          path: /tmp/fleet-final/*.encrypted.json
+          retention-days: 90
+          if-no-files-found: error
