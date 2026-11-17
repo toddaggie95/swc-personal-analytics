@@ -8,8 +8,8 @@ async function main(){
  const save=async(name,value)=>{for(const[recipient,key]of[['archive',createPublicKey(process.env.SWC_API_SNAPSHOT_PRIVATE_KEY)],['analysis',plan.analysisPublicKey]])writeFileSync(join(output,name+'.'+recipient+'.encrypted.json'),JSON.stringify(sealJson(value,key)),{mode:0o600});};
  if(mode==='worker'){
   const token=JSON.parse(readFileSync(process.env.SWC_ACCESS_TOKEN_FILE,'utf8'));if(!token.accessToken||token.refreshToken||!Number.isFinite(token.expiresAt)||token.expiresAt<Date.now()+15*60000)throw Error('resource-access-lifetime');
-  const auth={async accessToken(){if(token.expiresAt<Date.now()+5*60000)throw Error('resource-access-expiry');return token.accessToken;}},id=process.env.SWC_CAPTURE_BATCH,deadline=Date.now()+9*60000;
-  const transport=makeCaptureTransport({auth,pacer:await newPacer(deadline),save,phase:plan.runId+'-'+id,limit:64,deadline});
+  const auth={async accessToken(){if(token.expiresAt<Date.now()+5*60000)throw Error('resource-access-expiry');return token.accessToken;}},id=process.env.SWC_CAPTURE_BATCH,deadline=Date.now()+10*60000;
+  const transport=makeCaptureTransport({auth,pacer:await newPacer(deadline),save,phase:plan.runId+'-'+id,limit:80,deadline});
   try{await collectResourceBatch(transport.read,plan,id,r=>save('batch-'+id,r));}finally{await save('telemetry-'+id,transport.summary());}
  }else if(mode==='assemble'){
   const batches=files(args[1]).filter(p=>/batch-resource-\d{3}\.archive\.encrypted\.json$/.test(p)).map(open);await save('resources',assembleResources(plan,batches));

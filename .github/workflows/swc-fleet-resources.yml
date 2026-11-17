@@ -23,7 +23,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: ${{ (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Capture public planet controls for saved owner inventory') && 'swc-api-shadow-oauth' || format('fleet-resources-tests-{0}', github.ref) }}
+  group: ${{ (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Capture city details for saved planet registry') && 'swc-api-shadow-oauth' || format('fleet-resources-tests-{0}', github.ref) }}
   cancel-in-progress: false
 jobs:
   tests:
@@ -36,7 +36,7 @@ jobs:
       - run: node --test tools/planet-api/*.test.mjs
   plan:
     needs: tests
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Capture public planet controls for saved owner inventory'
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Capture city details for saved planet registry'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment: swc-api-shadow
@@ -75,10 +75,10 @@ jobs:
           github-token: ${{ github.token }}
           path: /tmp/fleet-resource-source
       - uses: actions/download-artifact@v4
-        if: inputs.phase == 'cities'
+        if: inputs.phase == 'cities' || github.event.head_commit.message == 'Capture city details for saved planet registry'
         with:
           name: fleet-resources-encrypted
-          run-id: ${{ inputs.planet_resources_run }}
+          run-id: ${{ inputs.planet_resources_run || '44133293493' }}
           github-token: ${{ github.token }}
           path: /tmp/planet-resource-source
       - name: Plan requested planetary resources
@@ -89,7 +89,7 @@ jobs:
           SWC_CAPTURE_OUTPUT: /tmp/swc-planet-plan
           SWC_OWNER_INVENTORY_SOURCE: /tmp/fleet-resource-source/fleet-owner-inventory.archive.encrypted.json
           SWC_PLANET_RESOURCE_SOURCE: /tmp/planet-resource-source/resources.archive.encrypted.json
-          SWC_RESOURCE_PHASE: ${{ inputs.phase || 'planets' }}
+          SWC_RESOURCE_PHASE: ${{ inputs.phase || 'cities' }}
           SWC_CAPTURE_ANALYSIS_PUBLIC_KEY: ${{ github.workspace }}/tools/planet-api/snapshot-analysis-public-key.pem
           SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
           SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
