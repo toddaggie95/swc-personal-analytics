@@ -1,6 +1,23 @@
 name: SWC planetary owner inventory survey (read only)
 on:
   workflow_dispatch:
+    inputs:
+      resume_run:
+        description: 'Optional previous survey run whose checkpoint should be continued'
+        type: string
+        required: false
+      resume_artifact:
+        description: 'Encrypted checkpoint artifact name'
+        type: string
+        default: planetary-owner-survey-encrypted
+      seed_run:
+        description: 'Optional planet snapshot run for additional affiliate permission checks'
+        type: string
+        required: false
+      request_limit:
+        description: 'Bound for this continuation; existing collected pages are reused'
+        type: string
+        default: '550'
   push:
     branches: [feature/planet-fleet-reconciliation]
     paths: ['tools/planet-api/**', '.github/workflows/swc-planet-owner-survey.yml']
@@ -10,7 +27,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: ${{ (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Survey accessible actual facilities and cities') && 'swc-api-shadow-oauth' || format('planet-survey-tests-{0}', github.ref) }}
+  group: ${{ (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Continue saved planetary owner survey') && 'swc-api-shadow-oauth' || format('planet-survey-tests-{0}', github.ref) }}
   cancel-in-progress: false
 jobs:
   tests:
@@ -23,7 +40,7 @@ jobs:
       - run: node --test tools/planet-api/*.test.mjs
   survey:
     needs: tests
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Survey accessible actual facilities and cities'
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Continue saved planetary owner survey'
     runs-on: ubuntu-latest
     timeout-minutes: 75
     environment: swc-api-shadow
@@ -53,11 +70,19 @@ jobs:
           cp tools/planet-api/*.{mjs,ts} collector/tools/planet-api/
           cp tools/api-parity/{private-audit-envelope.mjs,production-read-pacer.ts} collector/tools/api-parity/
       - uses: actions/download-artifact@v4
+        if: inputs.seed_run != '' && inputs.seed_run != null
         with:
           name: planet-snapshot-encrypted
-          run-id: '43811645377'
+          run-id: ${{ inputs.seed_run }}
           github-token: ${{ github.token }}
           path: /tmp/swc-survey-seed
+      - uses: actions/download-artifact@v4
+        if: inputs.resume_run != '' && inputs.resume_run != null || github.event.head_commit.message == 'Continue saved planetary owner survey'
+        with:
+          name: ${{ inputs.resume_artifact || 'repacked-owner-survey-encrypted' }}
+          run-id: ${{ inputs.resume_run || '43814849004' }}
+          github-token: ${{ github.token }}
+          path: /tmp/swc-survey-resume
       - name: Discover all planets represented in accessible owner inventories
         working-directory: collector
         env:
@@ -65,6 +90,8 @@ jobs:
           SWC_CAPTURE_OUTPUT: /tmp/swc-fleet-survey
           SWC_CAPTURE_ANALYSIS_PUBLIC_KEY: ${{ github.workspace }}/tools/planet-api/snapshot-analysis-public-key.pem
           SWC_SURVEY_SEED_SNAPSHOT: /tmp/swc-survey-seed/planet-snapshot.archive.encrypted.json
+          SWC_SURVEY_RESUME_DIR: ${{ (inputs.resume_run != '' && inputs.resume_run != null || github.event.head_commit.message == 'Continue saved planetary owner survey') && '/tmp/swc-survey-resume' || '' }}
+          SWC_SURVEY_REQUEST_LIMIT: ${{ inputs.request_limit || '550' }}
           SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
           SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
           SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
@@ -84,4 +111,4 @@ jobs:
           retention-days: 90
           if-no-files-found: warn
       - if: always()
-        run: rm -rf /tmp/swc-private /tmp/swc-fleet-survey /tmp/swc-survey-seed
+        run: rm -rf /tmp/swc-private /tmp/swc-fleet-survey /tmp/swc-survey-seed /tmp/swc-survey-resume

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "status": "published_rules_not_empirical_constants",
+  "sources": {
+    "planetary": {"url": "https://www.swcombine.com/rules/?Planetary_Economy=", "section": "3.1-3.3", "displayedRevision": "Year 27 Day 335", "retrievedAt": "2026-11-16"},
+    "government": {"url": "https://www.swcombine.com/rules/?Governments=", "section": "2.4", "displayedRevision": "Year 25 Day 170", "retrievedAt": "2026-11-16"},
+    "income": {"url": "https://www.swcombine.com/rules/?Facility_Income=", "section": "1.1-1.2", "displayedRevision": "Year 27 Day 335", "retrievedAt": "2026-11-16"}
+  },
+  "groups": {
+    "s1": ["Hotel", "Tavern", "Warehouse", "Park", "Factory", "Mine", "Slave Market", "Labour Camp", "Bank", "Alazhi Farm", "Dry Dock", "Naval Shipyard", "Port", "Computer Control Centre", "Research Centre", "Lab"],
+    "s2": ["Palace", "Statue", "Fountain", "Civic Centre", "Barracks", "Prison", "Imperial Palace", "Royal Hapan Palace", "Conference Centre", "Command Centre", "Government House", "Holonet Communication Centre", "Casino", "Council Flats", "Crew Quarters", "Large Palace"],
+    "s3": ["Personal Residence", "Hotel", "Tavern", "Semi-detached House", "Warehouse", "Palace", "Park", "Statue", "Fountain", "Church", "Landing Pad", "Hospital", "Factory", "Mine", "High Rise Building 10 flats", "High Rise Building 20 flats", "High Rise Building 30 flats", "High Rise Building 40 flats", "Temple", "Imperial Palace", "High Rise Building 50 flats", "Skyscraper 60 flats", "Skyscraper 70 flats", "Skyscraper 80 flats", "Skyscraper 90 flats", "Skyscraper 100 flats", "Jedi Praxeum", "Royal Hapan Palace", "Conference Centre", "Command Centre", "Government House", "Bank", "Alazhi Farm", "Chapel", "Dry Dock", "Naval Shipyard", "Port", "Computer Control Centre", "Cathedral", "Research Centre", "Starport", "Casino", "Lab", "Large Palace"],
+    "s4": ["Personal Residence", "Semi-detached House", "High Rise Building 10 flats", "High Rise Building 20 flats", "High Rise Building 30 flats", "High Rise Building 40 flats", "High Rise Building 50 flats", "Skyscraper 60 flats", "Skyscraper 70 flats", "Skyscraper 80 flats", "Skyscraper 90 flats", "Skyscraper 100 flats", "Workers Compound", "Council Flats", "Crew Quarters"],
+    "s5": ["Hotel", "Tavern", "Warehouse", "Landing Pad", "Factory", "Mine", "Recycling Plant", "Bacta Refinement Facility", "Dry Dock", "Naval Shipyard", "Port", "Starport", "Casino", "Lab"],
+    "s6": ["Slave Market", "Labour Camp", "Sith Temple"]
+  },
+  "rounding": "Retain full arithmetic precision; game intermediate rounding, zero denominators and clamping remain explicit unresolved behavior. No implicit defaults for secret income parameters."
+}

@@ -8,9 +8,14 @@ export function fleetPage(body,{ownerUid,kind,start,total:expectedTotal}){
  for(const row of values){const id=uid(row);if(!new RegExp('^'+(kind==='facilities'?'4':'7')+':\\d+$').test(id)||seen.has(id)||uid(row.owner)!==ownerUid)throw Error('fleet-owner-identity');seen.add(id);}
  return{total,rows:values};
 }
-export async function surveyOwner(read,{ownerUid,kind,maxPages=600,optional=false},checkpoint=async()=>{}){
+export async function surveyOwner(read,{ownerUid,kind,maxPages=600,optional=false,resume=null},checkpoint=async()=>{}){
  if(!/^20:\d+$/.test(ownerUid)||!['facilities','cities'].includes(kind))throw Error('survey-input');
- const result={ownerUid,kind,status:'collecting',rows:[],sources:[],total:null},seen=new Set();let start=1;
+ const result=resume?structuredClone(resume):{ownerUid,kind,status:'collecting',rows:[],sources:[],total:null},seen=new Set();
+ if(result.ownerUid!==ownerUid||result.kind!==kind||!Array.isArray(result.rows)||!Array.isArray(result.sources)||result.total!=null&&(!Number.isSafeInteger(result.total)||result.total<result.rows.length))throw Error('resume-contract');
+ for(const row of result.rows){if(!new RegExp('^'+(kind==='facilities'?'4':'7')+':\\d+$').test(uid(row))||uid(row.owner)!==ownerUid||seen.has(uid(row)))throw Error('resume-identity');seen.add(uid(row));}
+ if(result.status==='complete'){if(result.rows.length!==result.total)throw Error('resume-incomplete');return result;}
+ if(result.status==='unavailable')return result;
+ result.status='collecting';let start=result.rows.length+1;
  try{
   for(let i=0;i<maxPages;i++){
    const response=await read(`inventory/${ownerUid}/${kind}/owner`,{start_index:start,item_count:200});
@@ -26,6 +31,21 @@ export async function surveyOwner(read,{ownerUid,kind,maxPages=600,optional=fals
   }
   throw Error('survey-page-bound');
  }finally{if(result.status==='collecting')result.status='partial';await checkpoint(result);}
+}
+export function recoverSurveyState(previous,checkpoints){
+ if(previous.schemaVersion!==1||!Array.isArray(previous.factions)||!Array.isArray(previous.inventories))throw Error('resume-survey');
+ const state=structuredClone(previous),docs=new Map(state.inventories.map(d=>[d.ownerUid+':'+d.kind,d]));
+ for(const candidate of checkpoints){
+  if(!Array.isArray(candidate.rows)||!['facilities','cities'].includes(candidate.kind))continue;
+  if(!state.factions.some(f=>f.uid===candidate.ownerUid))throw Error('resume-foreign-owner');
+  const key=candidate.ownerUid+':'+candidate.kind,old=docs.get(key);
+  if(old){
+   if(old.total!==candidate.total||old.rows.some((r,i)=>i<candidate.rows.length&&uid(r)!==uid(candidate.rows[i])))throw Error('resume-checkpoint-conflict');
+   if(old.status==='complete'||old.rows.length>candidate.rows.length)continue;
+  }
+  docs.set(key,structuredClone(candidate));
+ }
+ state.inventories=[...docs.values()];state.status='recovered_partial';return state;
 }
 export function indexFleet(inventories){
  const planets=new Map(),unlocated=[],seen=new Map();

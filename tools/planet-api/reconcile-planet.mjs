@@ -78,11 +78,12 @@ export function reconcilePlanet(snapshot,evidence={schemaVersion:1,sources:[]}){
  const currentChecks=comparisons.filter(c=>c.currentIndependentControl);
  const hasCoreControls=['jobs','flats'].every(f=>currentChecks.some(c=>c.field===f));
  const missingCities=snapshot.coverage.missingCities;
- const status=discrepancies.length?'conflicting_evidence':unresolved.length||missingCities.length?'incomplete_coverage':!hasCoreControls?'pending_current_controls':currentChecks.some(c=>!c.withinTolerance)?'control_mismatch':'observed_controls_matched';
+ const ownerGaps=snapshot.coverage.ownerInventories?.some(d=>d.status!=='complete');
+ const status=discrepancies.length?'conflicting_evidence':unresolved.length||missingCities.length||ownerGaps?'incomplete_coverage':!hasCoreControls?'pending_current_controls':currentChecks.some(c=>!c.withinTolerance)?'control_mismatch':'observed_controls_matched';
  const income={reportedRecords:0,positiveRecords:0,zeroRecords:0,absentRecords:0,knownGenerationTimes:0,byType:[]},incomeTypes=new Map();
  for(const f of facilities.values()){
   const v=f.incomeObservation?.income;
-  if(v==null){income.absentRecords++;continue;}
+  if(v==null||typeof v==='string'&&!v.trim()){income.absentRecords++;continue;}
   const n=Number(v);if(!Number.isFinite(n)){discrepancies.push({uid:f.uid,code:'invalid_income_observation'});continue;}
   income.reportedRecords++;if(n>0)income.positiveRecords++;else if(n===0)income.zeroRecords++;
   if(f.incomeGeneratedAt)income.knownGenerationTimes++;
