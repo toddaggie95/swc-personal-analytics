@@ -2,7 +2,7 @@ import{hash}from'./planet-capture.mjs';import{uid,record,unwrap}from'./capabilit
 export function makeResourcePlan(inventory,{phase,planetEntries=[],runId,analysisPublicKey}){
  const{contentSha256,...body}=inventory;if(hash(body)!==contentSha256||inventory.status!=='complete'||!['planets','cities'].includes(phase))throw Error('resource-source');
  const index=indexFleet(inventory.inventories),targets=[],gaps=[];
- if(phase==='planets')for(const p of index.planets){if(p.names.length!==1){gaps.push({planetUid:p.planetUid,reason:'ambiguous_planet_name'});continue;}targets.push({uid:p.planetUid,name:p.names[0]});}
+ if(phase==='planets')for(const p of index.planets)targets.push({uid:p.planetUid,name:p.names.length===1?p.names[0]:null});
  else{
   const map=new Map();for(const e of planetEntries){if(e.status!=='observed'){gaps.push({planetUid:e.uid,reason:'planet_detail_unavailable'});continue;}
    const refs=record(e.data.cities).city;for(const ref of refs==null?[]:Array.isArray(refs)?refs:[refs]){
@@ -20,7 +20,7 @@ export async function collectResourceBatch(read,plan,id,save){
  verifyResourcePlan(plan);const b=plan.batches.find(b=>b.id===id);if(!b)throw Error('resource-batch-id');
  const result={schemaVersion:1,runId:plan.runId,planIdentity:plan.identity,phase:plan.phase,id,complete:false,entries:[]};
  try{for(const t of b.targets){
-  const endpoint=plan.phase==='planets'?'galaxy/planets/'+encodeURIComponent(t.name).replace(/'/g,'%27')+'/':'inventory/cities/'+t.uid;
+  const endpoint=plan.phase==='planets'?'galaxy/planets/'+encodeURIComponent(t.uid)+'/':'inventory/cities/'+t.uid;
   let r;try{r=await read(endpoint,{});}catch(error){if(['TimeoutError','AbortError','TypeError'].includes(error.name)||error.message==='non-json'){result.entries.push({uid:t.uid,planetUid:t.planetUid??t.uid,status:'transport_error',source:error.source??null});continue;}throw error;}
   if(r.status!==200){if([403,404].includes(r.status)||r.status===401&&plan.phase==='cities'&&!t.expectedOwner){result.entries.push({uid:t.uid,planetUid:t.planetUid??t.uid,status:'unavailable',httpStatus:r.status,source:r.source});continue;}throw Error('resource-auth-or-http');}
   const data=unwrap(r.body);if(uid(data)!==t.uid||plan.phase==='cities'&&(uid(record(data.location).planet)!==t.planetUid||t.expectedOwner&&uid(data.owner)!==t.expectedOwner))throw Error('resource-identity');
@@ -32,5 +32,5 @@ export function assembleResources(plan,batches){
  const entries=[],gaps=[...plan.gaps];
  for(const b of plan.batches){const r=results.get(b.id),targets=new Set(b.targets.map(t=>t.uid)),seen=new Set();for(const e of r?.entries??[]){if(!targets.has(e.uid)||seen.has(e.uid))throw Error('resource-result-target');seen.add(e.uid);entries.push(e);}for(const t of b.targets)if(!seen.has(t.uid)){entries.push({uid:t.uid,planetUid:t.planetUid??t.uid,status:'not_observed'});gaps.push({uid:t.uid,reason:'missing_worker_observation'});}}
  if(results.size>plan.batches.length)throw Error('resource-extra-batch');
- const result={schemaVersion:1,kind:'fleet_resource_observations',phase:plan.phase,runId:plan.runId,parentOwnerInventorySha256:plan.parentOwnerInventorySha256,planIdentity:plan.identity,createdAt:plan.createdAt,entries,gaps};result.contentSha256=hash(result);return result;
+ const result={schemaVersion:1,kind:'fleet_resource_observations',phase:plan.phase,runId:plan.runId,parentOwnerInventorySha256:plan.parentOwnerInventorySha256,...(plan.parentResourceSha256?{parentResourceSha256:plan.parentResourceSha256}:{}),planIdentity:plan.identity,createdAt:plan.createdAt,entries,gaps};result.contentSha256=hash(result);return result;
 }

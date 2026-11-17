@@ -20,7 +20,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: swc-api-shadow-oauth
+  group: ${{ github.event_name == 'workflow_dispatch' && 'swc-api-shadow-oauth' || format('planet-capability-tests-{0}', github.ref) }}
   cancel-in-progress: false
 jobs:
   tests:

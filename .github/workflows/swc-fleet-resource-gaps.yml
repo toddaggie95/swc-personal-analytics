@@ -1,0 +1,194 @@
+name: SWC unresolved public resource lookup (read only)
+on:
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: 'Completed owner inventory run'
+        type: string
+        required: true
+      phase:
+        type: choice
+        options: [planets, cities]
+        default: planets
+      planet_resources_run:
+        description: 'Planet resources run, required for city enrichment'
+        type: string
+        required: false
+  push:
+    branches: [main, feature/planet-fleet-reconciliation]
+    paths: ['tools/planet-api/**', '.github/workflows/swc-fleet-resource-gaps.yml']
+  pull_request:
+    paths: ['tools/planet-api/**', '.github/workflows/swc-fleet-resource-gaps.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ${{ (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Complete remaining planet metadata by UID') && 'swc-api-shadow-oauth' || format('fleet-resource-gap-tests-{0}', github.ref) }}
+  cancel-in-progress: false
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tools/planet-api/*.test.mjs
+  plan:
+    needs: tests
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Complete remaining planet metadata by UID'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: swc-api-shadow
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      has_batches: ${{ steps.plan.outputs.has_batches }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: collector/package-lock.json
+      - name: Prepare sole OAuth coordinator
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private collector/tools/{api-parity,planet-api}
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > /tmp/swc-private/tokens.json
+          cp /tmp/swc-private/tokens.json /tmp/swc-private/initial-tokens.json
+          cp src/auth/*.ts collector/src/auth/
+          cp tools/planet-api/*.{mjs,ts} collector/tools/planet-api/
+          cp tools/api-parity/{private-audit-envelope.mjs,production-read-pacer.ts} collector/tools/api-parity/
+      - uses: actions/download-artifact@v4
+        with:
+          name: fleet-owner-inventory-encrypted
+          run-id: ${{ inputs.source_run || '44131760133' }}
+          github-token: ${{ github.token }}
+          path: /tmp/fleet-resource-source
+      - uses: actions/download-artifact@v4
+        if: inputs.phase == 'cities' || github.event.head_commit.message == 'Complete remaining planet metadata by UID'
+        with:
+          name: fleet-resources-encrypted
+          run-id: ${{ inputs.planet_resources_run || '44133293493' }}
+          github-token: ${{ github.token }}
+          path: /tmp/planet-resource-source
+      - name: Plan requested planetary resources
+        id: plan
+        working-directory: collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_CAPTURE_OUTPUT: /tmp/swc-planet-plan
+          SWC_OWNER_INVENTORY_SOURCE: /tmp/fleet-resource-source/fleet-owner-inventory.archive.encrypted.json
+          SWC_PLANET_RESOURCE_SOURCE: /tmp/planet-resource-source/resources.archive.encrypted.json
+          SWC_RESOURCE_PHASE: planets
+          SWC_RESOURCE_ONLY_GAPS: 'true'
+          SWC_CAPTURE_ANALYSIS_PUBLIC_KEY: ${{ github.workspace }}/tools/planet-api/snapshot-analysis-public-key.pem
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+        run: |
+          set -euo pipefail
+          trap 'status=$?; bash ../tools/api-parity/persist-swc-token.sh || status=1; exit "$status"' EXIT
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          npx tsx tools/planet-api/run-fleet-resource-plan.ts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fleet-resource-worker-plan-encrypted
+          path: /tmp/swc-planet-plan/resource-plan.archive.encrypted.json
+          retention-days: 90
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fleet-resource-plan-encrypted
+          path: /tmp/swc-planet-plan/*.encrypted.json
+          retention-days: 90
+          if-no-files-found: warn
+      - if: always()
+        run: rm -rf /tmp/swc-private /tmp/swc-planet-plan
+  details:
+    if: needs.plan.outputs.has_batches == 'true'
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: swc-api-shadow
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: fleet-resource-worker-plan-encrypted
+          path: /tmp/swc-planet-plan
+      - name: Prepare access-only worker
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p /tmp/swc-private
+          node --input-type=module -e 'import fs from "node:fs";try{const t=JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON);if(typeof t.accessToken!=="string"||!t.accessToken||!Number.isFinite(t.expiresAt)||t.expiresAt<Date.now()+900000)throw Error();fs.writeFileSync("/tmp/swc-private/access.json",JSON.stringify({accessToken:t.accessToken,expiresAt:t.expiresAt}),{mode:0o600})}catch{console.error("Access-only preparation failed; private details suppressed");process.exit(1)}'
+      - name: Read at most twenty-five city or type details
+        env:
+          SWC_ACCESS_TOKEN_FILE: /tmp/swc-private/access.json
+          SWC_CAPTURE_PLAN: /tmp/swc-planet-plan/resource-plan.archive.encrypted.json
+          SWC_CAPTURE_BATCH: ${{ matrix.id }}
+          SWC_CAPTURE_OUTPUT: /tmp/swc-planet-batch
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+        run: node tools/planet-api/run-fleet-resources.mjs worker
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fleet-resource-${{ matrix.id }}-encrypted
+          path: /tmp/swc-planet-batch/*.encrypted.json
+          retention-days: 90
+          if-no-files-found: warn
+      - if: always()
+        run: rm -rf /tmp/swc-private /tmp/swc-planet-batch
+  assemble:
+    needs: [plan, details]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: fleet-resource-plan-encrypted
+          path: /tmp/swc-planet-plan
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fleet-resource-resource-*-encrypted
+          path: /tmp/swc-planet-batches
+      - name: Assemble versioned, deduplicated observed baseline
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+        run: node --max-old-space-size=6144 tools/planet-api/run-fleet-resources.mjs assemble /tmp/swc-planet-plan /tmp/swc-planet-batches /tmp/swc-planet-snapshot
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fleet-resources-encrypted
+          path: /tmp/swc-planet-snapshot/*.encrypted.json
+          retention-days: 90
+          if-no-files-found: warn
