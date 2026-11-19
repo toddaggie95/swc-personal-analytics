@@ -117,11 +117,12 @@ export async function liveInventory(owners, systemUid, read) {
     let expected;
     for (let start = 1, page = 0; ; page++) {
       if (page >= 100) throw Error('Facility inventory page limit reached.');
-      const response = await read.get(`inventory/${owner}/facilities/owner/`, {
-        start_index: start, item_count: 200,
-        'filter_type[0]': 'system', 'filter_value[0]': systemUid, 'filter_inclusion[0]': 'includes',
-        'filter_type[1]': 'type', 'filter_value[1]': MINE_TYPE_UID, 'filter_inclusion[1]': 'includes',
+      const query = {start_index: start, item_count: 200,
+        'filter_type[0]': 'type', 'filter_value[0]': MINE_TYPE_UID, 'filter_inclusion[0]': 'includes'};
+      if (systemUid) Object.assign(query, {
+        'filter_type[1]': 'system', 'filter_value[1]': systemUid, 'filter_inclusion[1]': 'includes',
       });
+      const response = await read.get(`inventory/${owner}/facilities/owner/`, query);
       if (!response.ok) throw Error(`Facility inventory read returned HTTP ${response.status} for ${owner}.`);
       const {entities} = (await response.json()).swcapi ?? {};
       const attrs = entities?.attributes;
@@ -134,7 +135,7 @@ export async function liveInventory(owners, systemUid, read) {
       expected = total;
       for (const item of pageRows) {
         const row = item.value ?? item;
-        if (uid(row.owner) !== owner || uid(row.location?.system) !== systemUid ||
+        if (uid(row.owner) !== owner || (systemUid !== null && uid(row.location?.system) !== systemUid) ||
             uid(row.type) !== MINE_TYPE_UID || !/^4:\d+$/.test(row.uid) || seen.has(row.uid)) {
           throw Error('Invalid or repeated facility in filtered inventory.');
         }
