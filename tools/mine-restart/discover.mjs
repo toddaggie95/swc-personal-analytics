@@ -3,7 +3,7 @@ import {gunzipSync} from 'node:zlib';
 import {parseArgs} from 'node:util';
 import {csv, MATERIALS} from '../production-sync/production-sync.mjs';
 
-const SYSTEM_UIDS = new Map([['Kashyyyk', '9:104'], ['Eberon', '9:22']]);
+const SYSTEM_UIDS = new Map([['Kashyyyk', '9:104'], ['Chamble', '9:103'], ['Tholatin', '9:190'], ['Eberon', '9:22']]);
 const MINE_TYPE_UID = '4:36';
 const API = 'https://www.swcombine.com/ws/v2.0/';
 const DEFAULT_MATERIALS = 'quantum meleenium ardanium rudic duracrete rockivory tibannagas nova varium varmigio lommite durelium'.split(' ');
@@ -144,7 +144,7 @@ async function main() {
     throw Error('Supply either --owner UID (repeatable) or --snapshot PATH (repeatable), and --output PATH.');
   }
   const systemUid = SYSTEM_UIDS.get(values.system);
-  if (!systemUid) throw Error('Supported systems are Kashyyyk and Eberon.');
+  if (!systemUid) throw Error('Supported systems are Kashyyyk, Eberon, Tholatin, and Chamble.');
   const allowed = values.materials === undefined ? DEFAULT_MATERIALS : values.materials.split(',').map(norm);
   if (allowed.some(material => !MATERIALS.includes(material)) || new Set(allowed).size !== allowed.length) {
     throw Error('Invalid or duplicated material in allowlist.');
