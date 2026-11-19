@@ -1,6 +1,11 @@
 name: SWC API - Kashyyyk Mine Detail
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      mine_uid:
+        description: 'Kashyyyk mine UID (format 4:1234567)'
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -20,14 +25,21 @@ jobs:
           node-version: '24'
       - name: Read one facility with the existing SWC credential
         env:
-          MINE_UID: ${{ secrets.SWC_MINE_PROBE_UID }}
           SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
         shell: bash
         run: |
           set -euo pipefail
           out="$RUNNER_TEMP/mine-detail.json"
           trap 'rm -f -- "$out"' EXIT
-          node --input-type=module - "$MINE_UID" "$out" <<'NODE'
+          node --input-type=module - "$out" <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const uid = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')).inputs?.mine_uid?.trim();
+          if (!/^4:\d+$/.test(uid ?? '')) {
+            console.error('Enter a facility UID in the form 4:1234567.');
+            process.exit(1);
+          }
+          console.log(`::add-mask::${uid}`);
+          process.argv.splice(2, 0, uid);
           try {
             const saved = JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON);
             if (typeof saved.accessToken !== 'string' || !saved.accessToken.trim() ||
