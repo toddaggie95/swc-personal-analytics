@@ -75,4 +75,36 @@ jobs:
           for (const key of ['infotext', 'tags', 'actions', 'cargo', 'deposits']) {
             if (Object.hasOwn(entity, key)) describe(entity[key], key);
           }
+          const norm = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
+          const positive = value => Number.isSafeInteger(value) && value > 0;
+          const actions = entity.actions?.action;
+          const action = Array.isArray(actions) && actions.length === 1 ? actions[0] : null;
+          const status = norm(action?.value?.status);
+          const pausedMining = Boolean(action && [action.attributes?.type, action.value?.actiontype]
+            .some(value => ['mine', 'mining'].includes(norm(value))) &&
+            ['paused', 'mining paused'].includes(status) && positive(action.attributes?.id));
+          const yieldUnits = action?.value?.['expected-yield'];
+          const deposits = entity.deposits?.deposit;
+          const deposit = Array.isArray(deposits) && deposits.length === 1 ? deposits[0] : null;
+          const meleenium = norm(deposit?.value) === 'meleenium';
+          const remaining = deposit?.attributes?.quantity;
+          const volume = entity.cargo?.volumecapacity;
+          // SWC mining rules list Meleenium at 1 m³ per unit.
+          const enoughMineVolume = meleenium && positive(yieldUnits) && Number.isFinite(volume?.remaining) &&
+            Number.isFinite(volume?.total) && volume.remaining <= volume.total && volume.remaining >= yieldUnits;
+          const checks = {
+            'Single identifiable paused mining action': pausedMining,
+            'Meleenium deposit covers one expected cycle': meleenium && positive(remaining) &&
+              positive(yieldUnits) && remaining >= yieldUnits,
+            'Mine cargo volume covers one Meleenium cycle': enoughMineVolume,
+            'Facility powered, complete and intact': norm(entity.ispowered) === 'yes' &&
+              norm(entity.underconstruction) === 'no' && norm(entity.wrecked) === 'no',
+            'Inventory infotext and tags verified empty': typeof entity.infotext === 'string' &&
+              !entity.infotext.trim() && Array.isArray(entity.tags?.tag) && entity.tags.tag.length === 0,
+          };
+          for (const [label, pass] of Object.entries(checks)) {
+            console.log(label + ': ' + (pass ? 'PASS' : 'REVIEW'));
+          }
+          console.log('API evidence checks: ' + (Object.values(checks).every(Boolean) ? 'PASS' : 'REVIEW'));
+          console.log('Restart approval and any external restrictions require separate confirmation.');
           NODE
