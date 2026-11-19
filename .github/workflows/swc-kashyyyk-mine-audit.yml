@@ -88,9 +88,14 @@ jobs:
             else if (!allowlist.includes(material)) excluded.push('material outside current allowlist');
             if (quantity === 0) excluded.push('deposit depleted');
             else if (!positive(quantity) || !positive(expectedYield) || quantity < expectedYield) review.push('deposit sufficient for next cycle unverified');
-            if (!positive(expectedYield) || !Number.isFinite(volume?.remaining) ||
+            if (volume?.remaining === 0 && Number.isFinite(volume?.total) && volume.total > 0) {
+              review.push('mine cargo reports zero free volume; linked storage unverified');
+            } else if (!positive(expectedYield) || !Number.isFinite(volume?.remaining) ||
                 !Number.isFinite(volume?.total) || volume.remaining > volume.total || volume.remaining < expectedYield) {
               review.push('mine storage for next cycle unverified; linked storage not counted');
+            }
+            if (expectedYield === 0 && action?.value?.['expected-cost'] === 0) {
+              review.push('SWC reports zero expected yield and zero expected cost');
             }
             if (norm(e.ispowered) === 'no' || norm(e.underconstruction) === 'yes' || norm(e.wrecked) === 'yes') excluded.push('facility unpowered, incomplete or wrecked');
             else if (norm(e.ispowered) !== 'yes' || norm(e.underconstruction) !== 'no' || norm(e.wrecked) !== 'no') review.push('facility condition unverified');
