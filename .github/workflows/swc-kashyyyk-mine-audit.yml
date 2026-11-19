@@ -5,11 +5,16 @@ on:
       system:
         description: Star system to audit
         type: choice
-        options: [Eberon, Kashyyyk, Tholatin, Chamble]
+        options: [Eberon, Kashyyyk, Tholatin, Chamble, All]
         default: Eberon
         required: true
+      resume_run_id:
+        description: Prior Mine Audit run ID for the same scope (optional)
+        type: string
+        required: false
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: swc-api-shadow-oauth
   cancel-in-progress: false
@@ -62,22 +67,44 @@ jobs:
           cp ../src/cli/github-auth-probe.ts src/cli/
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           npx --no-install tsx src/cli/github-auth-probe.ts
+      - name: Download the encrypted checkpoint for this workflow
+        if: inputs.resume_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$RESUME_RUN_ID" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESUME_RUN_ID" \
+            --jq '.path == ".github/workflows/swc-kashyyyk-mine-audit.yml" and .head_branch == "main" and .conclusion == "success"' | grep -qx true
+          url=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESUME_RUN_ID/artifacts" \
+            --jq '.artifacts[] | select(.name == "system-mine-audit-progress" and .expired == false) | .archive_download_url')
+          test -n "$url"
+          gh api "$url" > "$RUNNER_TEMP/mine-audit-progress.zip"
+          unzip -p "$RUNNER_TEMP/mine-audit-progress.zip" mine-audit-progress.encrypted.json > "$RUNNER_TEMP/mine-audit-progress.input.json"
       - name: Audit system mine inventory and detail using GET
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
         shell: bash
         run: |
           set -euo pipefail
           node --input-type=module <<'NODE' | tee -a "$GITHUB_STEP_SUMMARY"
-          import {readFileSync, writeFileSync} from 'node:fs';
+          import {existsSync, readFileSync, writeFileSync} from 'node:fs';
+          import {createPublicKey} from 'node:crypto';
           import {join} from 'node:path';
           import {createMineRead, DEFAULT_MATERIALS, liveInventory, MineReadStop, SYSTEM_UIDS} from './tools/mine-restart/discover.mjs';
-          import {encrypt} from './tools/api-parity/private-audit-envelope.mjs';
+          import {decrypt, encrypt} from './tools/api-parity/private-audit-envelope.mjs';
+          import {minePlanIdentity, restoreMineProgress} from './tools/mine-restart/audit-progress.mjs';
 
           const {accessToken, expiresAt} = JSON.parse(readFileSync(join(process.env.RUNNER_TEMP, 'swc-mine-private', 'tokens.json'), 'utf8'));
           if (typeof accessToken !== 'string' || !accessToken || !Number.isFinite(expiresAt) ||
               expiresAt < Date.now() + 45 * 60_000) throw Error('Run with a current Production Sync credential.');
           const system = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')).inputs?.system;
-          const systemUid = SYSTEM_UIDS.get(system);
-          if (!systemUid) throw Error('Unsupported audit system.');
+          const systemUid = system === 'All' ? null : SYSTEM_UIDS.get(system);
+          if (systemUid === undefined) throw Error('Unsupported audit system.');
+          const checkpointKey = process.env.SWC_API_SNAPSHOT_PRIVATE_KEY;
+          const checkpointInput = join(process.env.RUNNER_TEMP, 'mine-audit-progress.input.json');
+          if ((system === 'All' || existsSync(checkpointInput)) && !checkpointKey) throw Error('Existing audit checkpoint key unavailable.');
           const report = {system, observedFrom: new Date().toISOString(), coverage: [], mines: []};
           function classify(listed, e, allowlist) {
             const excluded = [], review = [];
@@ -138,24 +165,51 @@ jobs:
           for (const owner of ['20:1174', '20:1838']) {
             try {
               const {rows} = await liveInventory([owner], systemUid, read);
-              list.push(...rows.map(row => ({uid: row.uid, ownerUid: owner, name: row.name})));
+              list.push(...rows.map(row => ({uid: row.uid, ownerUid: owner, name: row.name,
+                systemUid: row.location?.system?.attributes?.uid ?? null, system: row.location?.system?.value ?? null})));
               report.coverage.push({owner, status: 'inventory-complete', count: rows.length});
             } catch (error) {
               report.coverage.push({owner, status: 'inventory-unavailable',
                 reason: error instanceof MineReadStop ? error.message : 'facility inventory read unavailable'});
             }
           }
+          const inventoryComplete = report.coverage.every(c => c.status === 'inventory-complete');
+          const identity = minePlanIdentity(system, list, allowlist, classify.toString());
+          let completed = new Map();
+          if (existsSync(checkpointInput)) {
+            if (!inventoryComplete) throw Error('Cannot resume against incomplete owner inventories.');
+            const prior = JSON.parse(decrypt(JSON.parse(readFileSync(checkpointInput, 'utf8')), checkpointKey));
+            completed = restoreMineProgress(prior, identity, list);
+            report.observedFrom = prior.observedFrom;
+          }
+          report.resumedDetails = completed.size;
           let stopReason;
+          let attempted = 0;
           for (const listed of list) {
+            if (completed.has(listed.uid)) {
+              report.mines.push(completed.get(listed.uid));
+              continue;
+            }
+            if (system === 'All' && attempted >= 350) stopReason ??= 'detail batch limit reached';
             if (!stopReason) {
+              attempted++;
               try {
                 const response = await read.get('inventory/facilities/' + listed.uid + '/');
                 if (!response.ok) throw Error('detail HTTP ' + response.status);
                 const body = await response.json();
                 const e = body.swcapi?.entity?.value ?? body.swcapi?.entity;
                 if (e?.uid !== listed.uid || e.owner?.attributes?.uid !== listed.ownerUid ||
-                    e.type?.attributes?.uid !== '4:36' || e.location?.system?.attributes?.uid !== systemUid) throw Error('detail identity mismatch');
-                report.mines.push(classify(listed, e, allowlist));
+                    e.type?.attributes?.uid !== '4:36' ||
+                    (e.location?.system?.attributes?.uid ?? null) !== listed.systemUid) throw Error('detail identity mismatch');
+                const row = {...classify(listed, e, allowlist), systemUid: listed.systemUid, system: listed.system,
+                  observedAt: new Date().toISOString()};
+                if (!listed.systemUid && row.classification === 'candidate') {
+                  row.classification = 'manual-review';
+                  row.category = 'manual-review';
+                  row.reasons.push('system location unverified');
+                }
+                completed.set(listed.uid, row);
+                report.mines.push(row);
                 continue;
               } catch (error) {
                 if (error instanceof MineReadStop) stopReason = error.message;
@@ -170,7 +224,9 @@ jobs:
           report.observedTo = new Date().toISOString();
           report.allowlist = allowlist;
           report.readMetrics = read.summary();
-          report.complete = report.coverage.every(c => c.status === 'inventory-complete') && report.mines.every(m => !m.detailsUnavailable);
+          report.complete = inventoryComplete && completed.size === list.length;
+          report.checkedDetails = completed.size;
+          report.pendingDetails = list.length - completed.size;
           const counts = Object.fromEntries(['candidate', 'excluded', 'manual-review'].map(c =>
             [c, report.mines.filter(m => m.classification === c).length]));
           const key = readFileSync('tools/planet-api/snapshot-analysis-public-key.pem');
@@ -178,7 +234,13 @@ jobs:
             JSON.stringify(encrypt(Buffer.from(JSON.stringify(report)), key)), {mode: 0o600});
           const categories = Object.fromEntries(['depleted', 'do-not-restart', 'paused-no-mine-space', 'paused-with-space-candidate', 'already-running', 'other-excluded', 'manual-review'].map(category =>
             [category, report.mines.filter(m => m.category === category).length]));
-          console.log(JSON.stringify({system, complete: report.complete, ...counts, categories, readMetrics: report.readMetrics}));
+          if (checkpointKey && inventoryComplete && !report.complete && completed.size) {
+            const checkpoint = {version: 1, identity, observedFrom: report.observedFrom, entries: [...completed.values()]};
+            writeFileSync(join(process.env.RUNNER_TEMP, 'mine-audit-progress.encrypted.json'),
+              JSON.stringify(encrypt(Buffer.from(JSON.stringify(checkpoint)), createPublicKey(checkpointKey))), {mode: 0o600});
+          }
+          console.log(JSON.stringify({system, complete: report.complete, checkedDetails: report.checkedDetails,
+            pendingDetails: report.pendingDetails, resumedDetails: report.resumedDetails, ...counts, categories, readMetrics: report.readMetrics}));
           NODE
       - uses: actions/upload-artifact@v4
         with:
@@ -186,6 +248,12 @@ jobs:
           path: ${{ runner.temp }}/system-mine-audit.encrypted.json
           retention-days: 7
           if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: system-mine-audit-progress
+          path: ${{ runner.temp }}/mine-audit-progress.encrypted.json
+          retention-days: 2
+          if-no-files-found: ignore
       - name: Remove temporary OAuth data
         if: always()
         run: rm -rf -- "$RUNNER_TEMP/swc-mine-private"
