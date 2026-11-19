@@ -21,12 +21,19 @@ export function validToken(value: unknown): value is OAuthToken {
 export async function beginAuth(config: Config, client = makeClient(config)): Promise<string> {
   // Opt in only during a new authorization; refresh never expands a grant.
   const profile = process.env.SWC_OAUTH_READ_PROFILE;
-  const scopes = profile ? (await import('./read-scopes.js')).readScopes(profile) : SCOPES;
+  const minePilot = process.env.SWC_OAUTH_MINE_PILOT === 'true';
+  if (minePilot && (profile || !process.env.SWC_PRIVATE_DIR ||
+      !process.env.SWC_MINE_PILOT_CLIENT_ID || config.clientId !== process.env.SWC_MINE_PILOT_CLIENT_ID)) {
+    throw new SafeError('Mine pilot authorization requires its own SWC client and explicit private storage.');
+  }
+  const scopes = minePilot
+    ? ['character_auth', 'character_read', 'faction_inv_facilities_read', 'faction_inv_facilities_assign'] as const
+    : profile ? (await import('./read-scopes.js')).readScopes(profile) : SCOPES;
   const pair = config.pkce === 's256' ? createPkcePair() : undefined;
   const pending: Pending = { state: randomBytes(32).toString('base64url'), createdAt: Date.now(),
     clientId: config.clientId, oobMode: config.oobMode, ...(pair ? { verifier: pair.codeVerifier } : {}) };
   await atomicWrite(join(config.privateDir, 'pending.json'), JSON.stringify(pending));
-  return client.auth.getAuthorizationUrl({ scopes, state: pending.state,
+  return client.auth.getAuthorizationUrl({ scopes: [...scopes], state: pending.state,
     ...(pair ? { codeChallenge: pair.codeChallenge } : {}) });
 }
 export function verifyOob(pending: Pending, code: string, state: string, now = Date.now()): void {
