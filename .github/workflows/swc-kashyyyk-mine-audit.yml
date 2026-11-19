@@ -17,7 +17,7 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     environment: swc-api-shadow
-    timeout-minutes: 45
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,7 +37,7 @@ jobs:
           const saved = JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON || '{}');
           if (!saved.accessToken || !Number.isFinite(saved.expiresAt)) throw Error('SWC credential unavailable.');
           writeFileSync(process.env.RUNNER_TEMP + '/swc-mine-private/tokens.json', JSON.stringify(saved));
-          appendFileSync(process.env.GITHUB_OUTPUT, 'refresh=' + (saved.expiresAt < Date.now() + 37 * 60_000) + '\n');
+          appendFileSync(process.env.GITHUB_OUTPUT, 'refresh=' + (saved.expiresAt < Date.now() + 45 * 60_000) + '\n');
           NODE
       - uses: actions/checkout@v4
         if: steps.credential.outputs.refresh == 'true'
@@ -75,7 +75,7 @@ jobs:
 
           const {accessToken, expiresAt} = JSON.parse(readFileSync(join(process.env.RUNNER_TEMP, 'swc-mine-private', 'tokens.json'), 'utf8'));
           if (typeof accessToken !== 'string' || !accessToken || !Number.isFinite(expiresAt) ||
-              expiresAt < Date.now() + 37 * 60_000) throw Error('Run with a current Production Sync credential.');
+              expiresAt < Date.now() + 45 * 60_000) throw Error('Run with a current Production Sync credential.');
           const temp = mkdtempSync(join(process.env.RUNNER_TEMP, 'mine-inventory-'));
           const system = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')).inputs?.system;
           const systemUid = new Map([['Eberon', '9:22'], ['Kashyyyk', '9:104'], ['Chamble', '9:103'], ['Tholatin', '9:190']]).get(system);
@@ -113,7 +113,10 @@ jobs:
             const notes = [e.name, e.infotext, ...(Array.isArray(tags) ? tags.map(t => t?.value ?? t) : [])];
             const hold = /\b(?:do not|don['’]?t|never)\s+(?:resume|restart|start|mine)|\b(?:hold|reserved|leave (?:off|paused)|no mining)\b/i;
             if (notes.some(v => hold.test(norm(v).replace(/[_-]+/g, ' ')))) excluded.push('explicit hold notation');
-            else if (typeof e.infotext !== 'string' || e.infotext.trim() || !Array.isArray(tags) || tags.length) review.push('annotations require review');
+            if (quantity !== 0 && notes.some(v => /\bdepleted\b/.test(norm(v).replace(/[_-]+/g, ' ')))) {
+              review.push('depletion notation conflicts with or is unverified by the deposit reading');
+            }
+            if (typeof e.infotext !== 'string' || e.infotext.trim() || !Array.isArray(tags) || tags.length) review.push('annotations require review');
             if (!/^1:\d+$/.test(e.pilot?.attributes?.uid ?? '') || !positive(action?.value?.workers) ||
                 !positive(action?.value?.['expected-cost'])) review.push('operator, workers or expected cost unverified');
             const paused = mining && ['paused', 'mining paused'].includes(status) && positive(action?.attributes?.id);
@@ -152,7 +155,7 @@ jobs:
             rmSync(temp, {recursive: true, force: true});
           }
           let stopReason;
-          const deadline = Date.now() + 23 * 60_000;
+          const deadline = Date.now() + 31 * 60_000;
           for (const listed of list) {
             if (!stopReason && (Date.now() + 40_000 >= deadline || Date.now() + 40_000 >= expiresAt)) stopReason = 'detail time budget exhausted';
             if (!stopReason) {
