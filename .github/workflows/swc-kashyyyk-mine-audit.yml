@@ -10,7 +10,7 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     environment: swc-api-shadow
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,9 +18,44 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Audit Kashyyyk mine inventory and detail using GET
+      - name: Stage the existing SWC credential privately
+        id: credential
         env:
           SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          umask 077
+          mkdir "$RUNNER_TEMP/swc-mine-private"
+          node --input-type=module <<'NODE'
+          import {appendFileSync, writeFileSync} from 'node:fs';
+          const saved = JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON || '{}');
+          if (!saved.accessToken || !Number.isFinite(saved.expiresAt)) throw Error('SWC credential unavailable.');
+          writeFileSync(process.env.RUNNER_TEMP + '/swc-mine-private/tokens.json', JSON.stringify(saved));
+          appendFileSync(process.env.GITHUB_OUTPUT, 'refresh=' + (saved.expiresAt < Date.now() + 37 * 60_000) + '\n');
+          NODE
+      - uses: actions/checkout@v4
+        if: steps.credential.outputs.refresh == 'true'
+        with:
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: collector
+          persist-credentials: false
+      - name: Refresh using the shared durable OAuth coordinator
+        if: steps.credential.outputs.refresh == 'true'
+        working-directory: collector
+        env:
+          SWC_PRIVATE_DIR: ${{ runner.temp }}/swc-mine-private
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+          SWC_FORCE_REFRESH: 'true'
+        run: |
+          set -euo pipefail
+          cp ../src/auth/*.ts src/auth/
+          cp ../src/cli/github-auth-probe.ts src/cli/
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          npx --no-install tsx src/cli/github-auth-probe.ts
+      - name: Audit Kashyyyk mine inventory and detail using GET
         shell: bash
         run: |
           set -euo pipefail
@@ -31,8 +66,7 @@ jobs:
           import {setTimeout as delay} from 'node:timers/promises';
           import {encrypt} from './tools/api-parity/private-audit-envelope.mjs';
 
-          const {accessToken, expiresAt} = JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON || '{}');
-          delete process.env.SWC_OAUTH_TOKENS_JSON;
+          const {accessToken, expiresAt} = JSON.parse(readFileSync(join(process.env.RUNNER_TEMP, 'swc-mine-private', 'tokens.json'), 'utf8'));
           if (typeof accessToken !== 'string' || !accessToken || !Number.isFinite(expiresAt) ||
               expiresAt < Date.now() + 37 * 60_000) throw Error('Run with a current Production Sync credential.');
           const temp = mkdtempSync(join(process.env.RUNNER_TEMP, 'mine-inventory-'));
@@ -137,3 +171,6 @@ jobs:
           path: ${{ runner.temp }}/kashyyyk-mine-audit.encrypted.json
           retention-days: 7
           if-no-files-found: error
+      - name: Remove temporary OAuth data
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/swc-mine-private"
