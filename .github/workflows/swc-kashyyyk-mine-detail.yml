@@ -1,0 +1,51 @@
+name: SWC API - Kashyyyk Mine Detail
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: swc-api-shadow-oauth
+  cancel-in-progress: false
+jobs:
+  read-mine:
+    runs-on: ubuntu-latest
+    environment: swc-api-shadow
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Read one facility with the existing SWC credential
+        env:
+          MINE_UID: ${{ secrets.SWC_MINE_PROBE_UID }}
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/mine-detail.json"
+          trap 'rm -f -- "$out"' EXIT
+          node --input-type=module - "$MINE_UID" "$out" <<'NODE'
+          try {
+            const saved = JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON);
+            if (typeof saved.accessToken !== 'string' || !saved.accessToken.trim() ||
+                !Number.isFinite(saved.expiresAt) || saved.expiresAt < Date.now() + 120000) {
+              throw Error();
+            }
+            process.env.SWC_ACCESS_TOKEN = saved.accessToken;
+          } catch {
+            console.error('Existing SWC credential is missing or near expiry. Run the shared OAuth coordinator first.');
+            process.exit(1);
+          }
+          delete process.env.SWC_OAUTH_TOKENS_JSON;
+          await import('./tools/mine-restart/read-facility.mjs');
+          NODE
+          node --input-type=module - "$out" <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import {readFileSync} from 'node:fs';
+          const {entity} = JSON.parse(readFileSync(process.argv[2], 'utf8'));
+          console.log('Verified one Kashyyyk mine via SWC facility detail GET.');
+          const fields = Object.keys(entity).filter(key => /^(action|deposit|mining|cargo|capacity|infotext|tags)/i.test(key));
+          console.log('Relevant top-level fields present: ' + (fields.join(', ') || 'none'));
+          NODE
