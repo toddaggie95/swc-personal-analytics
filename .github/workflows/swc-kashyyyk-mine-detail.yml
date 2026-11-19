@@ -54,10 +54,25 @@ jobs:
           delete process.env.SWC_OAUTH_TOKENS_JSON;
           await import('./tools/mine-restart/read-facility.mjs');
           NODE
-          node --input-type=module - "$out" <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          node --input-type=module - "$out" <<'NODE' | tee -a "$GITHUB_STEP_SUMMARY"
           import {readFileSync} from 'node:fs';
           const {entity} = JSON.parse(readFileSync(process.argv[2], 'utf8'));
           console.log('Verified one Kashyyyk mine via SWC facility detail GET.');
           const fields = Object.keys(entity).filter(key => /^(action|deposit|mining|cargo|capacity|infotext|tags)/i.test(key));
           console.log('Relevant top-level fields present: ' + (fields.join(', ') || 'none'));
+          function describe(value, path, depth = 0) {
+            const kind = value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
+            console.log(`${path}: ${kind}`);
+            if (depth >= 5) return;
+            if (kind === 'array') {
+              if (value.length) describe(value[0], path + '[]', depth + 1);
+            } else if (kind === 'object') {
+              for (const [key, child] of Object.entries(value).slice(0, 24)) {
+                if (/^[a-z][a-z_-]{0,50}$/i.test(key)) describe(child, path + '.' + key, depth + 1);
+              }
+            }
+          }
+          for (const key of ['infotext', 'tags', 'actions', 'cargo', 'deposits']) {
+            if (Object.hasOwn(entity, key)) describe(entity[key], key);
+          }
           NODE
