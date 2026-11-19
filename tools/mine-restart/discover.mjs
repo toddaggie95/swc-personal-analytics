@@ -1,12 +1,14 @@
 import {readFileSync, writeFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import {parseArgs} from 'node:util';
+import {stripTypeScriptTypes} from 'node:module';
+import {pathToFileURL} from 'node:url';
 import {csv, MATERIALS} from '../production-sync/production-sync.mjs';
 
-const SYSTEM_UIDS = new Map([['Kashyyyk', '9:104'], ['Chamble', '9:103'], ['Tholatin', '9:190'], ['Eberon', '9:22']]);
+export const SYSTEM_UIDS = new Map([['Kashyyyk', '9:104'], ['Chamble', '9:103'], ['Tholatin', '9:190'], ['Eberon', '9:22']]);
 const MINE_TYPE_UID = '4:36';
 const API = 'https://www.swcombine.com/ws/v2.0/';
-const DEFAULT_MATERIALS = 'quantum meleenium ardanium rudic duracrete rockivory tibannagas nova varium varmigio lommite durelium'.split(' ');
+export const DEFAULT_MATERIALS = 'quantum meleenium ardanium rudic duracrete rockivory tibannagas nova varium varmigio lommite durelium'.split(' ');
 const uid = ref => ref?.attributes?.uid;
 const norm = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
 const integer = value => /^\d+$/.test(String(value)) && Number.isSafeInteger(Number(value)) ? Number(value) : null;
@@ -60,9 +62,54 @@ function classify(facility, evidence, allowed, live) {
   };
 }
 
-async function liveInventory(owners, systemUid) {
-  const token = process.env.SWC_ACCESS_TOKEN?.trim();
-  if (!token) throw Error('SWC_ACCESS_TOKEN is required for live reads.');
+export class MineReadStop extends Error {}
+
+export async function createMineRead(token, deadline, fetcher = fetch) {
+  if (!token?.trim()) throw Error('SWC_ACCESS_TOKEN is required for live reads.');
+  const source = readFileSync(new URL('../api-parity/production-read-pacer.ts', import.meta.url), 'utf8');
+  const code = stripTypeScriptTypes(source, {mode: 'transform'});
+  const {ReadPacer} = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
+  const pacer = new ReadPacer(undefined, undefined, 6500, 60_000, 1000, deadline);
+  const metrics = {requests: 0, requestLatencyMs: 0, rateHeaderResponses: 0};
+  let stopped;
+  return {
+    async get(endpoint, query) {
+      if (stopped) throw new MineReadStop(stopped);
+      const url = new URL(endpoint, API);
+      if (url.origin !== new URL(API).origin || !url.pathname.startsWith('/ws/v2.0/inventory/')) throw Error('Unsupported SWC read path.');
+      if (query) url.search = new URLSearchParams(query);
+      try {
+        await pacer.beforeRequest('mine-inventory');
+      } catch {
+        stopped = 'SWC quota reserve or collection deadline reached';
+        throw new MineReadStop(stopped);
+      }
+      const started = Date.now();
+      metrics.requests++;
+      let response;
+      try {
+        response = await fetcher(url, {method: 'GET', redirect: 'error', signal: AbortSignal.timeout(25000),
+          headers: {Accept: 'application/json', Authorization: `OAuth ${token}`}});
+      } catch {
+        // Missing headers preserve the shared quota reserve and restore fallback pacing.
+        pacer.afterResponse('mine-inventory', new Headers());
+        throw Error('SWC GET unavailable');
+      } finally {
+        metrics.requestLatencyMs += Date.now() - started;
+      }
+      const quota = pacer.afterResponse('mine-inventory', response.headers);
+      if (quota.limit !== null && quota.remaining !== null && quota.resetAtMs !== null) metrics.rateHeaderResponses++;
+      if (response.status === 429) {
+        stopped = 'SWC rate limit reached';
+        throw new MineReadStop(stopped);
+      }
+      return response;
+    },
+    summary: () => ({...metrics, ...pacer.summary()}),
+  };
+}
+
+export async function liveInventory(owners, systemUid, read) {
   const rows = [], coverage = [];
   for (const owner of owners) {
     if (!/^(?:1|20):\d+$/.test(owner)) throw Error('Invalid inventory owner UID.');
@@ -70,15 +117,11 @@ async function liveInventory(owners, systemUid) {
     let expected;
     for (let start = 1, page = 0; ; page++) {
       if (page >= 100) throw Error('Facility inventory page limit reached.');
-      if (page || coverage.length) await new Promise(resolve => setTimeout(resolve, 6500));
-      const url = new URL(`inventory/${owner}/facilities/owner/`, API);
-      url.search = new URLSearchParams({
+      const response = await read.get(`inventory/${owner}/facilities/owner/`, {
         start_index: start, item_count: 200,
         'filter_type[0]': 'system', 'filter_value[0]': systemUid, 'filter_inclusion[0]': 'includes',
         'filter_type[1]': 'type', 'filter_value[1]': MINE_TYPE_UID, 'filter_inclusion[1]': 'includes',
       });
-      const response = await fetch(url, {method: 'GET', redirect: 'error', signal: AbortSignal.timeout(30000),
-        headers: {Accept: 'application/json', Authorization: `OAuth ${token}`}});
       if (!response.ok) throw Error(`Facility inventory read returned HTTP ${response.status} for ${owner}.`);
       const {entities} = (await response.json()).swcapi ?? {};
       const attrs = entities?.attributes;
@@ -158,7 +201,8 @@ async function main() {
     }
   }
   const live = Boolean(values.owner);
-  const {rows, coverage} = live ? await liveInventory([...new Set(values.owner)], systemUid) : savedInventory(values.snapshot, systemUid);
+  const {rows, coverage} = live ? await liveInventory([...new Set(values.owner)], systemUid,
+    await createMineRead(process.env.SWC_ACCESS_TOKEN, Date.now() + 31 * 60_000)) : savedInventory(values.snapshot, systemUid);
   const report = {system: values.system, systemUid, mode: live ? 'live-get' : 'historical-capture',
     generatedAt: new Date().toISOString(), allowlist: allowed, coverage,
     counts: {eligible: 0, excluded: 0, 'manual-review': 0}, mines: []};
@@ -175,4 +219,6 @@ async function main() {
   console.log(JSON.stringify(report.counts));
 }
 
-main().catch(error => { console.error(error.message); process.exitCode = 1; });
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch(error => { console.error(error.message); process.exitCode = 1; });
+}
