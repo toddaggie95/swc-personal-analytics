@@ -5,7 +5,7 @@ on:
       system:
         description: Star system to audit
         type: choice
-        options: [Eberon, Kashyyyk]
+        options: [Eberon, Kashyyyk, Tholatin, Chamble]
         default: Eberon
         required: true
 permissions:
@@ -78,7 +78,7 @@ jobs:
               expiresAt < Date.now() + 37 * 60_000) throw Error('Run with a current Production Sync credential.');
           const temp = mkdtempSync(join(process.env.RUNNER_TEMP, 'mine-inventory-'));
           const system = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')).inputs?.system;
-          const systemUid = new Map([['Eberon', '9:22'], ['Kashyyyk', '9:104']]).get(system);
+          const systemUid = new Map([['Eberon', '9:22'], ['Kashyyyk', '9:104'], ['Chamble', '9:103'], ['Tholatin', '9:190']]).get(system);
           if (!systemUid) throw Error('Unsupported audit system.');
           const report = {system, observedFrom: new Date().toISOString(), coverage: [], mines: []};
           function classify(listed, e, allowlist) {
