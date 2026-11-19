@@ -1,0 +1,114 @@
+name: SWC API - Single Taakarroo Mine Resume Pilot
+on:
+  workflow_dispatch:
+    inputs:
+      approved_mine_uid:
+        description: 'Enter the approved facility UID to send one live resume request'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: swc-api-shadow-oauth
+  cancel-in-progress: false
+jobs:
+  resume-one-mine:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == '1'
+    runs-on: ubuntu-latest
+    environment: swc-api-shadow
+    timeout-minutes: 5
+    steps:
+      - name: Revalidate, resume once and read back
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import {createHash} from 'node:crypto';
+          import {readFileSync} from 'node:fs';
+          const uid = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')).inputs?.approved_mine_uid?.trim();
+          const approvedTarget = 'e41e1ab56d1a0011ffec0a91eb71ad11e9918e8dae8a867aee53230bb0c8534f';
+          if (!/^4:\d+$/.test(uid ?? '') || createHash('sha256').update(uid).digest('hex') !== approvedTarget) {
+            throw Error('Input does not match the approved pilot mine.');
+          }
+          console.log(`::add-mask::${uid}`);
+          let token;
+          try {
+            const saved = JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON);
+            if (typeof saved.accessToken !== 'string' || !saved.accessToken.trim() ||
+                !Number.isFinite(saved.expiresAt) || saved.expiresAt < Date.now() + 120000) throw Error();
+            token = saved.accessToken;
+          } catch {
+            throw Error('Existing SWC credential is missing or near expiry.');
+          }
+          const url = new URL(`https://www.swcombine.com/ws/v2.0/inventory/facilities/${uid}/`);
+          const headers = {Accept: 'application/json', Authorization: `OAuth ${token}`};
+          const request = (target, options) => fetch(target, {
+            ...options, redirect: 'error', signal: AbortSignal.timeout(30000),
+          });
+          const identityMatches = entity => entity?.uid === uid && entity.type?.attributes?.uid === '4:36' &&
+            entity.location?.system?.attributes?.uid === '9:104' && entity.owner?.attributes?.uid === '20:1174';
+          async function readMine() {
+            const response = await request(url, {method: 'GET', headers});
+            if (!response.ok) throw Error(`Facility revalidation GET returned HTTP ${response.status}.`);
+            const body = await response.json();
+            const entity = body.swcapi?.entity?.value ?? body.swcapi?.entity;
+            if (!identityMatches(entity)) throw Error('Facility identity or ownership changed.');
+            return entity;
+          }
+          const entity = await readMine();
+          const norm = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
+          const positive = value => Number.isSafeInteger(value) && value > 0;
+          const actions = entity.actions?.action;
+          const action = Array.isArray(actions) && actions.length === 1 ? actions[0] : null;
+          const status = norm(action?.value?.status);
+          const pausedMining = Boolean(action && [action.attributes?.type, action.value?.actiontype]
+            .some(value => ['mine', 'mining'].includes(norm(value))) &&
+            ['paused', 'mining paused'].includes(status) && positive(action.attributes?.id));
+          const yieldUnits = action?.value?.['expected-yield'];
+          const deposits = entity.deposits?.deposit;
+          const deposit = Array.isArray(deposits) && deposits.length === 1 ? deposits[0] : null;
+          const meleenium = norm(deposit?.value) === 'meleenium';
+          const remaining = deposit?.attributes?.quantity;
+          const volume = entity.cargo?.volumecapacity;
+          // SWC mining rules list Meleenium at 1 m³ per unit.
+          const enoughMineVolume = meleenium && positive(yieldUnits) && Number.isFinite(volume?.remaining) &&
+            Number.isFinite(volume?.total) && volume.remaining <= volume.total && volume.remaining >= yieldUnits;
+          const checks = {
+            'Single identifiable paused mining action': pausedMining,
+            'Meleenium deposit covers one expected cycle': meleenium && positive(remaining) &&
+              positive(yieldUnits) && remaining >= yieldUnits,
+            'Mine cargo volume covers one Meleenium cycle': enoughMineVolume,
+            'Facility powered, complete and intact': norm(entity.ispowered) === 'yes' &&
+              norm(entity.underconstruction) === 'no' && norm(entity.wrecked) === 'no',
+            'Inventory infotext and tags verified empty': typeof entity.infotext === 'string' &&
+              !entity.infotext.trim() && Array.isArray(entity.tags?.tag) && entity.tags.tag.length === 0,
+          };
+          checks['Operator, workers and expected cost present'] = /^1:\d+$/.test(entity.pilot?.attributes?.uid ?? '') &&
+            positive(action?.value?.workers) && positive(action?.value?.['expected-cost']);
+          for (const [label, pass] of Object.entries(checks)) {
+            console.log(label + ': ' + (pass ? 'PASS' : 'REVIEW'));
+          }
+          if (!Object.values(checks).every(Boolean)) throw Error('Revalidation failed before the write.');
+          let accepted = false;
+          try {
+            const response = await request(new URL('action/', url), {
+              method: 'POST', headers: {...headers, 'Content-Type': 'application/json'},
+              body: JSON.stringify({new_value: 'resume'}),
+            });
+            console.log(`Single resume POST returned HTTP ${response.status}.`);
+            const result = (await response.json()).swcapi?.result?.data;
+            accepted = response.ok && result?.succeeded?.entity?.length === 1 &&
+              result.succeeded.entity[0]?.uid === uid && result.failed?.entity?.length === 0;
+          } catch {
+            console.log('Resume response unavailable or unreadable. Checking the live state once.');
+          }
+          const after = await readMine();
+          const afterActions = after.actions?.action;
+          const observed = Array.isArray(afterActions) && afterActions.length === 1 ? afterActions[0] : null;
+          const running = observed?.attributes?.id === action.attributes.id &&
+            ['running', 'active', 'in progress', 'mining'].includes(norm(observed.value?.status));
+          console.log('Readback confirms the original action is running: ' + (running ? 'YES' : 'UNVERIFIED'));
+          if (!accepted || !running) throw Error('Pilot result requires review. Do not retry the POST.');
+          NODE
