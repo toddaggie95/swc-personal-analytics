@@ -3,7 +3,7 @@ import {gunzipSync} from 'node:zlib';
 import {parseArgs} from 'node:util';
 import {csv, MATERIALS} from '../production-sync/production-sync.mjs';
 
-const SYSTEM_UID = '9:104';
+const SYSTEM_UIDS = new Map([['Kashyyyk', '9:104'], ['Eberon', '9:22']]);
 const MINE_TYPE_UID = '4:36';
 const API = 'https://www.swcombine.com/ws/v2.0/';
 const DEFAULT_MATERIALS = 'quantum meleenium ardanium rudic duracrete rockivory tibannagas nova varium varmigio lommite durelium'.split(' ');
@@ -60,7 +60,7 @@ function classify(facility, evidence, allowed, live) {
   };
 }
 
-async function liveInventory(owners) {
+async function liveInventory(owners, systemUid) {
   const token = process.env.SWC_ACCESS_TOKEN?.trim();
   if (!token) throw Error('SWC_ACCESS_TOKEN is required for live reads.');
   const rows = [], coverage = [];
@@ -74,7 +74,7 @@ async function liveInventory(owners) {
       const url = new URL(`inventory/${owner}/facilities/owner/`, API);
       url.search = new URLSearchParams({
         start_index: start, item_count: 200,
-        'filter_type[0]': 'system', 'filter_value[0]': SYSTEM_UID, 'filter_inclusion[0]': 'includes',
+        'filter_type[0]': 'system', 'filter_value[0]': systemUid, 'filter_inclusion[0]': 'includes',
         'filter_type[1]': 'type', 'filter_value[1]': MINE_TYPE_UID, 'filter_inclusion[1]': 'includes',
       });
       const response = await fetch(url, {method: 'GET', redirect: 'error', signal: AbortSignal.timeout(30000),
@@ -91,7 +91,7 @@ async function liveInventory(owners) {
       expected = total;
       for (const item of pageRows) {
         const row = item.value ?? item;
-        if (uid(row.owner) !== owner || uid(row.location?.system) !== SYSTEM_UID ||
+        if (uid(row.owner) !== owner || uid(row.location?.system) !== systemUid ||
             uid(row.type) !== MINE_TYPE_UID || !/^4:\d+$/.test(row.uid) || seen.has(row.uid)) {
           throw Error('Invalid or repeated facility in filtered inventory.');
         }
@@ -106,7 +106,7 @@ async function liveInventory(owners) {
   return {rows, coverage};
 }
 
-function savedInventory(paths) {
+function savedInventory(paths, systemUid) {
   const rows = [], coverage = [];
   for (const path of paths) {
     const bytes = readFileSync(path);
@@ -123,7 +123,7 @@ function savedInventory(paths) {
       const mines = inventory.rows.filter(row => uid(row.type) === MINE_TYPE_UID);
       for (const row of mines) {
         if (uid(row.owner) !== ownerUid || uid(row.location?.planet) !== snapshot.planet.uid ||
-            uid(row.location?.system) !== SYSTEM_UID || !/^4:\d+$/.test(row.uid)) {
+            uid(row.location?.system) !== systemUid || !/^4:\d+$/.test(row.uid)) {
           throw Error('Saved mine identity or location mismatch.');
         }
         rows.push(row);
@@ -138,11 +138,13 @@ function savedInventory(paths) {
 async function main() {
   const {values} = parseArgs({options: {
     owner: {type: 'string', multiple: true}, snapshot: {type: 'string', multiple: true},
-    evidence: {type: 'string'}, materials: {type: 'string'}, output: {type: 'string'},
+    system: {type: 'string', default: 'Kashyyyk'}, evidence: {type: 'string'}, materials: {type: 'string'}, output: {type: 'string'},
   }});
   if (Boolean(values.owner) === Boolean(values.snapshot) || !values.output) {
     throw Error('Supply either --owner UID (repeatable) or --snapshot PATH (repeatable), and --output PATH.');
   }
+  const systemUid = SYSTEM_UIDS.get(values.system);
+  if (!systemUid) throw Error('Supported systems are Kashyyyk and Eberon.');
   const allowed = values.materials === undefined ? DEFAULT_MATERIALS : values.materials.split(',').map(norm);
   if (allowed.some(material => !MATERIALS.includes(material)) || new Set(allowed).size !== allowed.length) {
     throw Error('Invalid or duplicated material in allowlist.');
@@ -156,8 +158,8 @@ async function main() {
     }
   }
   const live = Boolean(values.owner);
-  const {rows, coverage} = live ? await liveInventory([...new Set(values.owner)]) : savedInventory(values.snapshot);
-  const report = {system: 'Kashyyyk', systemUid: SYSTEM_UID, mode: live ? 'live-get' : 'historical-capture',
+  const {rows, coverage} = live ? await liveInventory([...new Set(values.owner)], systemUid) : savedInventory(values.snapshot, systemUid);
+  const report = {system: values.system, systemUid, mode: live ? 'live-get' : 'historical-capture',
     generatedAt: new Date().toISOString(), allowlist: allowed, coverage,
     counts: {eligible: 0, excluded: 0, 'manual-review': 0}, mines: []};
   const seen = new Set();
