@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Revalidate, resume once and read back
         env:
-          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+          SWC_MINE_PILOT_TOKENS_JSON: ${{ secrets.SWC_MINE_PILOT_TOKENS_JSON }}
         shell: bash
         run: |
           set -euo pipefail
@@ -35,12 +35,12 @@ jobs:
           console.log(`::add-mask::${uid}`);
           let token;
           try {
-            const saved = JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON);
+            const saved = JSON.parse(process.env.SWC_MINE_PILOT_TOKENS_JSON);
             if (typeof saved.accessToken !== 'string' || !saved.accessToken.trim() ||
                 !Number.isFinite(saved.expiresAt) || saved.expiresAt < Date.now() + 120000) throw Error();
             token = saved.accessToken;
           } catch {
-            throw Error('Existing SWC credential is missing or near expiry.');
+            throw Error('Dedicated SWC mine pilot credential is missing or near expiry.');
           }
           const url = new URL(`https://www.swcombine.com/ws/v2.0/inventory/facilities/${uid}/`);
           const headers = {Accept: 'application/json', Authorization: `OAuth ${token}`};
@@ -98,7 +98,15 @@ jobs:
               body: JSON.stringify({new_value: 'resume'}),
             });
             console.log(`Single resume POST returned HTTP ${response.status}.`);
-            const result = (await response.json()).swcapi?.result?.data;
+            const body = await response.text();
+            if (response.status === 403) {
+              const diagnostic = (response.headers.get('www-authenticate') ?? '') + ' ' + body;
+              const category = /insufficient[_ -]scope|missing (?:oauth )?scope/i.test(diagnostic) ? 'insufficient OAuth scope'
+                : /(?:faction|character) privilege|missing privilege/i.test(diagnostic) ? 'faction or character privilege'
+                : 'undetermined';
+              console.log('SWC forbidden response classification: ' + category);
+            }
+            const result = JSON.parse(body).swcapi?.result?.data;
             accepted = response.ok && result?.succeeded?.entity?.length === 1 &&
               result.succeeded.entity[0]?.uid === uid && result.failed?.entity?.length === 0;
           } catch {
