@@ -1,6 +1,13 @@
-name: SWC API - Kashyyyk Mine Audit
+name: SWC API - Mine Audit
 on:
   workflow_dispatch:
+    inputs:
+      system:
+        description: Star system to audit
+        type: choice
+        options: [Eberon, Kashyyyk]
+        default: Eberon
+        required: true
 permissions:
   contents: read
 concurrency:
@@ -55,7 +62,7 @@ jobs:
           cp ../src/cli/github-auth-probe.ts src/cli/
           npm ci --ignore-scripts --no-audit --no-fund >/dev/null
           npx --no-install tsx src/cli/github-auth-probe.ts
-      - name: Audit Kashyyyk mine inventory and detail using GET
+      - name: Audit system mine inventory and detail using GET
         shell: bash
         run: |
           set -euo pipefail
@@ -70,7 +77,10 @@ jobs:
           if (typeof accessToken !== 'string' || !accessToken || !Number.isFinite(expiresAt) ||
               expiresAt < Date.now() + 37 * 60_000) throw Error('Run with a current Production Sync credential.');
           const temp = mkdtempSync(join(process.env.RUNNER_TEMP, 'mine-inventory-'));
-          const report = {system: 'Kashyyyk', observedFrom: new Date().toISOString(), coverage: [], mines: []};
+          const system = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')).inputs?.system;
+          const systemUid = new Map([['Eberon', '9:22'], ['Kashyyyk', '9:104']]).get(system);
+          if (!systemUid) throw Error('Unsupported audit system.');
+          const report = {system, observedFrom: new Date().toISOString(), coverage: [], mines: []};
           function classify(listed, e, allowlist) {
             const excluded = [], review = [];
             const norm = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
@@ -106,10 +116,18 @@ jobs:
             else if (typeof e.infotext !== 'string' || e.infotext.trim() || !Array.isArray(tags) || tags.length) review.push('annotations require review');
             if (!/^1:\d+$/.test(e.pilot?.attributes?.uid ?? '') || !positive(action?.value?.workers) ||
                 !positive(action?.value?.['expected-cost'])) review.push('operator, workers or expected cost unverified');
+            const paused = mining && ['paused', 'mining paused'].includes(status) && positive(action?.attributes?.id);
+            const classification = excluded.length ? 'excluded' : review.length ? 'manual-review' : 'candidate';
+            const category = excluded.includes('explicit hold notation') ? 'do-not-restart'
+              : quantity === 0 ? 'depleted'
+              : excluded.includes('mining already running') ? 'already-running'
+              : excluded.length ? 'other-excluded'
+              : paused && (volume?.remaining === 0 || (positive(expectedYield) && Number.isFinite(volume?.remaining) && volume.remaining >= 0 && volume.remaining < expectedYield)) ? 'paused-no-mine-space'
+              : classification === 'candidate' ? 'paused-with-space-candidate' : 'manual-review';
             return {uid: listed.uid, ownerUid: listed.ownerUid, name: e.name, planet: e.location?.planet?.value,
               city: e.location?.city?.value, material, quantity, expectedYield, remainingVolume: volume?.remaining,
               expectedCost: action?.value?.['expected-cost'], status, infotext: e.infotext, tags,
-              classification: excluded.length ? 'excluded' : review.length ? 'manual-review' : 'candidate',
+              classification, category,
               reasons: [...excluded, ...review]};
           }
 
@@ -119,7 +137,7 @@ jobs:
             for (const owner of ['20:1174', '20:1838']) {
               if (report.coverage.length) await delay(6500);
               const output = join(temp, owner.replace(':', '-') + '.json');
-              const result = spawnSync(process.execPath, ['tools/mine-restart/discover.mjs', '--owner', owner, '--output', output],
+              const result = spawnSync(process.execPath, ['tools/mine-restart/discover.mjs', '--owner', owner, '--system', system, '--output', output],
                 {env: {...process.env, SWC_ACCESS_TOKEN: accessToken}, timeout: 300_000});
               if (result.status !== 0) {
                 report.coverage.push({owner, status: 'inventory-unavailable'});
@@ -149,16 +167,16 @@ jobs:
                 const body = await response.json();
                 const e = body.swcapi?.entity?.value ?? body.swcapi?.entity;
                 if (e?.uid !== listed.uid || e.owner?.attributes?.uid !== listed.ownerUid ||
-                    e.type?.attributes?.uid !== '4:36' || e.location?.system?.attributes?.uid !== '9:104') throw Error('detail identity mismatch');
+                    e.type?.attributes?.uid !== '4:36' || e.location?.system?.attributes?.uid !== systemUid) throw Error('detail identity mismatch');
                 report.mines.push(classify(listed, e, allowlist));
                 continue;
               } catch (error) {
                 const reason = /^(detail HTTP \d{3}|detail identity mismatch)$/.test(error.message) ? error.message : 'detail request unavailable';
-                report.mines.push({...listed, classification: 'manual-review', detailsUnavailable: true, reasons: [reason]});
+                report.mines.push({...listed, classification: 'manual-review', category: 'manual-review', detailsUnavailable: true, reasons: [reason]});
                 continue;
               }
             }
-            report.mines.push({...listed, classification: 'manual-review', detailsUnavailable: true, reasons: [stopReason]});
+            report.mines.push({...listed, classification: 'manual-review', category: 'manual-review', detailsUnavailable: true, reasons: [stopReason]});
           }
           report.observedTo = new Date().toISOString();
           report.allowlist = allowlist ?? [];
@@ -166,14 +184,16 @@ jobs:
           const counts = Object.fromEntries(['candidate', 'excluded', 'manual-review'].map(c =>
             [c, report.mines.filter(m => m.classification === c).length]));
           const key = readFileSync('tools/planet-api/snapshot-analysis-public-key.pem');
-          writeFileSync(join(process.env.RUNNER_TEMP, 'kashyyyk-mine-audit.encrypted.json'),
+          writeFileSync(join(process.env.RUNNER_TEMP, 'system-mine-audit.encrypted.json'),
             JSON.stringify(encrypt(Buffer.from(JSON.stringify(report)), key)), {mode: 0o600});
-          console.log(JSON.stringify({complete: report.complete, ...counts}));
+          const categories = Object.fromEntries(['depleted', 'do-not-restart', 'paused-no-mine-space', 'paused-with-space-candidate', 'already-running', 'other-excluded', 'manual-review'].map(category =>
+            [category, report.mines.filter(m => m.category === category).length]));
+          console.log(JSON.stringify({system, complete: report.complete, ...counts, categories}));
           NODE
       - uses: actions/upload-artifact@v4
         with:
-          name: kashyyyk-mine-audit-encrypted
-          path: ${{ runner.temp }}/kashyyyk-mine-audit.encrypted.json
+          name: system-mine-audit-encrypted
+          path: ${{ runner.temp }}/system-mine-audit.encrypted.json
           retention-days: 7
           if-no-files-found: error
       - name: Remove temporary OAuth data
