@@ -96,7 +96,7 @@ jobs:
           import {createMineRead, DEFAULT_MATERIALS, liveInventory, MineReadStop, SYSTEM_UIDS} from './tools/mine-restart/discover.mjs';
           import {decrypt, encrypt} from './tools/api-parity/private-audit-envelope.mjs';
           import {minePlanIdentity, restoreMineProgress} from './tools/mine-restart/audit-progress.mjs';
-          import {classifyMine as classify} from './tools/mine-restart/audit-classifier.mjs';
+          import {classifyMine as classify, summarizeUnfamiliarInfotext} from './tools/mine-restart/audit-classifier.mjs';
 
           const {accessToken, expiresAt} = JSON.parse(readFileSync(join(process.env.RUNNER_TEMP, 'swc-mine-private', 'tokens.json'), 'utf8'));
           if (typeof accessToken !== 'string' || !accessToken || !Number.isFinite(expiresAt) ||
@@ -173,6 +173,7 @@ jobs:
           report.observedTo = new Date().toISOString();
           report.allowlist = allowlist;
           report.readMetrics = read.summary();
+          report.unfamiliarInfotext = summarizeUnfamiliarInfotext(report.mines);
           report.complete = inventoryComplete && completed.size === list.length;
           report.checkedDetails = completed.size;
           report.pendingDetails = list.length - completed.size;
@@ -189,7 +190,8 @@ jobs:
               JSON.stringify(encrypt(Buffer.from(JSON.stringify(checkpoint)), createPublicKey(checkpointKey))), {mode: 0o600});
           }
           console.log(JSON.stringify({system, complete: report.complete, checkedDetails: report.checkedDetails,
-            pendingDetails: report.pendingDetails, resumedDetails: report.resumedDetails, ...counts, categories, readMetrics: report.readMetrics}));
+            pendingDetails: report.pendingDetails, resumedDetails: report.resumedDetails, unfamiliarInfotextValues: report.unfamiliarInfotext.length,
+            minesWithUnfamiliarInfotext: report.unfamiliarInfotext.reduce((sum, note) => sum + note.mines.length, 0), ...counts, categories, readMetrics: report.readMetrics}));
           NODE
       - uses: actions/upload-artifact@v4
         with:
