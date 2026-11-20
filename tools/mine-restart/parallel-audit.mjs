@@ -3,7 +3,7 @@ import {readFileSync, writeFileSync, readdirSync} from 'node:fs';
 import {join} from 'node:path';
 import {decrypt, encrypt} from '../api-parity/private-audit-envelope.mjs';
 import {createMineRead, DEFAULT_MATERIALS, liveInventory, MineReadStop} from './discover.mjs';
-import {classifyMine} from './audit-classifier.mjs';
+import {classifyMine, summarizeUnfamiliarInfotext} from './audit-classifier.mjs';
 import {minePlanIdentity, restoreMineProgress} from './audit-progress.mjs';
 
 const owners = ['20:1174', '20:1838'];
@@ -144,7 +144,8 @@ function assembleAudit() {
   const complete = entries.length === mines.length;
   const counts = Object.fromEntries(categories.map(category => [category, mines.filter(m => m.category === category).length]));
   const key = readFileSync(new URL('../planet-api/snapshot-analysis-public-key.pem', import.meta.url));
-  const report = {system: 'All', complete, coverage: plan.coverage, observedFrom: plan.observedFrom,
+  const unfamiliarInfotext = summarizeUnfamiliarInfotext(mines);
+  const report = {system: 'All', unfamiliarInfotext, complete, coverage: plan.coverage, observedFrom: plan.observedFrom,
     observedTo: new Date().toISOString(), checkedDetails: entries.length, pendingDetails: mines.length - entries.length,
     resumedDetails: 0, allowlist: plan.allowlist, mines, categories: counts,
     readMetrics: {inventory: plan.inventoryMetrics, workers: workerMetrics}};
@@ -154,7 +155,8 @@ function assembleAudit() {
       {version: 1, identity: plan.identity, observedFrom: plan.observedFrom, entries});
   }
   console.log(JSON.stringify({system: 'All', complete, checkedDetails: report.checkedDetails, pendingDetails: report.pendingDetails,
-    categories: counts, workersCompleted: seenBatches.size, workersPlanned: plan.batches.length,
+    categories: counts, unfamiliarInfotextValues: unfamiliarInfotext.length,
+    minesWithUnfamiliarInfotext: unfamiliarInfotext.reduce((sum, note) => sum + note.mines.length, 0), workersCompleted: seenBatches.size, workersPlanned: plan.batches.length,
     inventory: plan.inventoryMetrics, workers: workerMetrics}));
 }
 
