@@ -286,7 +286,7 @@ jobs:
     timeout-minutes: 16
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: 6
       matrix: ${{ fromJSON(needs.plan-mine-batches.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
