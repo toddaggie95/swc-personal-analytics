@@ -33,10 +33,9 @@ async function main() {
   const estimate = plan.candidates.reduce((sum, row) => sum + row.expectedCost, 0);
   report.auditedExpectedCost = estimate;
   report.confirmedExpectedCost = 0;
-  const saved = JSON.parse(process.env.SWC_MINE_PILOT_TOKENS_JSON || '{}');
-  delete process.env.SWC_MINE_PILOT_TOKENS_JSON;
-  if (typeof saved.accessToken !== 'string' || !saved.accessToken.trim() || !Number.isFinite(saved.expiresAt) ||
-      saved.expiresAt < Date.now() + 5 * 60_000) throw Error('Dedicated mine write credential is missing or near expiry.');
+  const saved = JSON.parse(readFileSync(join(temp, 'mine-worker-access.json'), 'utf8'));
+  if (typeof saved.accessToken !== 'string' || !saved.accessToken.trim() || saved.refreshToken || !Number.isFinite(saved.expiresAt) ||
+      saved.expiresAt < Date.now() + 5 * 60_000) throw Error('Shared SWC access token is missing or near expiry.');
   const read = await createMineRead(saved.accessToken, Math.min(saved.expiresAt - 45_000, Date.now() + 12 * 60_000));
   const getMine = async target => {
     const response = await read.get('inventory/facilities/' + target.uid + '/');
@@ -64,7 +63,7 @@ async function main() {
       save();
       continue;
     }
-    if (Date.now() + 95_000 >= saved.expiresAt) throw Error('Write credential is nearing expiry.');
+    if (Date.now() + 95_000 >= saved.expiresAt) throw Error('Shared SWC access token is nearing expiry.');
     const actionId = entity.actions.action[0].attributes.id;
     const attempt = {...mine, actionId, attemptedAt: new Date().toISOString(), reason: 'Awaiting SWC response and readback'};
     report.unconfirmed.push(attempt);
@@ -105,7 +104,7 @@ async function main() {
 try {
   await main();
 } catch (error) {
-  const fixed = /^(A new workflow|Invalid resume plan|Dedicated mine|Resume plan|Facility GET|Facility identity|Write credential|A resume could)/;
+  const fixed = /^(A new workflow|Invalid resume plan|Shared SWC access|Resume plan|Facility GET|Facility identity|Write credential|A resume could)/;
   report.stopReason = fixed.test(error.message) ? error.message : 'Resume stopped on an API or workflow error.';
   process.exitCode = 1;
 } finally {
