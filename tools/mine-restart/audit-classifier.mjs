@@ -79,7 +79,7 @@ export function classifyMine(listed, e, allowlist) {
     : paused && (volume?.remaining === 0 || (positive(expectedYield) && Number.isFinite(volume?.remaining) && volume.remaining >= 0 && volume.remaining < expectedYield)) ? 'paused-no-mine-space'
     : classification === 'candidate' ? 'paused-with-space-candidate' : 'manual-review';
   const miningState = excluded.includes('mining already running') ? 'running' : paused ? 'paused'
-    : (e.actions === null || (Array.isArray(actionList) && actionList.length === 0)) ? 'no-active-action' : 'unverified';
+    : (e.actions == null || (Array.isArray(actionList) && actionList.length === 0)) ? 'no-action-reported' : 'unverified';
   return {uid: listed.uid, ownerUid: listed.ownerUid, name: e.name, sector: e.location?.sector?.value,
     planet: e.location?.planet?.value, miningState, nameSaysDepleted,
     city: e.location?.city?.value, material, quantity, depositState, expectedYield, remainingVolume: volume?.remaining,
@@ -93,7 +93,7 @@ export function summarizeMineOperations(mines, restarted = []) {
   const depleted = m => ['explicitly-empty', 'zero-quantity'].includes(m.depositState);
   return {
     successfullyRestarted: restarted,
-    needsStart: observed.filter(m => m.depositState === 'positive-quantity' && m.miningState === 'no-active-action')
+    needsStart: observed.filter(m => m.depositState === 'positive-quantity' && m.miningState === 'no-action-reported')
       .map(m => ({...m, needsEmptying: m.remainingVolume === 0, explicitHold: m.category === 'do-not-restart'})),
     misnamedDepleted: observed.filter(m => m.nameSaysDepleted && m.depositState === 'positive-quantity'),
     needsDepletedName: observed.filter(m => depleted(m) && normalizeInfotext(m.name) !== 'depleted'),
