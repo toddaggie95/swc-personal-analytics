@@ -3,9 +3,6 @@ on:
   schedule:
     - cron: '7 6 * * *'
       timezone: America/Chicago
-    - cron: '12 16 20 11 *'
-    - cron: '16 10 20 11 *'
-      timezone: America/Chicago
   workflow_dispatch:
     inputs:
       system:
@@ -223,7 +220,7 @@ jobs:
         run: rm -rf -- "$RUNNER_TEMP/swc-mine-private"
 
   plan-mine-batches:
-    if: (github.event_name == 'schedule' && github.event.schedule == '7 6 * * *') || (inputs.system == 'All' && inputs.resume_run_id == '')
+    if: github.event_name == 'schedule' || (inputs.system == 'All' && inputs.resume_run_id == '')
     runs-on: ubuntu-latest
     environment: swc-api-shadow
     timeout-minutes: 18
@@ -252,13 +249,13 @@ jobs:
           appendFileSync(process.env.GITHUB_OUTPUT, 'refresh=' + (saved.expiresAt < Date.now() + 45 * 60_000) + '\n');
           NODE
       - uses: actions/checkout@v4
-        if: steps.credential.outputs.refresh == 'true' || (((github.event_name == 'schedule' && github.event.schedule == '7 6 * * *') || inputs.resume_eligible) && github.run_attempt == '1' && github.ref == 'refs/heads/main')
+        if: steps.credential.outputs.refresh == 'true' || ((github.event_name == 'schedule' || inputs.resume_eligible) && github.run_attempt == '1' && github.ref == 'refs/heads/main')
         with:
           ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
           path: collector
           persist-credentials: false
       - name: Renew the shared OAuth grant and verify write permission when requested
-        if: steps.credential.outputs.refresh == 'true' || (((github.event_name == 'schedule' && github.event.schedule == '7 6 * * *') || inputs.resume_eligible) && github.run_attempt == '1' && github.ref == 'refs/heads/main')
+        if: steps.credential.outputs.refresh == 'true' || ((github.event_name == 'schedule' || inputs.resume_eligible) && github.run_attempt == '1' && github.ref == 'refs/heads/main')
         working-directory: collector
         env:
           SWC_PRIVATE_DIR: ${{ runner.temp }}/swc-mine-private
@@ -268,7 +265,7 @@ jobs:
           SWC_APP_ACTIVATED: 'true'
           SWC_SECRET_REGENERATED: 'true'
           SWC_FORCE_REFRESH: ${{ steps.credential.outputs.refresh }}
-          SWC_REQUIRE_FACILITY_ASSIGN: ${{ (((github.event_name == 'schedule' && github.event.schedule == '7 6 * * *') || inputs.resume_eligible) && github.run_attempt == '1' && github.ref == 'refs/heads/main') }}
+          SWC_REQUIRE_FACILITY_ASSIGN: ${{ ((github.event_name == 'schedule' || inputs.resume_eligible) && github.run_attempt == '1' && github.ref == 'refs/heads/main') }}
         run: |
           set -euo pipefail
           cp ../src/auth/*.ts src/auth/
@@ -365,7 +362,7 @@ jobs:
           path: ${{ runner.temp }}/mine-worker-results
       - name: Verify coverage and assemble one encrypted mine audit
         env:
-          SWC_PREPARE_RESUME: ${{ ((github.event_name == 'schedule' && github.event.schedule == '7 6 * * *') || inputs.resume_eligible) && github.run_attempt == '1' && github.ref == 'refs/heads/main' }}
+          SWC_PREPARE_RESUME: ${{ (github.event_name == 'schedule' || inputs.resume_eligible) && github.run_attempt == '1' && github.ref == 'refs/heads/main' }}
           SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
         run: |
           set -eo pipefail
@@ -378,7 +375,7 @@ jobs:
           retention-days: 7
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
-        if: ((github.event_name == 'schedule' && github.event.schedule == '7 6 * * *') || inputs.resume_eligible) && github.run_attempt == '1' && github.ref == 'refs/heads/main'
+        if: (github.event_name == 'schedule' || inputs.resume_eligible) && github.run_attempt == '1' && github.ref == 'refs/heads/main'
         with:
           name: mine-resume-plan
           path: ${{ runner.temp }}/mine-resume-plan.encrypted.json
@@ -393,7 +390,7 @@ jobs:
 
   resume-eligible-mines:
     needs: assemble-mine-audit
-    if: ((github.event_name == 'schedule' && github.event.schedule == '7 6 * * *') || (inputs.resume_eligible && inputs.system == 'All' && inputs.resume_run_id == '')) && github.run_attempt == '1' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'schedule' || (inputs.resume_eligible && inputs.system == 'All' && inputs.resume_run_id == '')) && github.run_attempt == '1' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: swc-api-shadow
     timeout-minutes: 15
@@ -436,13 +433,3 @@ jobs:
       - name: Remove temporary access token
         if: always()
         run: rm -f -- "$RUNNER_TEMP/mine-worker-access.json"
-
-  scheduler-diagnostic:
-    if: github.event_name == 'schedule' && (github.event.schedule == '12 16 20 11 *' || github.event.schedule == '16 10 20 11 *')
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    steps:
-      - name: Confirm GitHub delivered the scheduler probe
-        env:
-          SCHEDULE_EXPRESSION: ${{ github.event.schedule }}
-        run: printf 'Scheduler probe delivered for %s at %s\n' "$SCHEDULE_EXPRESSION" "$(date -u)"
