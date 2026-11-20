@@ -160,6 +160,11 @@ function assembleAudit() {
     resumedDetails: 0, allowlist: plan.allowlist, mines, categories: counts,
     readMetrics: {inventory: plan.inventoryMetrics, workers: workerMetrics}};
   seal(join(temp, 'system-mine-audit.encrypted.json'), report, key);
+  if (complete && process.env.SWC_PREPARE_RESUME === 'true') {
+    const candidates = mines.filter(mine => mine.category === 'paused-with-space-candidate');
+    seal(join(temp, 'mine-resume-plan.encrypted.json'), {version: 1, runId: process.env.GITHUB_RUN_ID,
+      complete, contract: mineClassificationContract, candidates, operations});
+  }
   if (!complete && entries.length) {
     seal(join(temp, 'mine-audit-progress.encrypted.json'),
       {version: 1, identity: plan.identity, observedFrom: plan.observedFrom, entries});
