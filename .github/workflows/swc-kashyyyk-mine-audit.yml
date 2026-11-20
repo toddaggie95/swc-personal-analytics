@@ -231,6 +231,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Check the live resume credential before scanning
+        if: inputs.resume_eligible && github.run_attempt == '1' && github.ref == 'refs/heads/main'
+        env:
+          SWC_MINE_PILOT_TOKENS_JSON: ${{ secrets.SWC_MINE_PILOT_TOKENS_JSON }}
+        run: |
+          node --input-type=module <<'NODE'
+          try {
+            const saved = JSON.parse(process.env.SWC_MINE_PILOT_TOKENS_JSON || '{}');
+            if (typeof saved.accessToken !== 'string' || !saved.accessToken.trim() ||
+                !Number.isFinite(saved.expiresAt) || saved.expiresAt < Date.now() + 5 * 60_000) throw Error();
+          } catch {
+            console.error('Dedicated mine write credential is missing or near expiry. No mine scan or write began.');
+            process.exit(1);
+          }
+          NODE
       - name: Stage the existing SWC credential privately
         id: credential
         env:
