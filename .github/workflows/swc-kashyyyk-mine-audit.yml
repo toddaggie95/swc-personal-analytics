@@ -16,10 +16,6 @@ on:
         description: Approve live resumes for all eligible mines in this fresh All run
         type: boolean
         default: false
-      resume_credit_limit:
-        description: Maximum total expected next-cycle credits for live resume
-        type: number
-        default: 0
 permissions:
   contents: read
   actions: read
@@ -407,7 +403,6 @@ jobs:
           path: ${{ runner.temp }}
       - name: Recheck each audited mine, resume once, and verify
         env:
-          MINE_CREDIT_LIMIT: ${{ inputs.resume_credit_limit }}
           SWC_MINE_PILOT_TOKENS_JSON: ${{ secrets.SWC_MINE_PILOT_TOKENS_JSON }}
           SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
         run: |
