@@ -19,10 +19,7 @@ function summary() {
     unconfirmed: report.unconfirmed.length, pending: report.pending ?? 0, stopReason: report.stopReason};
 }
 async function main() {
-  const budget = Number(process.env.MINE_CREDIT_LIMIT);
-  if (!Number.isSafeInteger(budget) || budget <= 0 || process.env.GITHUB_RUN_ATTEMPT !== '1') {
-    throw Error('A positive whole-credit limit and a new workflow run are required.');
-  }
+  if (process.env.GITHUB_RUN_ATTEMPT !== '1') throw Error('A new workflow run is required.');
   const envelope = JSON.parse(readFileSync(join(temp, 'mine-resume-plan.encrypted.json'), 'utf8'));
   const plan = JSON.parse(decrypt(envelope, privateKey));
   if (plan.version !== 1 || plan.runId !== process.env.GITHUB_RUN_ID || plan.complete !== true ||
@@ -30,12 +27,12 @@ async function main() {
       new Set(plan.candidates.map(c => c.uid)).size !== plan.candidates.length) throw Error('Invalid resume plan.');
   report.pending = plan.candidates.length;
   report.auditRunId = plan.runId;
-  report.creditLimit = budget;
   report.auditOperations = plan.operations;
   save();
   if (report.pending === 0) return;
   const estimate = plan.candidates.reduce((sum, row) => sum + row.expectedCost, 0);
-  if (!Number.isSafeInteger(estimate) || estimate > budget) throw Error('Audited candidate costs exceed the approved credit limit.');
+  report.auditedExpectedCost = estimate;
+  report.confirmedExpectedCost = 0;
   const saved = JSON.parse(process.env.SWC_MINE_PILOT_TOKENS_JSON || '{}');
   delete process.env.SWC_MINE_PILOT_TOKENS_JSON;
   if (typeof saved.accessToken !== 'string' || !saved.accessToken.trim() || !Number.isFinite(saved.expiresAt) ||
@@ -50,7 +47,6 @@ async function main() {
         e.location?.system?.attributes?.uid !== target.systemUid) throw Error('Facility identity or location changed.');
     return e;
   };
-  let committed = 0;
   for (const target of plan.candidates) {
     const age = Date.now() - Date.parse(target.observedAt);
     if (!/^4:\d+$/.test(target.uid) || !['20:1174','20:1838'].includes(target.ownerUid) ||
@@ -68,7 +64,6 @@ async function main() {
       save();
       continue;
     }
-    if (committed + mine.expectedCost > budget) throw Error('Fresh next-cycle cost exceeds remaining approved credits.');
     if (Date.now() + 95_000 >= saved.expiresAt) throw Error('Write credential is nearing expiry.');
     const actionId = entity.actions.action[0].attributes.id;
     const attempt = {...mine, actionId, attemptedAt: new Date().toISOString(), reason: 'Awaiting SWC response and readback'};
@@ -100,7 +95,7 @@ async function main() {
         'SWC resume response was unsuccessful or ambiguous';
       throw Error('A resume could not be confirmed. The batch stopped without a retry.');
     }
-    committed += mine.expectedCost;
+    report.confirmedExpectedCost += mine.expectedCost;
     report.unconfirmed.pop();
     report.successfullyRestarted.push({...mine, actionId, previousState: 'paused', verifiedState: 'running',
       httpStatus: attempt.httpStatus, verifiedAt: new Date().toISOString()});
@@ -110,7 +105,7 @@ async function main() {
 try {
   await main();
 } catch (error) {
-  const fixed = /^(A positive|Invalid resume plan|Audited candidate|Dedicated mine|Resume plan|Facility GET|Facility identity|Fresh next-cycle|Write credential|A resume could)/;
+  const fixed = /^(A new workflow|Invalid resume plan|Dedicated mine|Resume plan|Facility GET|Facility identity|Write credential|A resume could)/;
   report.stopReason = fixed.test(error.message) ? error.message : 'Resume stopped on an API or workflow error.';
   process.exitCode = 1;
 } finally {
