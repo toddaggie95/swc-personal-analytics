@@ -3,7 +3,7 @@ import {readFileSync, writeFileSync, readdirSync} from 'node:fs';
 import {join} from 'node:path';
 import {decrypt, encrypt} from '../api-parity/private-audit-envelope.mjs';
 import {createMineRead, DEFAULT_MATERIALS, liveInventory, MineReadStop} from './discover.mjs';
-import {classifyMine, summarizeUnfamiliarInfotext} from './audit-classifier.mjs';
+import {classifyMine, mineClassificationContract, summarizeMineOperations, summarizeUnfamiliarInfotext} from './audit-classifier.mjs';
 import {minePlanIdentity, restoreMineProgress} from './audit-progress.mjs';
 
 const owners = ['20:1174', '20:1838'];
@@ -29,7 +29,7 @@ function validatePlan(plan) {
   if (plan?.version !== 1 || plan.system !== 'All' || !Array.isArray(plan.mines) ||
       !Array.isArray(plan.batches) || !Array.isArray(plan.coverage) ||
       JSON.stringify(plan.allowlist) !== JSON.stringify(DEFAULT_MATERIALS) ||
-      plan.identity !== minePlanIdentity('All', plan.mines, plan.allowlist, classifyMine.toString())) {
+      plan.identity !== minePlanIdentity('All', plan.mines, plan.allowlist, mineClassificationContract)) {
     throw Error('Invalid mine audit plan.');
   }
   restoreMineProgress({version: 1, identity: plan.identity, observedFrom: plan.observedFrom, entries: []},
@@ -57,7 +57,7 @@ async function planAudit() {
     batches.push({id: batches.length + 1, uids: mines.slice(i, i + batchSize).map(mine => mine.uid)});
   }
   const plan = validatePlan({version: 1, system: 'All', observedFrom: new Date(started).toISOString(),
-    allowlist: DEFAULT_MATERIALS, identity: minePlanIdentity('All', mines, DEFAULT_MATERIALS, classifyMine.toString()),
+    allowlist: DEFAULT_MATERIALS, identity: minePlanIdentity('All', mines, DEFAULT_MATERIALS, mineClassificationContract),
     mines, batches, coverage: coverage.map(c => ({owner: c.ownerUid, status: 'inventory-complete', count: c.mines})),
     inventoryMetrics: {...read.summary(), elapsedMs: Date.now() - started}});
   seal(join(temp, 'parallel-mine-plan.encrypted.json'), plan);
@@ -145,7 +145,9 @@ function assembleAudit() {
   const counts = Object.fromEntries(categories.map(category => [category, mines.filter(m => m.category === category).length]));
   const key = readFileSync(new URL('../planet-api/snapshot-analysis-public-key.pem', import.meta.url));
   const unfamiliarInfotext = summarizeUnfamiliarInfotext(mines);
-  const report = {system: 'All', unfamiliarInfotext, complete, coverage: plan.coverage, observedFrom: plan.observedFrom,
+  const operations = summarizeMineOperations(mines);
+  const operationalCounts = Object.fromEntries(Object.entries(operations).map(([key, rows]) => [key, rows.length]));
+  const report = {system: 'All', unfamiliarInfotext, operations, complete, coverage: plan.coverage, observedFrom: plan.observedFrom,
     observedTo: new Date().toISOString(), checkedDetails: entries.length, pendingDetails: mines.length - entries.length,
     resumedDetails: 0, allowlist: plan.allowlist, mines, categories: counts,
     readMetrics: {inventory: plan.inventoryMetrics, workers: workerMetrics}};
@@ -155,7 +157,7 @@ function assembleAudit() {
       {version: 1, identity: plan.identity, observedFrom: plan.observedFrom, entries});
   }
   console.log(JSON.stringify({system: 'All', complete, checkedDetails: report.checkedDetails, pendingDetails: report.pendingDetails,
-    categories: counts, unfamiliarInfotextValues: unfamiliarInfotext.length,
+    categories: counts, operationalCounts, unfamiliarInfotextValues: unfamiliarInfotext.length,
     minesWithUnfamiliarInfotext: unfamiliarInfotext.reduce((sum, note) => sum + note.mines.length, 0), workersCompleted: seenBatches.size, workersPlanned: plan.batches.length,
     inventory: plan.inventoryMetrics, workers: workerMetrics}));
 }
