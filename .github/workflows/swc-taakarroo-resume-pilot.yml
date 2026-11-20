@@ -18,6 +18,9 @@ jobs:
     environment: swc-api-shadow
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Revalidate, resume once and read back
         env:
           SWC_MINE_PILOT_TOKENS_JSON: ${{ secrets.SWC_MINE_PILOT_TOKENS_JSON }}
@@ -26,7 +29,14 @@ jobs:
           set -euo pipefail
           node --input-type=module <<'NODE'
           import {createHash} from 'node:crypto';
-          import {readFileSync} from 'node:fs';
+          import {readFileSync, writeFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          import {encrypt} from './tools/api-parity/private-audit-envelope.mjs';
+          const reportPath = join(process.env.RUNNER_TEMP, 'mine-resume-report.encrypted.json');
+          const reportKey = readFileSync('tools/planet-api/snapshot-analysis-public-key.pem');
+          const writeReport = successfullyRestarted => writeFileSync(reportPath,
+            JSON.stringify(encrypt(Buffer.from(JSON.stringify({successfullyRestarted})), reportKey)), {mode: 0o600});
+          writeReport([]);
           const uid = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')).inputs?.approved_mine_uid?.trim();
           const approvedTarget = 'e41e1ab56d1a0011ffec0a91eb71ad11e9918e8dae8a867aee53230bb0c8534f';
           if (!/^4:\d+$/.test(uid ?? '') || createHash('sha256').update(uid).digest('hex') !== approvedTarget) {
@@ -119,4 +129,16 @@ jobs:
             ['running', 'active', 'in progress', 'mining'].includes(norm(observed.value?.status));
           console.log('Readback confirms the original action is running: ' + (running ? 'YES' : 'UNVERIFIED'));
           if (!accepted || !running) throw Error('Pilot result requires review. Do not retry the POST.');
+          writeReport([{uid, ownerUid: entity.owner?.attributes?.uid, name: entity.name, material: deposit.value,
+            sector: entity.location?.sector?.value, system: entity.location?.system?.value, planet: entity.location?.planet?.value,
+            city: entity.location?.city?.value, previousState: 'paused', verifiedState: 'running',
+            actionId: action.attributes.id, expectedYield: yieldUnits, expectedCost: action.value['expected-cost'],
+            verifiedAt: new Date().toISOString()}]);
           NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mine-resume-report-encrypted
+          path: ${{ runner.temp }}/mine-resume-report.encrypted.json
+          if-no-files-found: ignore
+          retention-days: 7
