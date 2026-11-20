@@ -6,6 +6,10 @@ on:
         description: 'Kashyyyk mine UID (format 4:1234567)'
         required: true
         type: string
+      compare_mine_uid:
+        description: Optional running mine UID for a full API field comparison
+        type: string
+        required: false
 permissions:
   contents: read
 concurrency:
@@ -15,7 +19,7 @@ jobs:
   read-mine:
     runs-on: ubuntu-latest
     environment: swc-api-shadow
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,7 +27,58 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Stage the existing SWC credential privately
+        if: inputs.compare_mine_uid != ''
+        id: credential
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          umask 077
+          mkdir "$RUNNER_TEMP/swc-mine-private"
+          node --input-type=module <<'NODE'
+          import {appendFileSync, writeFileSync} from 'node:fs';
+          const saved = JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON || '{}');
+          if (!saved.accessToken || !Number.isFinite(saved.expiresAt)) throw Error('SWC credential unavailable.');
+          writeFileSync(process.env.RUNNER_TEMP + '/swc-mine-private/tokens.json', JSON.stringify(saved));
+          appendFileSync(process.env.GITHUB_OUTPUT, 'refresh=' + (saved.expiresAt < Date.now() + 5 * 60_000) + '\n');
+          NODE
+      - uses: actions/checkout@v4
+        if: steps.credential.outputs.refresh == 'true'
+        with:
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: collector
+          persist-credentials: false
+      - name: Refresh using the shared durable OAuth coordinator
+        if: steps.credential.outputs.refresh == 'true'
+        working-directory: collector
+        env:
+          SWC_PRIVATE_DIR: ${{ runner.temp }}/swc-mine-private
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+          SWC_FORCE_REFRESH: 'true'
+        run: |
+          set -euo pipefail
+          cp ../src/auth/*.ts src/auth/
+          cp ../src/cli/github-auth-probe.ts src/cli/
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          npx --no-install tsx src/cli/github-auth-probe.ts
+      - name: Compare the two mine details
+        if: inputs.compare_mine_uid != ''
+        run: |
+          set -eo pipefail
+          node tools/mine-restart/compare-mine-fields.mjs | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: inputs.compare_mine_uid != ''
+        with:
+          name: mine-field-comparison-encrypted
+          path: ${{ runner.temp }}/mine-field-comparison.encrypted.json
+          retention-days: 7
+          if-no-files-found: error
       - name: Read one facility with the existing SWC credential
+        if: inputs.compare_mine_uid == ''
         env:
           SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
         shell: bash
@@ -108,3 +163,6 @@ jobs:
           console.log('API evidence checks: ' + (Object.values(checks).every(Boolean) ? 'PASS' : 'REVIEW'));
           console.log('Restart approval and any external restrictions require separate confirmation.');
           NODE
+      - name: Remove temporary OAuth data
+        if: always() && inputs.compare_mine_uid != ''
+        run: rm -rf -- "$RUNNER_TEMP/swc-mine-private"
