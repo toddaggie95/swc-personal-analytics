@@ -73,7 +73,7 @@ def build_message(address, summary, run_url, status):
 
 def main():
     address = os.environ.get("SWC_MINE_REPORT_EMAIL", "").strip()
-    password = os.environ.get("SWC_MINE_REPORT_GMAIL_APP_PASSWORD", "").replace(" ", "").strip()
+    password = "".join(os.environ.get("SWC_MINE_REPORT_GMAIL_APP_PASSWORD", "").split())
     if not address and not password:
         print("Mine report email skipped: delivery credentials are not configured.")
         return
@@ -90,8 +90,14 @@ def main():
     message = build_message(address, summary, run_url, os.environ.get("AUDIT_STATUS", "unknown"))
     stage = "connect"
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30, context=ssl.create_default_context()) as smtp:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as smtp:
+            smtp.ehlo()
+            stage = "start TLS"
+            smtp.starttls(context=ssl.create_default_context())
+            smtp.ehlo()
             stage = "authenticate"
+            if not smtp.has_extn("auth"):
+                raise MailFailure("Gmail did not advertise SMTP authentication after TLS")
             smtp.login(address, password)
             stage = "send"
             smtp.send_message(message)
@@ -100,9 +106,9 @@ def main():
         raise MailFailure(f"Gmail authentication rejected (SMTP {error.smtp_code})") from None
     except smtplib.SMTPResponseException as error:
         raise MailFailure(f"Gmail rejected the {stage} step (SMTP {error.smtp_code})") from None
-    except (OSError, smtplib.SMTPException):
+    except (OSError, smtplib.SMTPException) as error:
         if stage != "close":
-            raise MailFailure(f"Gmail SMTP {stage} failed") from None
+            raise MailFailure(f"Gmail SMTP {stage} failed ({type(error).__name__})") from None
     print("Mine report email accepted by Gmail.")
 
 
