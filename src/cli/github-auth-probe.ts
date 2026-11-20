@@ -2,7 +2,7 @@ import { config as dotenv } from 'dotenv';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { loadConfig, requireLive, SafeError } from '../config/index.js';
-import { loadAuth, validToken } from '../auth/session.js';
+import { loadAuth, makeClient, validToken } from '../auth/session.js';
 import { SnapshotRun } from '../storage/snapshots.js';
 import { ReadClient } from '../swc/read-client.js';
 
@@ -39,11 +39,24 @@ async function main(): Promise<void> {
   stage = 'post-request token validation';
   const updated = JSON.parse(await readFile(join(config.privateDir, 'tokens.json'), 'utf8')) as unknown;
   if (!validToken(updated)) throw new SafeError('Refreshed token JSON failed validation.');
+  if (process.env.SWC_REQUIRE_FACILITY_ASSIGN === 'true') {
+    stage = 'facility assignment grant verification';
+    // The coordinator owns renewal. The scope lookup uses an access-only SDK client.
+    const permissionClient = makeClient(config);
+    const {refreshToken: _refreshToken, ...accessOnly} = updated;
+    permissionClient.setToken(accessOnly);
+    const scopes = await permissionClient.character.permissions.getScopes({uid: response.uid});
+    if (!Array.isArray(scopes) || !scopes.some(scope => typeof scope === 'string' &&
+        ['faction_inv_facilities_assign', 'faction_inv_facilities_all'].includes(scope.toLowerCase()))) {
+      throw new SafeError('Facility assignment scope is not granted to the shared SWC app.');
+    }
+    console.log('Shared SWC facility assignment permission verified.');
+  }
   const rotated = updated.refreshToken !== initialRefresh;
   const refreshed = updated.accessToken !== old.accessToken || updated.expiresAt !== old.expiresAt;
   console.log(JSON.stringify({
     authenticated: true,
-    requests: 1,
+    requests: process.env.SWC_REQUIRE_FACILITY_ASSIGN === 'true' ? 2 : 1,
     accessTokenRefreshed: refreshed,
     refreshTokenChanged: rotated,
     refreshTokenAvailable: Boolean(updated.refreshToken),
@@ -60,7 +73,9 @@ main().catch((error: unknown) => {
     message.startsWith('OAuth refresh rate-limited')?'oauth-refresh-rate-limited':
     message.startsWith('OAuth refresh network')?'oauth-refresh-network':
     message.startsWith('OAuth refresh failed due to server')?'oauth-refresh-server':
-    /persist|secret writer/i.test(message)?'token-persistence':'unclassified';
+    /persist|secret writer/i.test(message)?'token-persistence':
+    message.startsWith('Facility assignment scope is not granted')?'facility-assignment-scope-missing':
+    stage==='facility assignment grant verification'?'facility-assignment-scope-unverified':'unclassified';
   console.error('AUTH_FAILURE_CATEGORY '+category);
   process.exitCode = 1;
 });
