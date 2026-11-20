@@ -1,3 +1,22 @@
+const allowedInfotext = new Set([
+  'transfer',
+  'messert ii npc cargo transport',
+  'lexrul iii npc transport',
+]);
+
+const normalizeInfotext = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
+
+export function summarizeUnfamiliarInfotext(mines) {
+  const notes = new Map();
+  for (const mine of mines) {
+    const key = normalizeInfotext(mine.infotext);
+    if (!key || allowedInfotext.has(key)) continue;
+    if (!notes.has(key)) notes.set(key, {infotext: mine.infotext.trim(), mines: []});
+    notes.get(key).mines.push({uid: mine.uid, ownerUid: mine.ownerUid, system: mine.system, category: mine.category});
+  }
+  return [...notes.values()].sort((a, b) => a.infotext.localeCompare(b.infotext));
+}
+
 export function classifyMine(listed, e, allowlist) {
   const excluded = [], review = [];
   const norm = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
@@ -40,7 +59,10 @@ export function classifyMine(listed, e, allowlist) {
   else if (!depleted && depletionNotation) {
     review.push('depletion notation conflicts with or is unverified by the deposit reading');
   }
-  if (typeof e.infotext !== 'string' || e.infotext.trim() || !Array.isArray(tags) || tags.length) review.push('annotations require review');
+  const infotext = normalizeInfotext(e.infotext);
+  if (typeof e.infotext !== 'string' || (infotext && !allowedInfotext.has(infotext)) || !Array.isArray(tags) || tags.length) {
+    review.push('annotations require review');
+  }
   if (!/^1:\d+$/.test(e.pilot?.attributes?.uid ?? '') || !positive(action?.value?.workers) ||
       !positive(action?.value?.['expected-cost'])) review.push('operator, workers or expected cost unverified');
   const paused = mining && ['paused', 'mining paused'].includes(status) && positive(action?.attributes?.id);
