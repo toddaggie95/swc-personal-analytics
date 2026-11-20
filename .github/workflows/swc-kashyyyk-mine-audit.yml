@@ -231,21 +231,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Check the live resume credential before scanning
-        if: inputs.resume_eligible && github.run_attempt == '1' && github.ref == 'refs/heads/main'
-        env:
-          SWC_MINE_PILOT_TOKENS_JSON: ${{ secrets.SWC_MINE_PILOT_TOKENS_JSON }}
-        run: |
-          node --input-type=module <<'NODE'
-          try {
-            const saved = JSON.parse(process.env.SWC_MINE_PILOT_TOKENS_JSON || '{}');
-            if (typeof saved.accessToken !== 'string' || !saved.accessToken.trim() ||
-                !Number.isFinite(saved.expiresAt) || saved.expiresAt < Date.now() + 5 * 60_000) throw Error();
-          } catch {
-            console.error('Dedicated mine write credential is missing or near expiry. No mine scan or write began.');
-            process.exit(1);
-          }
-          NODE
       - name: Stage the existing SWC credential privately
         id: credential
         env:
@@ -261,13 +246,13 @@ jobs:
           appendFileSync(process.env.GITHUB_OUTPUT, 'refresh=' + (saved.expiresAt < Date.now() + 45 * 60_000) + '\n');
           NODE
       - uses: actions/checkout@v4
-        if: steps.credential.outputs.refresh == 'true'
+        if: steps.credential.outputs.refresh == 'true' || (inputs.resume_eligible && github.run_attempt == '1' && github.ref == 'refs/heads/main')
         with:
           ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
           path: collector
           persist-credentials: false
-      - name: Refresh using the shared durable OAuth coordinator
-        if: steps.credential.outputs.refresh == 'true'
+      - name: Renew the shared OAuth grant and verify write permission when requested
+        if: steps.credential.outputs.refresh == 'true' || (inputs.resume_eligible && github.run_attempt == '1' && github.ref == 'refs/heads/main')
         working-directory: collector
         env:
           SWC_PRIVATE_DIR: ${{ runner.temp }}/swc-mine-private
@@ -276,7 +261,8 @@ jobs:
           SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
           SWC_APP_ACTIVATED: 'true'
           SWC_SECRET_REGENERATED: 'true'
-          SWC_FORCE_REFRESH: 'true'
+          SWC_FORCE_REFRESH: ${{ steps.credential.outputs.refresh }}
+          SWC_REQUIRE_FACILITY_ASSIGN: ${{ (inputs.resume_eligible && github.run_attempt == '1' && github.ref == 'refs/heads/main') }}
         run: |
           set -euo pipefail
           cp ../src/auth/*.ts src/auth/
@@ -416,9 +402,20 @@ jobs:
         with:
           name: mine-resume-plan
           path: ${{ runner.temp }}
+      - name: Stage an access-only credential
+        env:
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+        run: |
+          umask 077
+          node --input-type=module <<'NODE'
+          import {writeFileSync} from 'node:fs';
+          const {accessToken, expiresAt} = JSON.parse(process.env.SWC_OAUTH_TOKENS_JSON || '{}');
+          if (typeof accessToken !== 'string' || !accessToken.trim() || !Number.isFinite(expiresAt) ||
+              expiresAt < Date.now() + 15 * 60_000) throw Error('Worker access token unavailable or too close to expiry.');
+          writeFileSync(process.env.RUNNER_TEMP + '/mine-worker-access.json', JSON.stringify({accessToken, expiresAt}));
+          NODE
       - name: Recheck each audited mine, resume once, and verify
         env:
-          SWC_MINE_PILOT_TOKENS_JSON: ${{ secrets.SWC_MINE_PILOT_TOKENS_JSON }}
           SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
         run: |
           set -eo pipefail
@@ -430,3 +427,6 @@ jobs:
           path: ${{ runner.temp }}/mine-resume-report.encrypted.json
           retention-days: 7
           if-no-files-found: ignore
+      - name: Remove temporary access token
+        if: always()
+        run: rm -f -- "$RUNNER_TEMP/mine-worker-access.json"
