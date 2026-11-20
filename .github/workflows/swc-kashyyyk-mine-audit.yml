@@ -405,7 +405,7 @@ jobs:
           job=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/jobs" \
             --jq '.jobs[] | select((.name == "assemble-mine-audit" or .name == "audit") and .conclusion == "success") | .id')
           [[ "$job" =~ ^[0-9]+$ ]]
-          gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job/logs" > "$RUNNER_TEMP/mine-email-summary.json"
+          gh api --allow-escape-sequences "repos/$GITHUB_REPOSITORY/actions/jobs/$job/logs" > "$RUNNER_TEMP/mine-email-summary.json"
       - name: Email the audit summary when configured
         continue-on-error: true
         env:
