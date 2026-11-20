@@ -21,6 +21,7 @@ export function classifyMine(listed, e, allowlist) {
   const excluded = [], review = [];
   const norm = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
   const positive = value => Number.isSafeInteger(value) && value > 0;
+  const actionList = e.actions?.action;
   const action = e.actions?.action?.length === 1 && Array.isArray(e.actions.action) ? e.actions.action[0] : null;
   const status = norm(action?.value?.status);
   const mining = [action?.attributes?.type, action?.value?.actiontype].some(v => ['mine', 'mining'].includes(norm(v)));
@@ -54,9 +55,12 @@ export function classifyMine(listed, e, allowlist) {
   const notes = [e.name, e.infotext, ...(Array.isArray(tags) ? tags.map(t => t?.value ?? t) : [])];
   const hold = /\b(?:do not|don['’]?t|never)\s+(?:resume|restart|start|mine)|\b(?:hold|reserved|leave (?:off|paused)|no mining)\b/i;
   if (notes.some(v => hold.test(norm(v).replace(/[_-]+/g, ' ')))) excluded.push('explicit hold notation');
-  const depletionNotation = notes.some(v => /\bdepleted\b/.test(norm(v).replace(/[_-]+/g, ' ')));
+  const hasDepletionNotation = v => /\bdepleted\b/.test(norm(v).replace(/[_-]+/g, ' '));
+  const nameSaysDepleted = hasDepletionNotation(e.name);
+  const otherDepletionNotation = notes.slice(1).some(hasDepletionNotation);
+  const depletionNotation = nameSaysDepleted || otherDepletionNotation;
   if (!depleted && depletionNotation && quantity == null) excluded.push('depletion notation with no API deposit quantity');
-  else if (!depleted && depletionNotation) {
+  else if (!depleted && otherDepletionNotation) {
     review.push('depletion notation conflicts with or is unverified by the deposit reading');
   }
   const infotext = normalizeInfotext(e.infotext);
@@ -74,9 +78,26 @@ export function classifyMine(listed, e, allowlist) {
     : excluded.length ? 'other-excluded'
     : paused && (volume?.remaining === 0 || (positive(expectedYield) && Number.isFinite(volume?.remaining) && volume.remaining >= 0 && volume.remaining < expectedYield)) ? 'paused-no-mine-space'
     : classification === 'candidate' ? 'paused-with-space-candidate' : 'manual-review';
-  return {uid: listed.uid, ownerUid: listed.ownerUid, name: e.name, planet: e.location?.planet?.value,
+  const miningState = excluded.includes('mining already running') ? 'running' : paused ? 'paused'
+    : (e.actions === null || (Array.isArray(actionList) && actionList.length === 0)) ? 'no-active-action' : 'unverified';
+  return {uid: listed.uid, ownerUid: listed.ownerUid, name: e.name, sector: e.location?.sector?.value,
+    planet: e.location?.planet?.value, miningState, nameSaysDepleted,
     city: e.location?.city?.value, material, quantity, depositState, expectedYield, remainingVolume: volume?.remaining,
     expectedCost: action?.value?.['expected-cost'], status, infotext: e.infotext, tags,
     classification, category,
     reasons: [...excluded, ...review]};
 }
+
+export function summarizeMineOperations(mines, restarted = []) {
+  const observed = mines.filter(m => !m.detailsUnavailable);
+  const depleted = m => ['explicitly-empty', 'zero-quantity'].includes(m.depositState);
+  return {
+    successfullyRestarted: restarted,
+    needsStart: observed.filter(m => m.depositState === 'positive-quantity' && m.miningState === 'no-active-action')
+      .map(m => ({...m, needsEmptying: m.remainingVolume === 0, explicitHold: m.category === 'do-not-restart'})),
+    misnamedDepleted: observed.filter(m => m.nameSaysDepleted && m.depositState === 'positive-quantity'),
+    needsDepletedName: observed.filter(m => depleted(m) && normalizeInfotext(m.name) !== 'depleted'),
+  };
+}
+
+export const mineClassificationContract = JSON.stringify([classifyMine.toString(), [...allowedInfotext]]);
