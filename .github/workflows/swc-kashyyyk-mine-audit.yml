@@ -24,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: swc-api-shadow
     timeout-minutes: 50
+    outputs:
+      email_summary: ${{ steps.audit-report.outputs.email_summary }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -84,12 +86,13 @@ jobs:
           gh api "$url" > "$RUNNER_TEMP/mine-audit-progress.zip"
           unzip -p "$RUNNER_TEMP/mine-audit-progress.zip" mine-audit-progress.encrypted.json > "$RUNNER_TEMP/mine-audit-progress.input.json"
       - name: Audit system mine inventory and detail using GET
+        id: audit-report
         env:
           SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
         shell: bash
         run: |
           set -euo pipefail
-          node --input-type=module <<'NODE' | tee -a "$GITHUB_STEP_SUMMARY"
+          node --input-type=module <<'NODE' | tee -a "$GITHUB_STEP_SUMMARY" "$RUNNER_TEMP/mine-audit-summary.log"
           import {existsSync, readFileSync, writeFileSync} from 'node:fs';
           import {createPublicKey} from 'node:crypto';
           import {join} from 'node:path';
@@ -195,6 +198,7 @@ jobs:
             pendingDetails: report.pendingDetails, resumedDetails: report.resumedDetails, operationalCounts, unfamiliarInfotextValues: report.unfamiliarInfotext.length,
             minesWithUnfamiliarInfotext: report.unfamiliarInfotext.reduce((sum, note) => sum + note.mines.length, 0), ...counts, categories, readMetrics: report.readMetrics}));
           NODE
+          printf 'email_summary=%s\n' "$(tail -n 1 "$RUNNER_TEMP/mine-audit-summary.log")" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
           name: system-mine-audit-encrypted
@@ -333,6 +337,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: swc-api-shadow
     timeout-minutes: 8
+    outputs:
+      email_summary: ${{ steps.assembled.outputs.email_summary }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -352,11 +358,13 @@ jobs:
           pattern: mine-detail-worker-*
           path: ${{ runner.temp }}/mine-worker-results
       - name: Verify coverage and assemble one encrypted mine audit
+        id: assembled
         env:
           SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
         run: |
           set -eo pipefail
-          node tools/mine-restart/parallel-audit.mjs assemble | tee -a "$GITHUB_STEP_SUMMARY"
+          node tools/mine-restart/parallel-audit.mjs assemble | tee -a "$GITHUB_STEP_SUMMARY" "$RUNNER_TEMP/mine-audit-summary.log"
+          printf 'email_summary=%s\n' "$(tail -n 1 "$RUNNER_TEMP/mine-audit-summary.log")" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
           name: system-mine-audit-encrypted
@@ -369,3 +377,24 @@ jobs:
           path: ${{ runner.temp }}/mine-audit-progress.encrypted.json
           retention-days: 2
           if-no-files-found: ignore
+
+  email-mine-audit:
+    needs: [audit, plan-mine-batches, assemble-mine-audit]
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    environment: swc-api-shadow
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Email the audit summary when configured
+        continue-on-error: true
+        env:
+          SWC_MINE_REPORT_EMAIL: ${{ secrets.SWC_MINE_REPORT_EMAIL }}
+          SWC_MINE_REPORT_GMAIL_APP_PASSWORD: ${{ secrets.SWC_MINE_REPORT_GMAIL_APP_PASSWORD }}
+          MINE_AUDIT_EMAIL_SUMMARY: ${{ needs.assemble-mine-audit.outputs.email_summary || needs.audit.outputs.email_summary }}
+          AUDIT_STATUS: ${{ needs.assemble-mine-audit.result == 'skipped' && needs.audit.result || needs.assemble-mine-audit.result }}
+        run: |
+          printf '%s\n' "$MINE_AUDIT_EMAIL_SUMMARY" > "$RUNNER_TEMP/mine-email-summary.json"
+          python3 tools/mine-restart/email-audit-report.py "$RUNNER_TEMP/mine-email-summary.json"
