@@ -8,6 +8,10 @@ import sys
 from email.message import EmailMessage
 from pathlib import Path
 
+class MailFailure(Exception):
+    pass
+
+
 OPERATION_LABELS = {
     "successfullyRestarted": "Confirmed restarts",
     "needsStart": "Mines to review for a new start",
@@ -21,7 +25,9 @@ def read_summary(path):
         return None
     for line in reversed(path.read_text(encoding="utf-8").splitlines()):
         try:
-            entry = json.loads(line)
+            # A replay uses the GitHub job log, where JSON lines have a timestamp prefix.
+            start = line.find('{"system":')
+            entry = json.loads(line[start:] if start >= 0 else line)
         except json.JSONDecodeError:
             continue
         if isinstance(entry, dict) and isinstance(entry.get("operationalCounts"), dict):
@@ -80,15 +86,30 @@ def main():
     run_url = f"https://github.com/{repo}/actions/runs/{run_id}"
     summary = read_summary(Path(sys.argv[1]))
     message = build_message(address, summary, run_url, os.environ.get("AUDIT_STATUS", "unknown"))
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30, context=ssl.create_default_context()) as smtp:
-        smtp.login(address, password)
-        smtp.send_message(message)
+    stage = "connect"
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30, context=ssl.create_default_context()) as smtp:
+            stage = "authenticate"
+            smtp.login(address, password)
+            stage = "send"
+            smtp.send_message(message)
+            stage = "close"
+    except smtplib.SMTPAuthenticationError as error:
+        raise MailFailure(f"Gmail authentication rejected (SMTP {error.smtp_code})") from None
+    except smtplib.SMTPResponseException as error:
+        raise MailFailure(f"Gmail rejected the {stage} step (SMTP {error.smtp_code})") from None
+    except (OSError, smtplib.SMTPException):
+        if stage != "close":
+            raise MailFailure(f"Gmail SMTP {stage} failed") from None
     print("Mine report email accepted by Gmail.")
 
 
 if __name__ == "__main__":
     try:
         main()
-    except (OSError, smtplib.SMTPException, ValueError, KeyError, IndexError):
-        print("::warning::Mine report email was not confirmed. Check the mail secrets and run report.", file=sys.stderr)
+    except MailFailure as error:
+        print(f"::warning::Mine report email was not confirmed: {error}.", file=sys.stderr)
+        sys.exit(1)
+    except (OSError, ValueError, KeyError, IndexError):
+        print("::warning::Mine report email was not confirmed: invalid mail configuration or audit summary.", file=sys.stderr)
         sys.exit(1)
