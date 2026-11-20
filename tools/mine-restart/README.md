@@ -1,4 +1,4 @@
-# Kashyyyk mine restart discovery
+# SWC mine audit and restart
 
 From the repository root, use Node.js 24. The runner identifies Mine facilities by type UID `4:36` and Kashyyyk by system UID `9:104`. Give it one existing access token with the facility inventory read scopes for the owners you request. The token is read from `SWC_ACCESS_TOKEN`. Use a new path under the ignored `.validation` directory for each report.
 
@@ -23,12 +23,13 @@ Use an ISO 8601 timestamp with timezone, a source reference, and explicit activi
 
 The default allowlist is provisional. It is the union of the materials in the cited Mine and Consular-class Cruiser bills. Override it with `--materials` and a comma-separated list matching the materials wanted for your facility and ship builds. The repository's existing 21-material vocabulary covers general inventory and is broader than this policy. [Mine bill](https://www.swcombine.com/rules/?Facilities=&ID=36) · [Consular-class Cruiser bill](https://www2.swcombine.com/rules/?ID=66&Ships=)
 
-## Proposed one-mine write pilot
+## Scheduled scans and resumes
 
-1. Select one eligible mine from a fresh live report. Verify from the game controls that it has an existing paused mining action and can resume with the current operator and workers. Confirm the intended material, remaining deposit, usable storage for the next cycle, expected costs and all notations. Agree with the operator on the response if the mine resumes unexpectedly or fails to resume.
-2. Confirm with SWC documentation or support that the generic facility action operation targets that single mining action and identify its minimum write scope. The documentation lists a generic `action` property with a resume value and no action ID selector. The mining rules also describe operator reassignment as a way to continue a mine. Treat reassignment as a separate operation requiring its own approval. [Entity property operation](https://www.swcombine.com/ws/v2.0/documentation/inventory/entity_type/uid/property/) · [Mining rules](https://www.swcombine.com/rules/?Mining)
-3. Present the exact mine UID, owner, planet, verified action and proposed one-time request for explicit approval. Bind approval to the UID and action, set a short expiry and use only the minimum write scope. Immediately before submission, re-read identity, operator, action, deposit, capacity and annotations. Abort if any required value changed, is unavailable, or more than one action could be targeted. Require a new approval after any abort.
-4. Send one single-entity request once. Record the request time, mine UID, response status and result without credentials. Verify the same mine's mining state with a fresh read. On timeout, conflict, ambiguous result or unexpected state, inspect the current state and stop for operator review. A retry or compensating change requires separate approval.
+The [Mine Audit workflow](../../.github/workflows/swc-kashyyyk-mine-audit.yml) runs every morning at **6:07 a.m. America/Chicago**. The scheduled run scans all TFF and TJO owner inventories and resumes eligible paused mines after fresh per-mine validation. It shares Production Sync's OAuth secret, renewal coordinator and concurrency group. Its write path requires the faction facility assignment scope. Email delivery is paused.
+
+Manual launches default to read-only. A fresh manual `All` run can opt into writes with `resume_eligible`. A continuation with `resume_run_id` is read-only. An incomplete audit produces no live resume plan. The live run records a restart only after SWC accepts the request and confirms the same mine action is running. It stops on an unconfirmed write and does not retry it.
+
+The encrypted audit and resume artifacts include restart outcomes and the lists for starts and naming corrections. Starting a new action and changing facility names remain operator follow-up. The one-mine Taakarroo pilot has been retired. Its [successful historical run](https://github.com/toddaggie95/swc-personal-analytics/actions/runs/44470452769) remains available.
 
 ## Hosted single-mine API probe
 
