@@ -147,7 +147,15 @@ function assembleAudit() {
   const unfamiliarInfotext = summarizeUnfamiliarInfotext(mines);
   const operations = summarizeMineOperations(mines);
   const operationalCounts = Object.fromEntries(Object.entries(operations).map(([key, rows]) => [key, rows.length]));
-  const report = {system: 'All', unfamiliarInfotext, operations, complete, coverage: plan.coverage, observedFrom: plan.observedFrom,
+  const workerStarts = workerMetrics.map(m => Date.parse(m.startedAt)).filter(Number.isFinite);
+  const workerEnds = workerMetrics.map(m => Date.parse(m.startedAt) + m.elapsedMs).filter(Number.isFinite);
+  const elapsedMs = Date.now() - Date.parse(plan.observedFrom);
+  const detailWallMs = workerStarts.length && workerEnds.length
+    ? Math.max(...workerEnds) - Math.min(...workerStarts) : 0;
+  const timing = {elapsedMs, inventoryWallMs: plan.inventoryMetrics.elapsedMs, detailWallMs,
+    otherWallMs: Math.max(0, elapsedMs - plan.inventoryMetrics.elapsedMs - detailWallMs),
+    apiRequests: plan.inventoryMetrics.requests + workerMetrics.reduce((sum, m) => sum + m.requests, 0)};
+  const report = {system: 'All', timing, unfamiliarInfotext, operations, complete, coverage: plan.coverage, observedFrom: plan.observedFrom,
     observedTo: new Date().toISOString(), checkedDetails: entries.length, pendingDetails: mines.length - entries.length,
     resumedDetails: 0, allowlist: plan.allowlist, mines, categories: counts,
     readMetrics: {inventory: plan.inventoryMetrics, workers: workerMetrics}};
@@ -159,7 +167,7 @@ function assembleAudit() {
   console.log(JSON.stringify({system: 'All', complete, checkedDetails: report.checkedDetails, pendingDetails: report.pendingDetails,
     categories: counts, operationalCounts, unfamiliarInfotextValues: unfamiliarInfotext.length,
     minesWithUnfamiliarInfotext: unfamiliarInfotext.reduce((sum, note) => sum + note.mines.length, 0), workersCompleted: seenBatches.size, workersPlanned: plan.batches.length,
-    inventory: plan.inventoryMetrics, workers: workerMetrics}));
+    timing, inventory: plan.inventoryMetrics, workers: workerMetrics}));
 }
 
 const commands = {plan: planAudit, worker: collectBatch, assemble: assembleAudit};
