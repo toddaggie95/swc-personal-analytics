@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto';
 
 const MAX_AGE_MS = 48 * 60 * 60 * 1000;
 const CATEGORIES = new Set([
-  'depleted', 'do-not-restart', 'paused-no-mine-space', 'paused-with-space-candidate',
+  'depleted', 'reported-depleted', 'do-not-restart', 'paused-no-mine-space', 'paused-with-space-candidate',
   'already-running', 'other-excluded', 'manual-review',
 ]);
 
