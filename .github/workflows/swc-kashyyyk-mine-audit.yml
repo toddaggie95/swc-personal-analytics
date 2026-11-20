@@ -138,7 +138,9 @@ jobs:
             const notes = [e.name, e.infotext, ...(Array.isArray(tags) ? tags.map(t => t?.value ?? t) : [])];
             const hold = /\b(?:do not|don['’]?t|never)\s+(?:resume|restart|start|mine)|\b(?:hold|reserved|leave (?:off|paused)|no mining)\b/i;
             if (notes.some(v => hold.test(norm(v).replace(/[_-]+/g, ' ')))) excluded.push('explicit hold notation');
-            if (quantity !== 0 && notes.some(v => /\bdepleted\b/.test(norm(v).replace(/[_-]+/g, ' ')))) {
+            const depletionNotation = notes.some(v => /\bdepleted\b/.test(norm(v).replace(/[_-]+/g, ' ')));
+            if (depletionNotation && quantity == null) excluded.push('depletion notation with no API deposit quantity');
+            else if (quantity !== 0 && depletionNotation) {
               review.push('depletion notation conflicts with or is unverified by the deposit reading');
             }
             if (typeof e.infotext !== 'string' || e.infotext.trim() || !Array.isArray(tags) || tags.length) review.push('annotations require review');
@@ -148,6 +150,7 @@ jobs:
             const classification = excluded.length ? 'excluded' : review.length ? 'manual-review' : 'candidate';
             const category = excluded.includes('explicit hold notation') ? 'do-not-restart'
               : quantity === 0 ? 'depleted'
+              : depletionNotation && quantity == null ? 'reported-depleted'
               : excluded.includes('mining already running') ? 'already-running'
               : excluded.length ? 'other-excluded'
               : paused && (volume?.remaining === 0 || (positive(expectedYield) && Number.isFinite(volume?.remaining) && volume.remaining >= 0 && volume.remaining < expectedYield)) ? 'paused-no-mine-space'
@@ -232,7 +235,7 @@ jobs:
           const key = readFileSync('tools/planet-api/snapshot-analysis-public-key.pem');
           writeFileSync(join(process.env.RUNNER_TEMP, 'system-mine-audit.encrypted.json'),
             JSON.stringify(encrypt(Buffer.from(JSON.stringify(report)), key)), {mode: 0o600});
-          const categories = Object.fromEntries(['depleted', 'do-not-restart', 'paused-no-mine-space', 'paused-with-space-candidate', 'already-running', 'other-excluded', 'manual-review'].map(category =>
+          const categories = Object.fromEntries(['depleted', 'reported-depleted', 'do-not-restart', 'paused-no-mine-space', 'paused-with-space-candidate', 'already-running', 'other-excluded', 'manual-review'].map(category =>
             [category, report.mines.filter(m => m.category === category).length]));
           if (checkpointKey && inventoryComplete && !report.complete && completed.size) {
             const checkpoint = {version: 1, identity, observedFrom: report.observedFrom, entries: [...completed.values()]};
