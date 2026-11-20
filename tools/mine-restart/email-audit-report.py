@@ -80,11 +80,13 @@ def main():
     if not re.fullmatch(r"[A-Za-z0-9._%+-]+@gmail\.com", address, re.IGNORECASE) or not password:
         raise ValueError("Mine report email configuration incomplete.")
     repo = os.environ["GITHUB_REPOSITORY"]
-    run_id = os.environ["GITHUB_RUN_ID"]
+    run_id = os.environ.get("MINE_REPORT_SOURCE_RUN_ID") or os.environ["GITHUB_RUN_ID"]
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo) or not run_id.isdecimal():
         raise ValueError("Invalid GitHub run identity.")
     run_url = f"https://github.com/{repo}/actions/runs/{run_id}"
     summary = read_summary(Path(sys.argv[1]))
+    if os.environ.get("MINE_REPORT_SOURCE_RUN_ID") and summary is None:
+        raise ValueError("Source audit summary unavailable.")
     message = build_message(address, summary, run_url, os.environ.get("AUDIT_STATUS", "unknown"))
     stage = "connect"
     try:
