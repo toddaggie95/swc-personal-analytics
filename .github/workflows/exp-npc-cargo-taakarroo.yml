@@ -26,6 +26,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Export public key for encrypted lookup input
+        env:
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          node -e 'const {createPublicKey}=require("node:crypto"); require("node:fs").writeFileSync(process.argv[1],createPublicKey(process.env.SWC_API_SNAPSHOT_PRIVATE_KEY).export({type:"spki",format:"pem"}))' "$RUNNER_TEMP/npc-cargo-input-public.pem"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npc-cargo-input-public-key
+          path: ${{ runner.temp }}/npc-cargo-input-public.pem
+          retention-days: 7
       - name: Install collector
         working-directory: collector
         run: npm ci --ignore-scripts --no-audit --no-fund
