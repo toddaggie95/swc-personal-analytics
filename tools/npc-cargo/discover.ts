@@ -133,7 +133,7 @@ async function main() {
           const label = 'facility group ' + (index + 1) + ' target ' + (offset + 1);
           const locationMatches = (row: Data) => {
             const location = record(row.location);
-            const surface = record(record(location.coordinates).surface);
+            const surface = record(record(record(location.coordinates).surface).attributes);
             return uid(location.planet) === planetId && surface.x != null && surface.y != null &&
               Number(surface.x) === x && Number(surface.y) === y;
           };
