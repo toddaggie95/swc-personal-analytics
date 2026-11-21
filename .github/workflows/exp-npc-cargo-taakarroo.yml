@@ -1,0 +1,65 @@
+name: EXP NPC Cargo - Taakarroo station discovery
+on:
+  push:
+    branches: [exp/npc-cargo-taakarroo]
+    paths: ['.github/workflows/exp-npc-cargo-taakarroo.yml']
+permissions:
+  contents: read
+concurrency:
+  group: swc-api-shadow-oauth
+  cancel-in-progress: false
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: swc-api-shadow
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: toddaggie95/swc-personal-analytics
+          ref: e5e09317db242662b7fb77aa8b46bbe637e070ae
+          path: collector
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install collector
+        working-directory: collector
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Read station through shared OAuth coordinator
+        working-directory: collector
+        env:
+          SWC_PRIVATE_DIR: /tmp/swc-private
+          SWC_NPC_CARGO_EVIDENCE: /tmp/swc-npc-cargo-evidence.json
+          SWC_OAUTH_TOKENS_JSON: ${{ secrets.SWC_OAUTH_TOKENS_JSON }}
+          SWC_CLIENT_ID: ${{ secrets.SWC_CLIENT_ID }}
+          SWC_CLIENT_SECRET: ${{ secrets.SWC_CLIENT_SECRET }}
+          SWC_SECRET_WRITER_TOKEN: ${{ secrets.SWC_SECRET_WRITER_TOKEN }}
+          SWC_API_SNAPSHOT_PRIVATE_KEY: ${{ secrets.SWC_API_SNAPSHOT_PRIVATE_KEY }}
+          SWC_APP_ACTIVATED: 'true'
+          SWC_SECRET_REGENERATED: 'true'
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$SWC_OAUTH_TOKENS_JSON"
+          test -n "$SWC_SECRET_WRITER_TOKEN"
+          mkdir -p "$SWC_PRIVATE_DIR" tools/npc-cargo
+          printf '%s' "$SWC_OAUTH_TOKENS_JSON" > "$SWC_PRIVATE_DIR/tokens.json"
+          cp "$SWC_PRIVATE_DIR/tokens.json" "$SWC_PRIVATE_DIR/initial-tokens.json"
+          cp ../src/auth/*.ts src/auth/
+          cp ../tools/api-parity/production-read-pacer.ts src/swc/read-pacer.ts
+          cp ../tools/npc-cargo/probe.ts tools/npc-cargo/
+          trap 'status=$?; bash ../tools/api-parity/persist-swc-token.sh || status=1; exit "$status"' EXIT
+          npx --no-install tsx tools/npc-cargo/probe.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swc-npc-cargo-sanitized
+          path: /tmp/swc-npc-cargo-evidence.json
+          retention-days: 7
+          if-no-files-found: warn
+      - if: always()
+        run: rm -rf /tmp/swc-private /tmp/swc-npc-cargo-evidence.json
