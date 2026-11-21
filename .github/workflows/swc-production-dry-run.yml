@@ -1,6 +1,12 @@
 name: SWC Production Sync
+run-name: "${{ github.event_name == 'schedule' && format('SWC Production Sync ({0})', github.event.schedule) || 'SWC Production Sync' }}"
 
 on:
+  schedule:
+    - cron: '7 6 * * *'
+      timezone: America/Chicago
+    - cron: '7 18 * * *'
+      timezone: America/Chicago
   workflow_dispatch:
     inputs:
       export_source:
@@ -38,10 +44,11 @@ permissions:
 concurrency:
   group: swc-api-shadow-oauth
   cancel-in-progress: false
+  queue: max
 
 jobs:
   api-inputs:
-    if: inputs.export_source == 'api'
+    if: github.event_name == 'schedule' || inputs.export_source == 'api'
     uses: ./.github/workflows/production-api-inputs.yml
     with:
       resume_run_id: ${{ inputs.api_resume_run_id || '' }}
