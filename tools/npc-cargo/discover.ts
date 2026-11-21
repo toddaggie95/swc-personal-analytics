@@ -1,9 +1,11 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { loadConfig, requireLive } from '../../src/config/index.js';
 import { loadAuth } from '../../src/auth/session.js';
 import { withLock } from '../../src/storage/files.js';
 import { ReadClient, RateLimitError, record } from '../../src/swc/read-client.js';
 import { ReadPacer } from '../../src/swc/read-pacer.js';
+
+import { decrypt } from '../api-parity/private-audit-envelope.mjs';
 
 const stationUid = '5:26986';
 const stationName = 'TFF Taakarroo Storage Depot';
@@ -17,8 +19,8 @@ class DiscoveryClient extends ReadClient {
       'location/stations/5:26986/', 'galaxy/planets/Taakarroo/', 'galaxy/systems/Kashyyyk/',
       'inventory/stations/5:26986'];
     const inventory = /^inventory\/20:\d+\/(?:stations|materials|facilities|ships)\/owner$/;
-    const facility = /^inventory\/facilities\/4:\d+$/;
-    if (!fixed.includes(route) && !inventory.test(route) && !facility.test(route)) throw new Error('Unexpected route');
+    const detail = /^inventory\/(?:facilities\/4|ships\/2):\d+$/;
+    if (!fixed.includes(route) && !inventory.test(route) && !detail.test(route)) throw new Error('Unexpected route');
     return this.get(route, query);
   }
 }
@@ -96,42 +98,57 @@ async function main() {
           throw error;
         }
       }
-      const station = await read('inventory station detail', 'inventory/stations/5:26986');
-      const planet = await read('planet detail', 'galaxy/planets/Taakarroo/');
-      const stationMatched = station?.uid === stationUid && station.name === stationName;
-      evidence.inventory.stationMatched = stationMatched;
-      const owner = uid(station?.owner), planetUid = uid(planet);
-      if (!stationMatched || !/^20:\d+$/.test(owner)) return;
-      const inventory = async (kind: string, filter: 'planet' | 'system' | 'container', id: string) => {
-        if (!new RegExp(filter === 'planet' ? '^8:\\d+$' : filter === 'container' ? '^5:\\d+$' : '^9:\\d+$').test(id)) return [];
-        const rows: Data[] = [];
-        let total = NaN;
-        for (let batch = 0; batch < (kind === 'facilities' ? 16 : 2); batch++) {
-          const data = await read(kind + ' page ' + (batch + 1), 'inventory/' + owner + '/' + kind + '/owner',
-            { start_index: rows.length + 1, item_count: 200, 'filter_type[0]': filter,
-              'filter_value[0]': id, 'filter_inclusion[0]': 'includes' });
-          if (!data) break;
-          const result = page(data);
-          total = result.total;
-          if (!result.rows.length) break;
-          rows.push(...result.rows);
-          if (!(rows.length < total)) break;
-        }
-        evidence.inventory[kind] = { returned: rows.length, total, complete: rows.length === total };
-        return rows;
+      const input = JSON.parse(await readFile(new URL('./targets.encrypted.json', import.meta.url), 'utf8'));
+      evidence.inventory.targetInput = 'encrypted targets loaded';
+      const targets = JSON.parse(decrypt(input, process.env.SWC_API_SNAPSHOT_PRIVATE_KEY!).toString('utf8')) as {
+        facilities: { name: string; coordinates: number[][] }[];
+        ships: { name: string }[];
       };
-      const materials = await inventory('materials', 'container', stationUid);
-      evidence.inventory.materialRowsReferencingDepot = materials.filter(row => uid(record(row.location).container) === stationUid).length;
-      const facilities = await inventory('facilities', 'planet', planetUid);
-      const matches = facilities.filter(row =>
-        /^(?:TFF (?:Quantum|Lommite|Meleenium)|Depleted Meleenium) Taakarroo(?:\s|$)/i.test(String(row.name)));
-      evidence.inventory.matchingMineNamePatternCount = matches.length;
-      for (const mine of matches.slice(0, 2)) {
-        const id = uid(mine);
-        if (/^4:\d+$/.test(id)) await read('sample mine detail', 'inventory/facilities/' + id);
+      evidence.inventory.targetInput = 'decrypted';
+      const station = await read('inventory station detail', 'inventory/stations/5:26986');
+      const owner = uid(station?.owner);
+      if (station?.uid !== stationUid || station.name !== stationName || !/^20:\d+$/.test(owner)) throw Error('Station identity');
+      const planet = await read('planet detail', 'galaxy/planets/Taakarroo/');
+      const planetId = uid(planet);
+      if (planet?.name !== 'Taakarroo' || !/^8:\d+$/.test(planetId)) throw Error('Planet identity');
+      const matches: Array<Record<string, unknown>> = [];
+      evidence.inventory.targetMatches = matches;
+      for (const kind of ['facilities', 'ships'] as const) {
+        for (const [index, target] of targets[kind].entries()) {
+          const label = kind + ' target ' + (index + 1);
+          const query: Query = {
+            start_index: 1, item_count: 200, 'filter_type[0]': 'name',
+            'filter_value[0]': target.name, 'filter_inclusion[0]': 'includes',
+          };
+          if (kind === 'facilities') {
+            Object.assign(query, {'filter_type[1]': 'planet', 'filter_value[1]': planetId, 'filter_inclusion[1]': 'includes'});
+          }
+          const data = await read(label, 'inventory/' + owner + '/' + kind + '/owner', query);
+          if (!data) continue;
+          const result = page(data);
+          const exact = result.rows.filter(row => row.name === target.name);
+          const expected = 'coordinates' in target ? target.coordinates : [];
+          const rows = expected.length ? exact.filter(row => {
+            const location = record(row.location);
+            const surface = record(record(location.coordinates).surface);
+            return uid(location.planet) === planetId && expected.some(([x, y]) =>
+              surface.x != null && surface.y != null && Number(surface.x) === x && Number(surface.y) === y);
+          }) : exact;
+          const summary = { label, returned: result.rows.length, total: result.total, exactName: exact.length,
+            nameAndLocationMatches: rows.length, detailReads: 0, depotContainerMatches: 0 };
+          matches.push(summary);
+          const detailLimit = expected.length || 1;
+          if (rows.length > detailLimit) continue;
+          for (const [offset, row] of rows.entries()) {
+            const id = uid(row);
+            if (!(kind === 'ships' ? /^2:\d+$/ : /^4:\d+$/).test(id)) continue;
+            const detail = await read(label + ' detail ' + (offset + 1), 'inventory/' + kind + '/' + id);
+            if (!detail || uid(detail) !== id || detail.name !== target.name) continue;
+            summary.detailReads++;
+            if (uid(record(detail.location).container) === stationUid) summary.depotContainerMatches++;
+          }
+        }
       }
-      const ships = await inventory('ships', 'container', stationUid);
-      evidence.inventory.shipRowsReferencingDepot = ships.filter(row => uid(record(row.location).container) === stationUid).length;
     });
   } finally {
     evidence.pacingWaitMs = pacer.summary().pacingWaitMs;
