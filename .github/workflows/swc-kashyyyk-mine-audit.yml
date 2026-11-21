@@ -1,7 +1,7 @@
 name: SWC API - Mine Audit
 on:
   schedule:
-    - cron: '7 6 * * *'
+    - cron: '7 6,18 * * *'
       timezone: America/Chicago
   workflow_dispatch:
     inputs:
