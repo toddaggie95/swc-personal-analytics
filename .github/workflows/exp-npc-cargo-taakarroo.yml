@@ -51,9 +51,10 @@ jobs:
           cp "$SWC_PRIVATE_DIR/tokens.json" "$SWC_PRIVATE_DIR/initial-tokens.json"
           cp ../src/auth/*.ts src/auth/
           cp ../tools/api-parity/production-read-pacer.ts src/swc/read-pacer.ts
-          cp ../tools/npc-cargo/probe.ts tools/npc-cargo/
+          cp ../tools/npc-cargo/discover.ts tools/npc-cargo/
+          sed -i 's/^  private async get(/  protected async get(/' src/swc/read-client.ts
           trap 'status=$?; bash ../tools/api-parity/persist-swc-token.sh || status=1; exit "$status"' EXIT
-          npx --no-install tsx tools/npc-cargo/probe.ts
+          npx --no-install tsx tools/npc-cargo/discover.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
