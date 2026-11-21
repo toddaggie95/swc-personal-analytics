@@ -107,6 +107,9 @@ async function main() {
         const grants = await read('UID-specific app permissions', 'character/' + characterUid + '/permissions/');
         if (grants) evidence.inventory.eventPermissionMentioned = values(grants).includes('character_events');
       }
+      const input = JSON.parse(await readFile(new URL('./targets.encrypted.json', import.meta.url), 'utf8'));
+      const targets = JSON.parse(decrypt(input, process.env.SWC_API_SNAPSHOT_PRIVATE_KEY!).toString('utf8')) as {ships: {name: string}[]; squadronId: string};
+      const squadronId = /^\d+$/.test(targets.squadronId) ? new RegExp("\\b" + targets.squadronId + "\\b") : null;
       const eventPattern = /cargo[ _-]*(?:squadron|transport|manifest|source|base)|loiter(?:ing|ed)?|berthing fee/i;
       const eventSummary: Array<Record<string, unknown>> = [];
       evidence.inventory.eventFeeds = eventSummary;
@@ -124,12 +127,10 @@ async function main() {
         eventSummary.push({mode, listed: events.length, recognizedEventCollection: Object.hasOwn(envelope, 'event'),
           cargoLikeEvents: matches.length,
           matchedDepotMention: matches.some(event => values(event).some(value => /\b26986\b|taakarroo storage depot/i.test(value))),
-          matchedScreenshotSquadronId: matches.some(event => values(event).some(value => /\b248658421\b/.test(value))),
+          matchedScreenshotSquadronId: matches.some(event => values(event).some(value => squadronId?.test(value))),
           fields: [...new Set(matches.flatMap(event => Object.keys(record(event)).filter(key => knownFields.test(key))))].sort()});
       }
       if (station?.uid !== stationUid || station.name !== stationName || !/^20:\d+$/.test(owner)) return;
-      const input = JSON.parse(await readFile(new URL('./targets.encrypted.json', import.meta.url), 'utf8'));
-      const targets = JSON.parse(decrypt(input, process.env.SWC_API_SNAPSHOT_PRIVATE_KEY!).toString('utf8')) as {ships: {name: string}[]};
       const shipChecks: Array<Record<string, unknown>> = [];
       evidence.inventory.shipChecks = shipChecks;
       const examinedTypes = new Map<string, Data | null>();
