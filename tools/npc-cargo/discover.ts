@@ -96,26 +96,17 @@ async function main() {
           throw error;
         }
       }
-      await read('resource index', '');
-      await read('published permissions', 'api/permissions/');
-      await read('app permissions', 'character/permissions/');
       const station = await read('inventory station detail', 'inventory/stations/5:26986');
-      const alternate = await read('galaxy station', 'galaxy/stations/5:26986/');
-      const location = await read('station location', 'location/stations/5:26986/');
       const planet = await read('planet detail', 'galaxy/planets/Taakarroo/');
-      const system = await read('system detail', 'galaxy/systems/Kashyyyk/');
       const stationMatched = station?.uid === stationUid && station.name === stationName;
       evidence.inventory.stationMatched = stationMatched;
-      evidence.inventory.alternateStationMatched = alternate?.uid === stationUid && alternate.name === stationName;
-      evidence.inventory.locationMentionsPlanet = values(location).includes('Taakarroo');
-      evidence.inventory.stationContainsScreenshotFitoutLabel = values(station).includes('TFF Taakaroo');
-      const owner = uid(station?.owner), planetUid = uid(planet), systemUid = uid(system);
+      const owner = uid(station?.owner), planetUid = uid(planet);
       if (!stationMatched || !/^20:\d+$/.test(owner)) return;
-      const inventory = async (kind: string, filter: 'planet' | 'system', id: string) => {
-        if (!new RegExp(filter === 'planet' ? '^8:\\d+$' : '^9:\\d+$').test(id)) return [];
+      const inventory = async (kind: string, filter: 'planet' | 'system' | 'container', id: string) => {
+        if (!new RegExp(filter === 'planet' ? '^8:\\d+$' : filter === 'container' ? '^5:\\d+$' : '^9:\\d+$').test(id)) return [];
         const rows: Data[] = [];
         let total = NaN;
-        for (let batch = 0; batch < 2; batch++) {
+        for (let batch = 0; batch < (kind === 'facilities' ? 16 : 2); batch++) {
           const data = await read(kind + ' page ' + (batch + 1), 'inventory/' + owner + '/' + kind + '/owner',
             { start_index: rows.length + 1, item_count: 200, 'filter_type[0]': filter,
               'filter_value[0]': id, 'filter_inclusion[0]': 'includes' });
@@ -129,9 +120,7 @@ async function main() {
         evidence.inventory[kind] = { returned: rows.length, total, complete: rows.length === total };
         return rows;
       };
-      const stations = await inventory('stations', 'system', systemUid);
-      evidence.inventory.factionListContainsDepot = stations.some(row => uid(row) === stationUid);
-      const materials = await inventory('materials', 'system', systemUid);
+      const materials = await inventory('materials', 'container', stationUid);
       evidence.inventory.materialRowsReferencingDepot = materials.filter(row => uid(record(row.location).container) === stationUid).length;
       const facilities = await inventory('facilities', 'planet', planetUid);
       const matches = facilities.filter(row =>
@@ -141,7 +130,7 @@ async function main() {
         const id = uid(mine);
         if (/^4:\d+$/.test(id)) await read('sample mine detail', 'inventory/facilities/' + id);
       }
-      const ships = await inventory('ships', 'system', systemUid);
+      const ships = await inventory('ships', 'container', stationUid);
       evidence.inventory.shipRowsReferencingDepot = ships.filter(row => uid(record(row.location).container) === stationUid).length;
     });
   } finally {

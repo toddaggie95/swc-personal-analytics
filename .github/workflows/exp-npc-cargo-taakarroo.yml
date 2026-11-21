@@ -2,7 +2,7 @@ name: EXP NPC Cargo - Taakarroo station discovery
 on:
   push:
     branches: [exp/npc-cargo-taakarroo]
-    paths: ['.github/workflows/exp-npc-cargo-taakarroo.yml']
+    paths: ['.github/workflows/exp-npc-cargo-taakarroo.yml', 'tools/npc-cargo/discover.ts']
 permissions:
   contents: read
 concurrency:
