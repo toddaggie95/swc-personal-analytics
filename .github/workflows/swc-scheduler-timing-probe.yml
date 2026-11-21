@@ -1,0 +1,20 @@
+name: SWC Scheduler Timing Probe
+on:
+  schedule:
+    - cron: '6 6 21 11 *'
+    - cron: '9 0 21 11 *'
+      timezone: America/Chicago
+    - cron: '14 6 21 11 *'
+    - cron: '19 0 21 11 *'
+      timezone: America/Chicago
+permissions: {}
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record schedule and UTC time
+        env:
+          TRIGGER_CRON: ${{ github.event.schedule }}
+        run: |
+          printenv TRIGGER_CRON
+          date -u
