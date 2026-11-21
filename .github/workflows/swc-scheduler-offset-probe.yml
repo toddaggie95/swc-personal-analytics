@@ -1,0 +1,22 @@
+name: SWC Scheduler Offset Probe
+on:
+  schedule:
+    - cron: '27 16 20 11 *'
+      timezone: America/Chicago
+    - cron: '30 16 20 11 *'
+      timezone: America/Chicago
+    - cron: '35 16 20 11 *'
+      timezone: America/Chicago
+    - cron: '40 16 20 11 *'
+      timezone: America/Chicago
+permissions: {}
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record schedule and UTC time
+        env:
+          TRIGGER_CRON: ${{ github.event.schedule }}
+        run: |
+          printenv TRIGGER_CRON
+          date -u
