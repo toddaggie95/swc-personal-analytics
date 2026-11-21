@@ -60,7 +60,7 @@ function page(data: Data) {
 async function main() {
   const config = loadConfig();
   requireLive(config);
-  const pacer = new ReadPacer(undefined, undefined, 6500, 30000, 1000, Date.now() + 240000);
+  const pacer = new ReadPacer(undefined, undefined, 6500, 30000, 1000, Date.now() + 300000);
   let current: number[];
   let requests = 0;
   try {
@@ -69,7 +69,7 @@ async function main() {
       const transport: typeof fetch = async (url, init) => {
         const target = new URL(String(url));
         if (target.origin !== 'https://www.swcombine.com' || !target.pathname.startsWith('/ws/v2.0/') ||
-            init?.method !== 'GET' || ++requests > 24) throw Error('Request guard');
+            init?.method !== 'GET' || ++requests > 30) throw Error('Request guard');
         const response = await fetch(url, init);
         current.push(response.status);
         return response;
@@ -92,7 +92,7 @@ async function main() {
           return data;
         } catch (error) {
           const status = current.at(-1);
-          if (error instanceof RateLimitError || status === 429 || requests > 24) throw error;
+          if (error instanceof RateLimitError || status === 429 || requests > 30) throw error;
           if (status && [400, 401, 403, 404, 405].includes(status)) return null;
           if (status === 200) { entry.outcome = 'unrecognized response'; return null; }
           throw error;
@@ -113,40 +113,42 @@ async function main() {
       if (planet?.name !== 'Taakarroo' || !/^8:\d+$/.test(planetId)) throw Error('Planet identity');
       const matches: Array<Record<string, unknown>> = [];
       evidence.inventory.targetMatches = matches;
-      for (const kind of ['facilities', 'ships'] as const) {
-        for (const [index, target] of targets[kind].entries()) {
-          const label = kind + ' target ' + (index + 1);
-          const query: Query = {
-            start_index: 1, item_count: 200, 'filter_type[0]': 'name',
-            'filter_value[0]': target.name, 'filter_inclusion[0]': 'includes',
-          };
-          if (kind === 'facilities') {
-            Object.assign(query, {'filter_type[1]': 'planet', 'filter_value[1]': planetId, 'filter_inclusion[1]': 'includes'});
-          }
-          const data = await read(label, 'inventory/' + owner + '/' + kind + '/owner', query);
-          if (!data) continue;
-          const result = page(data);
-          const exact = result.rows.filter(row => row.name === target.name);
-          const expected = 'coordinates' in target ? target.coordinates : [];
-          const rows = expected.length ? exact.filter(row => {
+      const facilities: Data[] = [];
+      let total: number | null = null;
+      for (let index = 0; index < 16; index++) {
+        const data = await read('planet facilities page ' + (index + 1), 'inventory/' + owner + '/facilities/owner',
+          {start_index: facilities.length + 1, item_count: 200, 'filter_type[0]': 'planet',
+            'filter_value[0]': planetId, 'filter_inclusion[0]': 'includes'});
+        if (!data) break;
+        const result = page(data);
+        total = Number.isSafeInteger(result.total) ? result.total : null;
+        if (!result.rows.length) break;
+        facilities.push(...result.rows);
+        if (total === null || facilities.length >= total) break;
+      }
+      evidence.inventory.facilityCoverage = {total, rows: facilities.length,
+        unique: new Set(facilities.map(uid)).size};
+      for (const [index, target] of targets.facilities.entries()) {
+        for (const [offset, [x, y]] of target.coordinates.entries()) {
+          const label = 'facility group ' + (index + 1) + ' target ' + (offset + 1);
+          const locationMatches = (row: Data) => {
             const location = record(row.location);
             const surface = record(record(location.coordinates).surface);
-            return uid(location.planet) === planetId && expected.some(([x, y]) =>
-              surface.x != null && surface.y != null && Number(surface.x) === x && Number(surface.y) === y);
-          }) : exact;
-          const summary = { label, returned: result.rows.length, total: result.total, exactName: exact.length,
-            nameAndLocationMatches: rows.length, detailReads: 0, depotContainerMatches: 0 };
+            return uid(location.planet) === planetId && surface.x != null && surface.y != null &&
+              Number(surface.x) === x && Number(surface.y) === y;
+          };
+          const nameMatches = (row: Data) => {
+            const name = String(row.name).replace(/\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)\s*$/, '');
+            return name.trim().toLowerCase() === target.name.toLowerCase();
+          };
+          const candidates = facilities.filter(row => nameMatches(row) && locationMatches(row));
+          const summary = { label, exactCoordinatesAndName: candidates.length, detailIdentityMatched: false };
           matches.push(summary);
-          const detailLimit = expected.length || 1;
-          if (rows.length > detailLimit) continue;
-          for (const [offset, row] of rows.entries()) {
-            const id = uid(row);
-            if (!(kind === 'ships' ? /^2:\d+$/ : /^4:\d+$/).test(id)) continue;
-            const detail = await read(label + ' detail ' + (offset + 1), 'inventory/' + kind + '/' + id);
-            if (!detail || uid(detail) !== id || detail.name !== target.name) continue;
-            summary.detailReads++;
-            if (uid(record(detail.location).container) === stationUid) summary.depotContainerMatches++;
-          }
+          if (candidates.length !== 1) continue;
+          const id = uid(candidates[0]);
+          if (!/^4:\d+$/.test(id)) continue;
+          const detail = await read(label + ' detail', 'inventory/facilities/' + id);
+          summary.detailIdentityMatched = Boolean(detail && uid(detail) === id && nameMatches(detail) && locationMatches(detail));
         }
       }
     });
