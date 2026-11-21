@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "source": "api",
-  "snapshotId": "b269252496d4f55320e3c98c77a4a14643c32a34f33b1e403d5d982544049a4b",
+  "snapshotId": "b21f0b44e5cadc0e7b2455f7e53f2c12d10a3ece55e1edef5b760d9b7a49ecff",
   "collectedAt": null,
-  "acceptedAt": "2026-11-21T06:10:08.176614+00:00",
-  "workflowRunId": "44873783822",
+  "acceptedAt": "2026-11-21T16:06:38.779748+00:00",
+  "workflowRunId": "44922088705",
   "verification": "verified",
   "files": [
     {
@@ -17,9 +17,9 @@
     {
       "owner": "TFF",
       "kind": "Materials",
-      "id": "api:tff-materials:ab83f8acc60d2f10ca2d65bfefafe1893235167858cf951119721c5ad5ac8569",
-      "sha256": "ab83f8acc60d2f10ca2d65bfefafe1893235167858cf951119721c5ad5ac8569",
-      "rowCount": 2048
+      "id": "api:tff-materials:00ead8924bf8f174b95b3742204423c0b091c81c4f105a3799fe504d1c1dbe92",
+      "sha256": "00ead8924bf8f174b95b3742204423c0b091c81c4f105a3799fe504d1c1dbe92",
+      "rowCount": 2051
     },
     {
       "owner": "TJO",
@@ -31,9 +31,9 @@
     {
       "owner": "TJO",
       "kind": "Materials",
-      "id": "api:tjo-materials:0f69f1350787aed076d29eb1405b9a328429c8b6c03bea28715a1b86b9ebdedb",
-      "sha256": "0f69f1350787aed076d29eb1405b9a328429c8b6c03bea28715a1b86b9ebdedb",
-      "rowCount": 2885
+      "id": "api:tjo-materials:4cf9eb8cedbfbaed78af1d562e4773e6b66a1215d26c84fdd7266fcac0b13c02",
+      "sha256": "4cf9eb8cedbfbaed78af1d562e4773e6b66a1215d26c84fdd7266fcac0b13c02",
+      "rowCount": 2891
     }
   ]
 }
