@@ -126,6 +126,9 @@ async function main() {
         const knownFields = /^(?:attributes|type|category|uid|id|time|timestamp|date|title|text|message|subject|location|entity|eventid|squadron|base)$/i;
         eventSummary.push({mode, listed: events.length, recognizedEventCollection: Object.hasOwn(envelope, 'event'),
           cargoLikeEvents: matches.length,
+          explicitCargoSquadronText: events.filter(event => values(record(event).text).some(value => /\bcargo[\s-]+squadron\b/i.test(value))).length,
+          explicitCargoTransportText: events.filter(event => values(record(event).text).some(value => /\bcargo[\s-]+transport\b/i.test(value))).length,
+          loiterText: events.filter(event => values(record(event).text).some(value => /\bloiter(?:ing|ed)?\b/i.test(value))).length,
           matchedDepotMention: matches.some(event => values(event).some(value => /\b26986\b|taakarroo storage depot/i.test(value))),
           matchedScreenshotSquadronId: matches.some(event => values(event).some(value => squadronId?.test(value))),
           fields: [...new Set(matches.flatMap(event => Object.keys(record(event)).filter(key => knownFields.test(key))))].sort()});
