@@ -1,7 +1,10 @@
 name: SWC API - Mine Audit
+run-name: "${{ github.event_name == 'schedule' && format('SWC API - Mine Audit ({0})', github.event.schedule) || 'SWC API - Mine Audit' }}"
 on:
   schedule:
-    - cron: '7 6,18 * * *'
+    - cron: '7 6 * * *'
+      timezone: America/Chicago
+    - cron: '7 18 * * *'
       timezone: America/Chicago
   workflow_dispatch:
     inputs:
