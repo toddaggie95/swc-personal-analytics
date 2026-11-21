@@ -9,7 +9,7 @@ on:
         description: Star system to audit
         type: choice
         options: [Eberon, Kashyyyk, Tholatin, Chamble, All]
-        default: Eberon
+        default: All
         required: true
       resume_run_id:
         description: Prior Mine Audit run ID for the same scope (optional)
@@ -18,7 +18,7 @@ on:
       resume_eligible:
         description: Approve live resumes for all eligible mines in this fresh All run
         type: boolean
-        default: false
+        default: true
 permissions:
   contents: read
   actions: read
