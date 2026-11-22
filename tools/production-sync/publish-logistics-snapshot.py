@@ -1,4 +1,4 @@
-"""Publish a verified four-file inventory snapshot to a private shared-drive folder."""
+"""Publish a verified four-file inventory snapshot to a private Drive folder."""
 import hashlib
 import json
 import os
@@ -10,11 +10,29 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
-from download_drive_exports import TARGETS
-
 API = "https://www.googleapis.com"
 POINTER = "current-logistics.json"
 MANAGED = {"swcLogistics": "1"}
+SWC_EXPORTS_FOLDER = "1oGgiWgYZzPvfk6Kcjp_jeAY55eIREY28"
+EXPECTED_FILES = {f"{faction}-{kind}.csv" for faction in ("tff", "tjo")
+                  for kind in ("stations", "materials")}
+
+
+def configure_destination():
+    credential = os.environ.get("SWC_LOGISTICS_DRIVE_OAUTH")
+    if not credential:
+        return bool(os.environ.get("SWC_LOGISTICS_FOLDER_ID"))
+    config = json.loads(credential)
+    body = urlencode({
+        **{key: config[key] for key in ("client_id", "client_secret", "refresh_token")},
+        "grant_type": "refresh_token",
+    }).encode()
+    request = Request("https://oauth2.googleapis.com/token", data=body,
+                      headers={"Content-Type": "application/x-www-form-urlencoded"})
+    with urlopen(request, timeout=45) as response:
+        os.environ["GOOGLE_ACCESS_TOKEN"] = json.load(response)["access_token"]
+    os.environ["SWC_LOGISTICS_FOLDER_ID"] = config["folder_id"]
+    return True
 
 
 def timestamp(value):
@@ -57,8 +75,9 @@ def upload(metadata, content, mime_type, file_id=""):
 
 def children(folder, drive_id):
     params = {"q": f"'{folder}' in parents and trashed = false",
-              "corpora": "drive", "driveId": drive_id, "includeItemsFromAllDrives": "true",
               "fields": "nextPageToken,files(id,name,appProperties)", "pageSize": 100}
+    if drive_id:
+        params.update(corpora="drive", driveId=drive_id, includeItemsFromAllDrives="true")
     while True:
         page = drive(params=params)
         yield from page["files"]
@@ -71,8 +90,8 @@ def publish(export_dir, progress_file):
     manifest = json.loads((export_dir / "export-manifest.json").read_bytes())
     source = manifest.get("source", "manual_csv")
     entries = manifest["files"]
-    if (source not in {"api", "manual_csv"} or len(entries) != len(TARGETS)
-            or {entry["canonicalName"] for entry in entries} != set(TARGETS.values())):
+    if (source not in {"api", "manual_csv"} or len(entries) != len(EXPECTED_FILES)
+            or {entry["canonicalName"] for entry in entries} != EXPECTED_FILES):
         raise ValueError("Expected four validated inventory exports")
     captured = (timestamp(json.loads(progress_file.read_bytes())["createdAt"]) if source == "api"
                 else min(timestamp(entry["modifiedTime"]) for entry in entries))
@@ -87,11 +106,14 @@ def publish(export_dir, progress_file):
     folder = os.environ["SWC_LOGISTICS_FOLDER_ID"]
     if not folder or not all(c.isascii() and (c.isalnum() or c in "_-") for c in folder):
         raise ValueError("Invalid logistics destination ID")
-    meta = drive(folder, params={"fields": "driveId,mimeType,capabilities(canAddChildren)"})
-    if (meta.get("mimeType") != "application/vnd.google-apps.folder" or not meta.get("driveId")
+    meta = drive(folder, params={"fields": "driveId,mimeType,parents,appProperties,capabilities(canAddChildren)"})
+    owned_destination = (meta.get("appProperties", {}).get("swcLogisticsRoot") == "1"
+                         and SWC_EXPORTS_FOLDER in meta.get("parents", []))
+    if (meta.get("mimeType") != "application/vnd.google-apps.folder"
+            or not (meta.get("driveId") or owned_destination)
             or not meta.get("capabilities", {}).get("canAddChildren")):
-        raise ValueError("Logistics destination needs a writable shared-drive folder")
-    listed = list(children(folder, meta["driveId"]))
+        raise ValueError("Logistics destination is not a writable publisher folder")
+    listed = list(children(folder, meta.get("driveId")))
     pointers = [item for item in listed if item["name"] == POINTER]
     if len(pointers) > 1 or (pointers and pointers[0].get("appProperties") != MANAGED):
         raise ValueError("Ambiguous logistics manifest")
@@ -127,7 +149,10 @@ def publish(export_dir, progress_file):
 
 if __name__ == "__main__":
     try:
-        publish(Path(sys.argv[1]), Path(sys.argv[2]))
+        if configure_destination():
+            publish(Path(sys.argv[1]), Path(sys.argv[2]))
+        else:
+            print("Logistics publication is awaiting a Drive destination.")
     except HTTPError as exc:
         sys.exit(f"Logistics publication failed (Google Drive HTTP {exc.code}).")
     except (OSError, ValueError, KeyError) as exc:

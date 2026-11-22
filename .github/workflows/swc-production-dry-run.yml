@@ -114,8 +114,9 @@ jobs:
         run: python3 tools/production-sync/download-drive-exports.py
 
       - name: Publish validated API inventory for logistics
-        if: matrix.source == 'api' && vars.SWC_LOGISTICS_FOLDER_ID != ''
+        if: matrix.source == 'api'
         env:
+          SWC_LOGISTICS_DRIVE_OAUTH: ${{ secrets.SWC_LOGISTICS_DRIVE_OAUTH }}
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_LOGISTICS_FOLDER_ID: ${{ vars.SWC_LOGISTICS_FOLDER_ID }}
         run: |
@@ -310,8 +311,9 @@ jobs:
             "${{ runner.temp }}/batch-acceptance-report.json"
 
       - name: Publish accepted manual inventory for logistics
-        if: matrix.source == 'csv' && steps.accept_batch.outcome == 'success' && vars.SWC_LOGISTICS_FOLDER_ID != ''
+        if: matrix.source == 'csv' && steps.accept_batch.outcome == 'success'
         env:
+          SWC_LOGISTICS_DRIVE_OAUTH: ${{ secrets.SWC_LOGISTICS_DRIVE_OAUTH }}
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_LOGISTICS_FOLDER_ID: ${{ vars.SWC_LOGISTICS_FOLDER_ID }}
         run: python3 tools/production-sync/publish-logistics-snapshot.py "${{ runner.temp }}/swc-exports" /tmp/swc-private/production-progress.json
