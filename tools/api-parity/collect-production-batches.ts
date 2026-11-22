@@ -14,6 +14,13 @@ import {readFileSync,existsSync,mkdirSync,appendFileSync} from 'node:fs';
 import {join,basename} from 'node:path';
 
 let phase='configuration',details=0;
+let inventory: {faction:string, kind:string, started:number} | undefined;
+const inventoryResponses: Record<number,number> = {};
+const inventoryTransport: typeof fetch = async (...args) => {
+ const response=await fetch(...args);
+ inventoryResponses[response.status]=(inventoryResponses[response.status]??0)+1;
+ return response;
+};
 const contract=()=>readFileSync(new URL('./production-contract.mjs',import.meta.url));
 const output=process.env.SWC_BATCH_OUTPUT!;
 const key=()=>{if(!process.env.SWC_API_SNAPSHOT_PRIVATE_KEY)throw Error('Checkpoint encryption unavailable');return process.env.SWC_API_SNAPSHOT_PRIVATE_KEY;};
@@ -28,17 +35,19 @@ async function coordinator(){
   if(!validToken(token))throw Error('Invalid coordinator token');
   if(token.expiresAt<Date.now()+45*60_000)await auth.refresh();
   const pacer=new ReadPacer(undefined,undefined,6500,12*60_000,1000,Date.now()+12*60_000);
-  const client=new ReadClient(auth,new SnapshotRun(cfg.privateDir,'production_batch_plan'),undefined,undefined,pacer);
+  const client=new ReadClient(auth,new SnapshotRun(cfg.privateDir,'production_batch_plan'),inventoryTransport,undefined,pacer);
   const me=client.me.bind(client);let character:ReturnType<typeof me>|undefined;client.me=()=>character??=me();
   const documents=[];
   for(const faction of ['tff','tjo'] as const){
    for(const kind of ['stations','materials']){
     phase='coordinator-inventory';
+    inventory={faction,kind,started:Date.now()};
     const run=new SnapshotRun(cfg.privateDir,kind+'_'+faction);
     const inv=kind==='stations'?await syncFactionStations(client,run,cfg.privateDir,faction,false):await syncFactionMaterials(client,run,cfg.privateDir,faction);
     documents.push({name:basename(inv.exportFile),faction,doc:await readJson(inv.exportFile)});
    }
   }
+  inventory=undefined;
   // Refresh only in this coordinator, after inventory work, if workers need a longer window.
   const current=await readJson(join(cfg.privateDir,'tokens.json'));
   if(!validToken(current))throw Error('Invalid coordinator token');
@@ -80,4 +89,6 @@ async function worker(){
  }
 }
 const mode=process.argv[2];
-(mode==='plan'?coordinator():mode==='worker'?worker():Promise.reject(Error('Unknown batch mode'))).catch(error=>{console.error('PRODUCTION_API_FAILURE '+JSON.stringify({phase,details,category:failureCategory(error,phase)}));process.exitCode=1;});
+(mode==='plan'?coordinator():mode==='worker'?worker():Promise.reject(Error('Unknown batch mode'))).catch(error=>{console.error('PRODUCTION_API_FAILURE '+JSON.stringify({phase,details,category:failureCategory(error,phase),...(inventory&&{
+ faction:inventory.faction,kind:inventory.kind,elapsedMs:Date.now()-inventory.started,httpResponses:inventoryResponses
+ })}));process.exitCode=1;});
