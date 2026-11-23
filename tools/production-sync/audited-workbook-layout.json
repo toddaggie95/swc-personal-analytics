@@ -3017,7 +3017,12 @@
         "sheet": "Daluuj",
         "hasColumn": 2,
         "materialStartRow": 47
-      }
+      },
+      "underConstructionStationUids": [
+        "5:67168",
+        "5:67165",
+        "5:67163"
+      ]
     },
     {
       "id": "Krmar-hub-1-0",
