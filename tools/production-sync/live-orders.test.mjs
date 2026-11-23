@@ -52,7 +52,7 @@ test('Daluuj (4,1) registers all new construction shipyards as unassigned',()=>{
  coords.forEach((xy,i)=>{rows[37+i]=[xy,'None','','']});
  const result=liveProductionOrders({manifest:m,stations:st,rowsBySystem:{Daluuj:rows}});
  assert.equal(result.length,5);
- assert.deepEqual(result.filter(x=>['5:67168','5:67165','5:67163'].includes(ids[positions.findIndex(p=>p[0]===x.x&&p[1]===x.y)])).map(x=>x.ship),['None','None','None']);
+ assert.deepEqual(result.filter(x=>['4,0','5,0','5,1'].includes(x.x+','+x.y)).map(x=>x.ship),['None','None','None']);
  rows[38]=['4,0','TIE/in Interceptor','48',''];
  assert.equal(liveProductionOrders({manifest:m,stations:st,rowsBySystem:{Daluuj:rows}}).find(x=>x.x===4&&x.y===0).ship,'TIE/in Interceptor');
 });
