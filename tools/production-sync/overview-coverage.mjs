@@ -27,11 +27,14 @@ export function auditOverviewCoverage({manifest,orders,legacyTotals={},stations=
  const trackedSystems=new Set(bySystem.keys());
  const allExportShipyards=stations.filter(s=>/shipyard/i.test(String(s.type_name??'')));
  const uncoveredShipyards=allExportShipyards.filter(s=>trackedSystems.has(s.system)&&!orderIds.has(s.uid)).map(s=>({uid:s.uid,system:s.system,type:s.type_name,owner:s.owner_name??s.owner??null}));
+ // Untracked systems are diagnostic only; they cannot be mapped to live sheet rows.
+ const untrackedSystemShipyards=allExportShipyards.filter(s=>!trackedSystems.has(s.system)).map(s=>({uid:s.uid,system:s.system,sector:s.sector??null,x:s.sysX??null,y:s.sysY??null,type:s.type_name,owner:s.owner_name??s.owner??null}));
  const systems=[...bySystem.values()].sort((a,b)=>a.system.localeCompare(b.system)).map(r=>({
    ...r,manifestMinusOrders:r.memberStations-r.classifiedOrders,
    legacyMinusOrders:r.legacyTotal===null?null:r.legacyTotal-r.classifiedOrders
  }));
- return {mode:'read_only',systems,unmatchedMembers:unmatched,uncoveredShipyards,totals:{
+ return {mode:'read_only',systems,unmatchedMembers:unmatched,uncoveredShipyards,untrackedSystemShipyards,totals:{
+   exportedShipyardsInUntrackedSystems:untrackedSystemShipyards.length,
    exportedShipyardsInTrackedSystems:allExportShipyards.filter(s=>trackedSystems.has(s.system)).length,
    uncoveredExportShipyardsInTrackedSystems:uncoveredShipyards.length,
    manifestMembers:systems.reduce((n,r)=>n+r.memberStations,0),
