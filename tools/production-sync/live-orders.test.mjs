@@ -39,3 +39,20 @@ test('edge hub tolerates unassigned negative coordinate placeholders',()=>{
  rowsBySystem.Chamble[2][1]='TIE/in Interceptor';
  assert.throws(()=>liveProductionOrders({manifest:m,stations:st,rowsBySystem}),/Unknown station coordinate/);
 });
+
+
+test('Daluuj (4,1) registers all new construction shipyards as unassigned',()=>{
+ const ids=['5:67168','5:67165','5:65571','5:67163','5:56605'];
+ const positions=[[4,0],[5,0],[4,1],[5,1],[5,2]];
+ const m={destinations:[{id:'Daluuj-hub-2-0',kind:'hub',system:'Daluuj',center:{x:4,y:1},target:{hasColumn:2,materialStartRow:47},memberStationUids:ids}]};
+ const st=ids.map((uid,i)=>({uid,system:'Daluuj',sysX:String(positions[i][0]),sysY:String(positions[i][1]),type_name:i===2||i===4?'Depot Station I':'Shipyard I'}));
+ const rows=Array.from({length:47},()=>[]);
+ rows[36]=['TFF Daluuj Depot (4,1)'];
+ const coords=['3,0','4,0','5,0','3,1','4,1','5,1','3,2','4,2','5,2'];
+ coords.forEach((xy,i)=>{rows[37+i]=[xy,'None','','']});
+ const result=liveProductionOrders({manifest:m,stations:st,rowsBySystem:{Daluuj:rows}});
+ assert.equal(result.length,5);
+ assert.deepEqual(result.filter(x=>['5:67168','5:67165','5:67163'].includes(ids[positions.findIndex(p=>p[0]===x.x&&p[1]===x.y)])).map(x=>x.ship),['None','None','None']);
+ rows[38]=['4,0','TIE/in Interceptor','48',''];
+ assert.equal(liveProductionOrders({manifest:m,stations:st,rowsBySystem:{Daluuj:rows}}).find(x=>x.x===4&&x.y===0).ship,'TIE/in Interceptor');
+});
