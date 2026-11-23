@@ -29,3 +29,15 @@ test('already-started ship does not require another material bill',()=>{
  assert.equal(mapped[0].started,true);
  assert.deepEqual(mapped[0].bill,{});
 });
+
+
+test('under-construction shipyard is explicitly marked and never generates a production bill',()=>{
+ const args=inputs();
+ args.manifest={destinations:[{...manifest.destinations[0],underConstructionStationUids:['s1']}]};
+ args.shipBills=new Map();
+ const mapped=mapProductionOrders(args);
+ assert.equal(mapped[0].underConstruction,true);
+ assert.deepEqual(mapped[0].bill,{});
+ args.rowsBySystem={Eberon:[[],['Hub (5,10)'],['4,9','TIE/in Interceptor','48','Yes']]};
+ assert.throws(()=>mapProductionOrders(args),/Under-construction station marked started/);
+});
