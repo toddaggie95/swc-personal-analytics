@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "source": "api",
-  "snapshotId": "7ca1bc935616c76ff84aa2768de180f21cffe3393859ca422f6549fc313f89e1",
+  "snapshotId": "db904136665749f019700127580ebe6bfba3f11c73b3fec2d0b312ce29d5ad65",
   "collectedAt": null,
-  "acceptedAt": "2026-11-22T14:03:41.895658+00:00",
-  "workflowRunId": "45030388245",
+  "acceptedAt": "2026-11-23T00:18:44.388889+00:00",
+  "workflowRunId": "45087679438",
   "verification": "verified",
   "files": [
     {
@@ -17,22 +17,22 @@
     {
       "owner": "TFF",
       "kind": "Materials",
-      "id": "api:tff-materials:81a3954eebacfab85e3b349db3eb99cb56d77dd471c31161e46fd21c8a9b4c5e",
-      "sha256": "81a3954eebacfab85e3b349db3eb99cb56d77dd471c31161e46fd21c8a9b4c5e",
-      "rowCount": 1494
+      "id": "api:tff-materials:8b6b5626c8e761a6fabb596aad4d99d77bc0d45e366c44869c5b04cd1bcdf485",
+      "sha256": "8b6b5626c8e761a6fabb596aad4d99d77bc0d45e366c44869c5b04cd1bcdf485",
+      "rowCount": 1505
     },
     {
       "owner": "TJO",
       "kind": "Stations",
-      "id": "api:tjo-stations:b67a236a2df95a829bbad8724339fc39341202b770baf6226cebc8d3cff5da96",
-      "sha256": "b67a236a2df95a829bbad8724339fc39341202b770baf6226cebc8d3cff5da96",
+      "id": "api:tjo-stations:2df410db7367bdd8220186670720e8a2d26b91f2c1aaef2a33697240fe38080a",
+      "sha256": "2df410db7367bdd8220186670720e8a2d26b91f2c1aaef2a33697240fe38080a",
       "rowCount": 1029
     },
     {
       "owner": "TJO",
       "kind": "Materials",
-      "id": "api:tjo-materials:03cff979d50be0b39a61360a7280a128b9ea205b43b77f9d008c088bbd54b6f3",
-      "sha256": "03cff979d50be0b39a61360a7280a128b9ea205b43b77f9d008c088bbd54b6f3",
+      "id": "api:tjo-materials:3876efe7fddafeaf84c2f022389c0b1a49177a600c68d03e03ed7a0ad89783c0",
+      "sha256": "3876efe7fddafeaf84c2f022389c0b1a49177a600c68d03e03ed7a0ad89783c0",
       "rowCount": 2291
     }
   ]
