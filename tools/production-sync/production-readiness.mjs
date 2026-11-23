@@ -21,8 +21,9 @@ export function allocateReadiness({pools,orders,priority = () => 1}) {
     if (!o.id || seen.has(o.id)) throw Error('Duplicate or missing order ID');
     seen.add(o.id);
     if (!o.system || !o.destinationId || !o.stationPoolId) throw Error('Incomplete order');
+    if (o.underConstruction && o.started) throw Error('Under-construction station marked started '+o.id);
     if (o.started && o.ship === 'None') throw Error('Started station has no ship assignment '+o.id);
-    if (o.started || !o.ship || o.ship === 'None') { result.push({...o,status:o.started?'building':'unassigned'}); return false; }
+    if (o.underConstruction || o.started || !o.ship || o.ship === 'None') { result.push({...o,status:o.started?'building':'unassigned'}); return false; }
     validateBill(o.bill);
     const home=poolById.get(o.stationPoolId);
     if (!home || home.system!==o.system || home.destinationId!==o.destinationId) throw Error('Order station mapping mismatch '+o.id);
