@@ -23,6 +23,9 @@ def plan(manifest,stations,rows_by_system,ship_names=None):
   sheet=dest["system"];rows=rows_by_system[sheet]
   missing=[uid for uid in dest["memberStationUids"] if uid not in by_uid]
   if missing:raise ValueError("Tracked stations missing from exports: "+str(missing[:10]))
+  construction=set(dest.get("underConstructionStationUids",[]))
+  if not construction.issubset(dest["memberStationUids"]):
+   raise ValueError("Construction marker outside destination membership "+dest["id"])
   positions={}
   if dest["kind"]=="hub":
    col=dest["target"]["hasColumn"]-2
@@ -45,7 +48,9 @@ def plan(manifest,stations,rows_by_system,ship_names=None):
   for uid,location in members:
    station=by_uid[uid]
    if station.get("system")!=sheet:raise ValueError("System mismatch "+uid)
-   if "shipyard" not in station.get("type_name","").lower():continue
+   if "shipyard" not in station.get("type_name","").lower():
+    if uid in construction:raise ValueError("Construction marker requires a shipyard "+uid)
+    continue
    if uid in seen:raise ValueError("Duplicate tracked shipyard "+uid)
    seen.add(uid)
    if location is None:raise ValueError("Shipyard missing from hub "+uid+" at "+str(station.get("sysX"))+","+str(station.get("sysY"))+"; header="+str(header)+" col="+str(col)+"; known="+str(sorted(positions)))
@@ -62,6 +67,8 @@ def plan(manifest,stations,rows_by_system,ship_names=None):
    checked+=1
    if status not in ("","running","paused","stopped","complete","completed","idle","none","cancelled","canceled"):
     raise ValueError("Unrecognized productionStatus "+uid+": "+status)
+   if uid in construction and (status=="running" or current.lower()=="yes"):
+    raise ValueError("Under-construction station marked started "+uid)
    desired="Yes" if status=="running" else ""
    if status=="running":
     ship=station.get("tooled-to","").strip()

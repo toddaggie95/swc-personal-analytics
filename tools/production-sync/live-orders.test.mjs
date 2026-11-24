@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import {liveProductionOrders} from './live-orders.mjs';
 const manifest={destinations:[{id:'hub',kind:'hub',system:'Eberon',center:{x:5,y:10},target:{hasColumn:2,materialStartRow:12},memberStationUids:['s1']}]};
@@ -38,4 +39,28 @@ test('edge hub tolerates unassigned negative coordinate placeholders',()=>{
  assert.equal(liveProductionOrders({manifest:m,stations:st,rowsBySystem}).length,1);
  rowsBySystem.Chamble[2][1]='TIE/in Interceptor';
  assert.throws(()=>liveProductionOrders({manifest:m,stations:st,rowsBySystem}),/Unknown station coordinate/);
+});
+
+
+test('Daluuj (4,1) registers all new construction shipyards as unassigned',()=>{
+ const {destinations}=JSON.parse(readFileSync(new URL('./audited-workbook-layout.json',import.meta.url),'utf8'));
+ const hub=destinations.find(d=>d.id==='Daluuj-hub-2-0');
+ const shipyards={'5:67191':[3,0],'5:67168':[4,0],'5:67165':[5,0],'5:67163':[5,1]};
+ const depots={'5:65571':[4,1],'5:56605':[5,2]};
+ assert.deepEqual(new Set(hub.underConstructionStationUids),new Set(Object.keys(shipyards)));
+ const m={destinations:[hub]};
+ const st=Object.entries({...shipyards,...depots}).map(([uid,[x,y]])=>({
+  uid,system:'Daluuj',sysX:String(x),sysY:String(y),type_name:uid in depots?'Depot Station I':'Shipyard I'
+ }));
+ const rows=Array.from({length:47},()=>[]);
+ rows[36]=['TFF Daluuj Depot (4,1)'];
+ const coords=['3,0','4,0','5,0','3,1','4,1','5,1','3,2','4,2','5,2'];
+ coords.forEach((xy,i)=>{rows[37+i]=[xy,'None','','']});
+ const result=liveProductionOrders({manifest:m,stations:st,rowsBySystem:{Daluuj:rows}});
+ assert.deepEqual(result.map(({x,y})=>[x,y]),Object.values(shipyards));
+ assert.deepEqual(result.map(x=>x.ship),['None','None','None','None']);
+ rows[41]=['4,1','TIE/in Interceptor','48',''];
+ assert.equal(liveProductionOrders({manifest:m,stations:st,rowsBySystem:{Daluuj:rows}}).length,4);
+ rows[38]=['4,0','TIE/in Interceptor','48',''];
+ assert.equal(liveProductionOrders({manifest:m,stations:st,rowsBySystem:{Daluuj:rows}}).find(x=>x.x===4&&x.y===0).ship,'TIE/in Interceptor');
 });

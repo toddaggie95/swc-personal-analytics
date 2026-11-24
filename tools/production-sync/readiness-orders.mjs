@@ -63,15 +63,17 @@ export function mapProductionOrders({auditedOrders,manifest,stations,rowsBySyste
   if(oneoff && String(row[4]??'').trim()!==station.uid)throw Error('One-off UID mismatch '+station.uid);
   if(used.has(station.uid))throw Error('Station has duplicate orders '+station.uid);
   used.add(station.uid);
+  const underConstruction=(d.underConstructionStationUids??[]).includes(station.uid);
+  if(underConstruction && started==='yes')throw Error('Under-construction station marked started '+station.uid);
   const isAssigned=ship!==''&&ship!=='None';
   const qty=isAssigned?Number(qtyRaw):0;
   if(isAssigned&&(!Number.isSafeInteger(qty)||qty<=0))throw Error('Invalid order quantity '+station.uid);
   // Started production consumes no new materials in this planner; its bill is not needed.
-  const bom=isAssigned&&started!=='yes'?shipBills.get(ship):null;
-  if(isAssigned&&started!=='yes'&&!bom)throw Error('Unverified ship material bill '+ship);
+  const bom=isAssigned&&started!=='yes'&&!underConstruction?shipBills.get(ship):null;
+  if(isAssigned&&started!=='yes'&&!underConstruction&&!bom)throw Error('Unverified ship material bill '+ship);
   const bill=Object.fromEntries(Object.entries(bom??{}).map(([m,n])=>[m,n*qty]));
   if(Object.values(bill).some(x=>!Number.isSafeInteger(x)))throw Error('Material multiplication overflow '+station.uid);
-  output.push({id:station.uid,stationPoolId:station.uid,ownerFaction,ownerFactionId:ownerMatch?.[1]??null,system:entry.system,sector,coordinates:entry.x+','+entry.y,destinationId:station.destinationId,ship,quantity:qty,started:started==='yes',bill});
+  output.push({id:station.uid,stationPoolId:station.uid,ownerFaction,ownerFactionId:ownerMatch?.[1]??null,system:entry.system,sector,coordinates:entry.x+','+entry.y,destinationId:station.destinationId,ship,quantity:qty,started:started==='yes',underConstruction,bill});
  }
  return output;
 }

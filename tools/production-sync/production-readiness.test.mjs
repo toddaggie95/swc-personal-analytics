@@ -39,3 +39,11 @@ test('conservation across multiple materials and destinations', () => {
   assert.ok(r.reservations.filter(x=>x.material===material).reduce((sum,x)=>sum+x.quantity,0)<=limit);
  }
 });
+
+
+test('under-construction station cannot become ready even if assigned and fully stocked',()=>{
+ const r=allocateReadiness({pools:[p('yard','hub',{mel:100})],orders:[o('yard','hub',{mel:10},'yard',{underConstruction:true})]});
+ assert.equal(r.orders[0].status,'unassigned');
+ assert.equal(r.reservations.length,0);
+ assert.throws(()=>allocateReadiness({pools:[],orders:[o('yard','hub',{},'yard',{underConstruction:true,started:true})]}),/Under-construction station marked started/);
+});

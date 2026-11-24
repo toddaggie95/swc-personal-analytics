@@ -2998,6 +2998,35 @@
       }
     },
     {
+      "id": "Daluuj-hub-2-0",
+      "kind": "hub",
+      "system": "Daluuj",
+      "title": "TFF Daluuj Depot (4,1)",
+      "center": {
+        "x": 4,
+        "y": 1
+      },
+      "memberStationUids": [
+        "5:67191",
+        "5:67168",
+        "5:67165",
+        "5:65571",
+        "5:67163",
+        "5:56605"
+      ],
+      "target": {
+        "sheet": "Daluuj",
+        "hasColumn": 2,
+        "materialStartRow": 47
+      },
+      "underConstructionStationUids": [
+        "5:67191",
+        "5:67168",
+        "5:67165",
+        "5:67163"
+      ]
+    },
+    {
       "id": "Krmar-hub-1-0",
       "kind": "hub",
       "system": "Krmar",

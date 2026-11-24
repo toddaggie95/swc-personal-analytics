@@ -30,3 +30,20 @@ test('untracked exported shipyards are reported without pretending they are clas
  assert.equal(report.totals.uncoveredExportShipyardsInTrackedSystems,1);
  assert.equal(report.uncoveredShipyards[0].uid,'other');
 });
+
+
+test('shipyards in untracked systems are reported separately without blocking tracked coverage',()=>{
+ const report=auditOverviewCoverage({
+  manifest:{destinations:[{system:'Daluuj',memberStationUids:['depot','yard']}]},
+  orders:[{id:'yard',system:'Daluuj'}],
+  stations:[
+   {uid:'depot',type_name:'Depot Station I',system:'Daluuj'},
+   {uid:'yard',type_name:'Shipyard I',system:'Daluuj'},
+   {uid:'5:66371',type_name:'Shipyard IV',system:'Asteroid Field 275-70 BDJ',sector:'Eclorar',sysX:'10',sysY:'18'}
+  ]
+ });
+ assert.equal(report.totals.uncoveredExportShipyardsInTrackedSystems,0);
+ assert.equal(report.totals.exportedShipyardsInUntrackedSystems,1);
+ assert.deepEqual(report.untrackedSystemShipyards.map(s=>s.uid),['5:66371']);
+ assert.equal(report.untrackedSystemShipyards[0].system,'Asteroid Field 275-70 BDJ');
+});

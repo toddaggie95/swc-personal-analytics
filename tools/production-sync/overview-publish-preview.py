@@ -14,7 +14,11 @@ def preview(snapshot,audit):
     coverage=snapshot.get("coverageAudit",{})
     totals=coverage.get("totals",{})
     if totals.get("uncoveredExportShipyardsInTrackedSystems")!=0:
-        raise ValueError("Uncovered exported shipyards")
+        examples = ", ".join(
+            f"{yard['system']} {yard['uid']} ({yard.get('x')},{yard.get('y')})"
+            for yard in coverage.get("uncoveredShipyards", [])[:10]
+        )
+        raise ValueError(f"Uncovered exported shipyards ({totals.get('uncoveredExportShipyardsInTrackedSystems')}): {examples}")
     orders=snapshot.get("orders",[])
     if len(orders)!=totals.get("classifiedOrders") or len(orders)!=snapshot.get("statistics",{}).get("liveOrders"):
         raise ValueError("Production order coverage mismatch")
