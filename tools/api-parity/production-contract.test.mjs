@@ -28,3 +28,10 @@ test('canonical output retains ownership, zero coordinates and production quanti
  assert.throws(()=>canonicalRow({uid:'5:3',entityType:'stations',typeName:null}),/station type/);
  assert.throws(()=>canonicalRow({uid:'5:4',operations:{productionStateValidated:true,productionStatus:'running',productionQuantity:'0',tooledTo:'Ship'}}),/quantity/);
 });
+
+test('construction comes from API actions, not a stale manifest marker',()=>{
+ const building=productionState({actions:{action:[action('StationConstructionAction')]}});
+ assert.equal(building.underConstruction,true);
+ assert.equal(productionState({}).underConstruction,false);
+ assert.equal(canonicalRow({uid:'5:1',operations:building}).underConstruction,'true');
+});

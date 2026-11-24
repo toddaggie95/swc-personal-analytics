@@ -23,5 +23,7 @@ jobs:
           node-version: '22'
       - name: Run deterministic and audited inventory tests
         run: node --test tools/production-sync/*.test.mjs
+      - name: Run API construction contract tests
+        run: node --test tools/api-parity/production-contract.test.mjs tools/api-parity/export-canonical-csv.test.mjs
       - name: Run production publication Python regression tests
-        run: python3 -m unittest discover -s tools/production-sync -p 'test_publish_*.py'
+        run: python3 -m unittest discover -s tools/production-sync -p 'test_*.py'
