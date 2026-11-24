@@ -40,4 +40,8 @@ test('under-construction shipyard is explicitly marked and never generates a pro
  assert.deepEqual(mapped[0].bill,{});
  args.rowsBySystem={Eberon:[[],['Hub (5,10)'],['4,9','TIE/in Interceptor','48','Yes']]};
  assert.throws(()=>mapProductionOrders(args),/Under-construction station marked started/);
+ args.manifest=manifest;
+ const completed=mapProductionOrders(args);
+ assert.equal(completed[0].underConstruction,false);
+ assert.equal(completed[0].started,true);
 });

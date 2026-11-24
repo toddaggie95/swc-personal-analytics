@@ -24,7 +24,7 @@ export function auditOverviewCoverage({manifest,orders,legacyTotals={},stations=
      if(/shipyard/i.test(item.type))throw Error('Unclassified audited shipyard '+item.uid);
    }
  }
- const trackedSystems=new Set(bySystem.keys());
+ const trackedSystems=new Set(manifest.destinations.map(d=>d.system));
  const allExportShipyards=stations.filter(s=>/shipyard/i.test(String(s.type_name??'')));
  const uncoveredShipyards=allExportShipyards.filter(s=>trackedSystems.has(s.system)&&!orderIds.has(s.uid)).map(s=>({uid:s.uid,system:s.system,type:s.type_name,owner:s.owner_name??s.owner??null}));
  // Untracked systems are diagnostic only; they cannot be mapped to live sheet rows.

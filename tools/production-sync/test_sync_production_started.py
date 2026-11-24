@@ -24,6 +24,16 @@ class StartedSyncTests(unittest.TestCase):
   result=sync.plan(manifest,stations,{"Kashyyyk":rows})
   self.assertEqual(result["checkedShipyards"],3)
   self.assertEqual([(c["uid"],c["proposed"]) for c in result["changes"] if c.get("field")=="started"],[("5:1","Yes"),("5:2","Yes")])
+  manifest["destinations"][0]["underConstructionStationUids"]=["5:1"]
+  with self.assertRaisesRegex(ValueError,"Under-construction station marked started 5:1"):
+   sync.plan(manifest,stations,{"Kashyyyk":rows})
+  stations[0]["productionStatus"]=""
+  result=sync.plan(manifest,stations,{"Kashyyyk":rows})
+  self.assertEqual(result["checkedShipyards"],3)
+  self.assertNotIn("5:1",[c["uid"] for c in result["changes"]])
+  rows[37][11]="Yes"
+  with self.assertRaisesRegex(ValueError,"Under-construction station marked started 5:1"):
+   sync.plan(manifest,stations,{"Kashyyyk":rows})
  def test_reject_coordinate_drift(self):
   manifest={"destinations":[{"id":"x","kind":"oneoff-group","system":"Kashyyyk","memberStationUids":["5:1"],"oneoffs":[{"stationUid":"5:1","row":1}]}]}
   station={"uid":"5:1","system":"Kashyyyk","sysX":"4","sysY":"16","type_name":"Shipyard I","productionStatus":"running"}

@@ -1,5 +1,6 @@
 // Derive production assignments from live sheet rows, never a cached GitHub order list.
 // Manifest supplies hub geometry and station UIDs only. Fail closed on coordinate drift.
+const isDepot=station=>/^Depot Station\b/i.test(station.type_name??'');
 export function liveProductionOrders({manifest,stations,rowsBySystem}) {
  const byUid=new Map(stations.map(s=>[s.uid,s]));
  const result=[],seen=new Set();
@@ -38,6 +39,8 @@ export function liveProductionOrders({manifest,stations,rowsBySystem}) {
     }
     if(found.has(uid)||seen.has(uid))throw Error('Duplicate live production station '+uid);
     found.add(uid);seen.add(uid);
+    // Depot rows can carry copied dropdown values. Their inventory still enters HAS.
+    if(isDepot(byUid.get(uid)))continue;
     const [x,y]=xy.split(',').map(Number);
     result.push({destinationId:d.id,system:d.system,x,y,row,ship:String(values[col+1]??'').trim()});
    }
@@ -57,6 +60,7 @@ export function liveProductionOrders({manifest,stations,rowsBySystem}) {
     if(coord(values[0])!==coord(one.coordinate)||coord(values[0])!==s.sysX+','+s.sysY||String(values[4]??'').trim()!==uid)throw Error('One-off UID/coordinate drift '+d.system+':'+row);
     if(seen.has(uid))throw Error('Duplicate one-off station '+uid);
     seen.add(uid);
+    if(isDepot(s))continue;
     result.push({destinationId:d.id,system:d.system,x:Number(s.sysX),y:Number(s.sysY),row,ship:String(values[1]??'').trim()});
    }
   }else throw Error('Unknown destination kind '+d.kind);
