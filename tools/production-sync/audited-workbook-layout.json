@@ -3007,6 +3007,7 @@
         "y": 1
       },
       "memberStationUids": [
+        "5:67191",
         "5:67168",
         "5:67165",
         "5:65571",
@@ -3019,6 +3020,7 @@
         "materialStartRow": 47
       },
       "underConstructionStationUids": [
+        "5:67191",
         "5:67168",
         "5:67165",
         "5:67163"
