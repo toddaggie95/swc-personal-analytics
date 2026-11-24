@@ -6,7 +6,7 @@ import {canonicalRow} from './production-contract.mjs';
 import {fileURLToPath} from 'node:url';
 const ownerNames={tff:'The Faerytail Family',tjo:'The Faerytail Family: The Je`daii Order'};
 const names=['tff-stations','tff-materials','tjo-stations','tjo-materials'];
-const canonicalColumns={stations:['uid','name','owner_name','owner_uid','type_name','sector','sector_uid','system','system_uid','sysX','sysY','tooled-to','productionStatus','productionQuantity'],materials:['uid','name','owner_name','type_name','system','sysX','sysY','quantity','container_type_name','container_uid']};
+const canonicalColumns={stations:['uid','name','owner_name','owner_uid','type_name','sector','sector_uid','system','system_uid','sysX','sysY','tooled-to','productionStatus','productionQuantity','underConstruction'],materials:['uid','name','owner_name','type_name','system','sysX','sysY','quantity','container_type_name','container_uid']};
 const quote=v=>{const s=String(v??'');return /[",\r\n]/.test(s)?'"'+s.replaceAll('"','""')+'"':s};
 export function buildCanonical({apiDir,referenceDir,outDir,systems}){
  if(!Array.isArray(systems)||!systems.length||new Set(systems).size!==systems.length)throw Error('Invalid system registry');

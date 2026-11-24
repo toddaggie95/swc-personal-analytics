@@ -20,11 +20,12 @@ export function productionState(detail){
  const tooling=typeof detail.tooledto==='string'?detail.tooledto:record(detail.tooledto).value;
  if(active&&(!Number.isSafeInteger(quantity)||quantity<=0||typeof tooling!=='string'||!tooling))throw Error('Running production lacks quantity or tooling');
  // User-validated policy: missing actions/queue is idle; tooling is assignment, not activity.
- return {productionStateValidated:true,productionStatus:active?'running':'',productionQuantity:active?String(quantity):'',tooledTo:tooling??'',observedAt:new Date().toISOString()};
+ if(types.includes('StationConstructionAction')&&active)throw Error('Construction conflicts with running production');
+ return {underConstruction:types.includes('StationConstructionAction'),productionStateValidated:true,productionStatus:active?'running':'',productionQuantity:active?String(quantity):'',tooledTo:tooling??'',observedAt:new Date().toISOString()};
 }
 export function canonicalRow(raw){
  const loc=raw.location??{},coords=raw.coordinates??{},ops=raw.operations;
- const row={uid:raw.uid,name:str(raw.name),type_name:str(raw.typeName),owner_uid:raw.ownerUid};
+ const row={uid:raw.uid,name:str(raw.name),type_name:str(raw.typeName),owner_uid:raw.ownerUid,underConstruction:''};
  for(const k of ['sector','system','planet','city']){row[k]=str(loc[k]?.name);row[k+'_uid']=str(loc[k]?.uid);}
  row.sysX=str(coords.system?.x);row.sysY=str(coords.system?.y);
  row.container_uid=str(loc.container?.uid);
@@ -37,6 +38,7 @@ export function canonicalRow(raw){
  if(ops?.productionStateValidated){
   if(!['','running'].includes(ops.productionStatus))throw Error('Invalid validated production status');
   if(ops.productionStatus==='running'&&(!Number.isSafeInteger(Number(ops.productionQuantity))||Number(ops.productionQuantity)<=0||!str(ops.tooledTo).trim()))throw Error('Invalid validated running quantity/tooling');
+  row.underConstruction=typeof ops.underConstruction==='boolean'?String(ops.underConstruction):'';
   row['tooled-to']=str(ops.tooledTo);row.productionStatus=ops.productionStatus;row.productionQuantity=ops.productionQuantity;
  }else if(ops&&Array.isArray(ops.productionActions)){
   const running=ops.productionActions.filter(a=>record(a.value).status==='running');

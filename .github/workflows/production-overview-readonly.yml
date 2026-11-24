@@ -100,6 +100,16 @@ jobs:
         run: |
           node --test tools/production-sync/*.test.mjs
           python3 -m unittest discover -s tools/production-sync -p 'test_*.py' -v
+      - name: Resolve shared production hub membership from owned station exports
+        if: success() && (github.event_name != 'workflow_run' || steps.accepted_batch.outputs.verified == 'true')
+        working-directory: tools/production-sync
+        run: |
+          node hub-membership.mjs audited-workbook-layout.json \
+            "${{ runner.temp }}/swc-exports/tff-stations.csv" \
+            "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
+            "${{ runner.temp }}/swc-exports/export-manifest.json" \
+            "${{ runner.temp }}/resolved-hub-membership.json"
+
       - name: Capture live production assignments and ship bills (read only)
         if: success() && (github.event_name != 'workflow_run' || steps.accepted_batch.outputs.verified == 'true')
         env:
@@ -107,7 +117,7 @@ jobs:
           SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
         run: |
           python3 tools/production-sync/capture-overview-snapshot.py \
-            tools/production-sync/audited-workbook-layout.json \
+            "${{ runner.temp }}/resolved-hub-membership.json" \
             tools/production-sync/audited-production-orders.json \
             "${{ runner.temp }}/overview-input.json"
       - name: Calculate overview readiness (read only)

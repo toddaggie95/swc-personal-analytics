@@ -144,6 +144,15 @@ jobs:
         working-directory: tools/production-sync
         run: node --test production-sync.test.mjs audited-inventory.test.mjs station-registry-audit.test.mjs system-has-audit.test.mjs
 
+      - name: Resolve shared production hub membership from owned station exports
+        working-directory: tools/production-sync
+        run: |
+          node hub-membership.mjs audited-workbook-layout.json \
+            "${{ runner.temp }}/swc-exports/tff-stations.csv" \
+            "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
+            "${{ runner.temp }}/swc-exports/export-manifest.json" \
+            "${{ runner.temp }}/resolved-hub-membership.json"
+
       - name: Calculate audited inventory (no spreadsheet writes)
         working-directory: tools/production-sync
         run: |
@@ -152,7 +161,7 @@ jobs:
             --tjo-materials "${{ runner.temp }}/swc-exports/tjo-materials.csv" \
             --tff-stations "${{ runner.temp }}/swc-exports/tff-stations.csv" \
             --tjo-stations "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
-            --manifest audited-workbook-layout.json \
+            --manifest "${{ runner.temp }}/resolved-hub-membership.json" \
             --out "${{ runner.temp }}/audited-ledger.json"
 
       - name: Audit complete station registry and untracked TJO shipyards (read only)
@@ -163,7 +172,7 @@ jobs:
           node station-registry-audit.mjs \
             "${{ runner.temp }}/swc-exports/tff-stations.csv" \
             "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
-            audited-workbook-layout.json \
+            "${{ runner.temp }}/resolved-hub-membership.json" \
             "$BASELINE" \
             "${{ runner.temp }}/station-registry-audit.json" \
             "${{ runner.temp }}/station-registry-bootstrap.json"
@@ -176,7 +185,7 @@ jobs:
             "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
             "${{ runner.temp }}/swc-exports/tff-materials.csv" \
             "${{ runner.temp }}/swc-exports/tjo-materials.csv" \
-            audited-workbook-layout.json \
+            "${{ runner.temp }}/resolved-hub-membership.json" \
             "${{ runner.temp }}/system-has-audit.json"
 
       - name: Compare system HAS against live workbook (read only)
@@ -204,7 +213,7 @@ jobs:
         run: |
           node pile-trace.mjs \
             "${{ runner.temp }}/spreadsheet-comparison.json" \
-            audited-workbook-layout.json \
+            "${{ runner.temp }}/resolved-hub-membership.json" \
             "${{ runner.temp }}/swc-exports/tff-stations.csv" \
             "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
             "${{ runner.temp }}/swc-exports/tff-materials.csv" \
@@ -221,7 +230,7 @@ jobs:
           SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
         run: |
           python3 tools/production-sync/sync-production-started.py \
-            tools/production-sync/audited-workbook-layout.json \
+            "${{ runner.temp }}/resolved-hub-membership.json" \
             "${{ runner.temp }}/swc-exports/tff-stations.csv" \
             "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
             "${{ runner.temp }}/production-started-preflight.json" false
@@ -230,7 +239,7 @@ jobs:
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SWC_PRODUCTION_SHEET_ID: '1ezzYU4MYW9VyWWR2mJWQ6jmFlZKxPxvezZAscXtx5q8'
-        run: python3 tools/production-sync/capture-overview-snapshot.py tools/production-sync/audited-workbook-layout.json tools/production-sync/audited-production-orders.json "${{ runner.temp }}/preview-workbook.json"
+        run: python3 tools/production-sync/capture-overview-snapshot.py "${{ runner.temp }}/resolved-hub-membership.json" tools/production-sync/audited-production-orders.json "${{ runner.temp }}/preview-workbook.json"
       - name: Prepare projected production preview without writes
         run: |
           node tools/api-parity/prepare-sync-preview.mjs "${{ runner.temp }}/preview-workbook.json" "${{ runner.temp }}/audited-ledger.json" "${{ runner.temp }}/production-started-preflight.json" "${{ runner.temp }}/swc-exports" "${{ runner.temp }}/production-preview"
@@ -292,7 +301,7 @@ jobs:
         run: |
           if [ "${{ matrix.source }}" = api ]; then node tools/api-parity/production-progress.mjs check-fresh /tmp/swc-private/production-progress.json; fi
           python3 tools/production-sync/sync-production-started.py \
-            tools/production-sync/audited-workbook-layout.json \
+            "${{ runner.temp }}/resolved-hub-membership.json" \
             "${{ runner.temp }}/swc-exports/tff-stations.csv" \
             "${{ runner.temp }}/swc-exports/tjo-stations.csv" \
             "${{ runner.temp }}/production-started-write-report.json" true
@@ -364,6 +373,7 @@ jobs:
             ${{ runner.temp }}/audited-ledger.json
             ${{ runner.temp }}/spreadsheet-comparison.json
             ${{ runner.temp }}/pile-trace.json
+            ${{ runner.temp }}/resolved-hub-membership.json
             ${{ runner.temp }}/station-registry-audit.json
             ${{ runner.temp }}/station-registry-bootstrap.json
             ${{ runner.temp }}/system-has-audit.json
