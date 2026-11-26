@@ -38,3 +38,18 @@ test('unregistered non-production stations do not change the audited material po
 test('manual CSV cannot infer construction for a new shipyard',()=>{
  assert.throws(()=>resolve([old,fresh],manifest,'csv'),/requires API/);
 });
+
+test('registered Daluuj (1,4) depot collects material and discovers both new shipyards',()=>{
+ const depot=station('5:65569',1,4,{type_name:'Depot Station I'});
+ const a=station('5:67266',0,3,{underConstruction:'true'});
+ const b=station('5:67268',0,4,{underConstruction:'true'});
+ const outside=station('5:99999',0,6);
+ const hub={id:'Daluuj-hub-2-1',kind:'hub',system:'Daluuj',center:{x:1,y:4},memberStationUids:[depot.uid],target:{sheet:'Daluuj',hasColumn:6,materialStartRow:47}};
+ const stations=[depot,a,b,outside];
+ const result=resolve(stations,{destinations:[hub]});
+ assert.deepEqual(result.manifest.destinations[0].memberStationUids,[depot.uid,a.uid,b.uid]);
+ assert.deepEqual(result.manifest.destinations[0].underConstructionStationUids,[a.uid,b.uid]);
+ assert.deepEqual(result.discovered.map(s=>s.uid),[a.uid,b.uid]);
+ const materials=[{uid:'16:1',type_name:'meleenium',quantity:'100',container_uid:depot.uid,container_type_name:'Stations',system:'Daluuj'},{uid:'16:2',type_name:'meleenium',quantity:'50',container_uid:a.uid,container_type_name:'Stations',system:'Daluuj'}];
+ assert.equal(buildLedger(result.manifest,stations,materials).destinations[0].totals.meleenium,150);
+});
